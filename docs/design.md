@@ -347,6 +347,10 @@ Nichtbenutzung.)*
 
 Das **Datum der letzten Sicherung** steht in den Einstellungen. Kein Nörgel-Dialog.
 
+**Einlesen ebenfalls auf beiden Wegen:** Sicherungsdatei auswählen oder den kopierten
+Text einfügen. Jeder Export braucht sein Gegenstück — eine Datei, die nur von Hand
+geöffnet und kopiert werden kann, ist mit VoiceOver keine Sicherung.
+
 **Import ergänzt, er ersetzt nicht.** Dubletten werden über die Koordinate erkannt.
 „Ersetzen" wäre der Klick, der im falschen Moment alles kostet.
 

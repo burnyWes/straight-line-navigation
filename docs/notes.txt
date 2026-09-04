@@ -55,6 +55,8 @@ x  Service Worker: App startet ohne Netz - Server gestoppt und geprueft
 x  GPS-Ausfall bei laufendem Kompass: Fix gilt 12 Sekunden, danach wird die
    Liste gehalten und der Zustand angesagt (design.md 4.6). Fehlermeldungen
    werden nicht mehr vom naechsten Bild ueberschrieben.
+x  Sicherung einlesen ging nur ueber das Textfeld - Dateiauswahl ergaenzt, das
+   Gegenstueck zu "Als Datei sichern" (design.md 7)
 
 --------------------------------------------------------------------------------
 TODO
@@ -71,6 +73,8 @@ TODO
    verdeckt er nichts Wichtiges?
 -  Praxistest: sind 12 Sekunden bis "Standort veraltet" richtig gewaehlt - kommt
    die Meldung im staedtischen Raum zu oft oder zu spaet? (design.md 4.6)
+-  Praxistest: laesst sich die Sicherungsdatei auf dem iPhone aus der
+   Dateien-App waehlen und wieder einlesen?
 
 m  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
 m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)

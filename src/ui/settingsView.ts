@@ -29,6 +29,7 @@ export class SettingsView {
   private readonly coneSelect: HTMLSelectElement;
   private readonly distanceSelect: HTMLSelectElement;
   private readonly earconBox: HTMLInputElement;
+  private readonly importFileField: HTMLInputElement;
   private readonly importField: HTMLTextAreaElement;
   private readonly backupLine: HTMLElement;
   private readonly feedback: HTMLElement;
@@ -90,6 +91,33 @@ export class SettingsView {
       this.callbacks.onExportClipboard();
     });
 
+    // Gegenstueck zu "Als Datei sichern": Ohne diesen Weg muesste eine
+    // Sicherungsdatei erst von Hand geoeffnet und ihr Text kopiert werden.
+    this.importFileField = el('input', {
+      type: 'file',
+      id: 'import-datei',
+      accept: 'application/json,.json',
+    }) as HTMLInputElement;
+    this.importFileField.addEventListener('change', () => {
+      const file = this.importFileField.files?.[0];
+      if (file === undefined) {
+        return;
+      }
+      void file
+        .text()
+        .then((text) => {
+          this.callbacks.onImport(text);
+        })
+        .catch(() => {
+          this.report('Die Datei war nicht lesbar.');
+        })
+        .finally(() => {
+          // Sonst bleibt der Dateiname stehen und dieselbe Datei loest beim
+          // zweiten Mal kein 'change' aus.
+          this.importFileField.value = '';
+        });
+    });
+
     this.importField = el('textarea', {
       id: 'import',
       rows: 4,
@@ -132,7 +160,13 @@ export class SettingsView {
       this.backupLine,
       exportFile,
       exportClipboard,
-      el('label', { for: 'import', text: 'Sicherung einfuegen' }),
+      el('label', { for: 'import-datei', text: 'Sicherungsdatei einlesen' }),
+      this.importFileField,
+      el('label', { for: 'import', text: 'Oder Sicherung als Text einfuegen' }),
+      el('p', {
+        class: 'hint',
+        text: 'Den kopierten Text hier einfuegen und dann "Sicherung einlesen" waehlen.',
+      }),
       this.importField,
       importButton,
       this.feedback,

@@ -169,6 +169,14 @@ const settingsView = new SettingsView(settings, announcer, {
       });
   },
   onImport: (text) => {
+    if (text.trim().length === 0) {
+      // Ohne diesen Fall meldet der leere Knopfdruck "keine Orte gefunden" -
+      // das klingt nach einer kaputten Sicherung statt nach einem leeren Feld.
+      settingsView.report(
+        'Das Feld war leer. Erst die Sicherung einfuegen oder eine Datei waehlen.',
+      );
+      return;
+    }
     const parsed = deserializeLocations(text);
     if (parsed.locations.length === 0) {
       settingsView.report(
