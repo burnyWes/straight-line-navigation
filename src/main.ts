@@ -32,9 +32,6 @@ import { LocationsView } from './ui/locationsView.js';
 import { SettingsView } from './ui/settingsView.js';
 import { el } from './ui/dom.js';
 
-// Muss ohne Netz starten koennen - genau dafuer ist die App gedacht.
-registerServiceWorker();
-
 const root = document.getElementById('app');
 if (root === null) {
   throw new Error('Kein Wurzelelement gefunden.');
@@ -65,6 +62,11 @@ let latestHeading: number | null = null;
 let dirty = false;
 let running = false;
 const subscriptions: Unsubscribe[] = [];
+
+// Muss ohne Netz starten koennen - genau dafuer ist die App gedacht. Eine
+// neue Fassung uebernimmt erst, wenn kein Lauf aktiv ist: Das Neuladen wuerde
+// ihn sonst abreissen.
+registerServiceWorker(() => running);
 
 // --- Oberflaeche ------------------------------------------------------------
 

@@ -15,15 +15,19 @@
  *   Alles andere   -> zuerst Zwischenspeicher. Die Dateinamen tragen einen
  *                     Hash, gleicher Name heisst gleicher Inhalt.
  *
- * Kein skipWaiting: Eine neue Fassung uebernimmt beim naechsten Kaltstart.
- * Assets unter laufender Navigation auszutauschen bringt nichts und kann einen
- * Lauf zerlegen.
+ * skipWaiting nur auf Zuruf: Assets unter laufender Navigation auszutauschen
+ * bringt nichts und kann einen Lauf zerlegen. Die Seite ruft deshalb selbst,
+ * und nur wenn gerade kein Lauf aktiv ist (siehe adapters/serviceWorker.ts).
+ *
+ * Von allein zu warten reicht nicht: Eine installierte App wird auf dem
+ * Telefon nie geschlossen, nur pausiert. Ein wartender Worker bliebe damit
+ * fuer immer im Wartestand - die App wuerde sich schlicht nie erneuern.
  *
  * VERSION erhoehen, wenn sich die Strategie aendert - das raeumt alte
  * Zwischenspeicher ab.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `luftlinie-${VERSION}`;
 
 /** Die Schale. Ohne sie startet gar nichts. */
@@ -106,6 +110,16 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+/**
+ * Die Seite entscheidet, wann eine neue Fassung uebernimmt - sie allein weiss,
+ * ob gerade navigiert wird.
+ */
+self.addEventListener('message', (event) => {
+  if (event.data === 'skip-waiting') {
+    void self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) {
@@ -116,12 +130,26 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       (async () => {
         try {
-          const response = await fetch(request);
+          // cache: 'reload' umgeht den HTTP-Zwischenspeicher des Browsers.
+          // GitHub Pages liefert die Seite mit max-age=600 aus; ohne das hier
+          // bekaeme die App bis zu zehn Minuten lang die alte Fassung
+          // zurueck, obwohl Netz da ist.
+          const response = await fetch(request.url, {
+            cache: 'reload',
+            credentials: 'same-origin',
+          });
           const cache = await caches.open(CACHE);
-          await cache.put('./index.html', response.clone());
+          // Beide Schluessel pflegen: Die installierte App startet auf './',
+          // die Notfallantwort haengt an './index.html'. Nur einen zu
+          // erneuern hiesse, offline eine veraltete Seite zu zeigen.
+          await Promise.all([
+            cache.put('./', response.clone()),
+            cache.put('./index.html', response.clone()),
+          ]);
           return response;
         } catch {
-          const cached = await caches.match('./index.html', MATCH);
+          const cached =
+            (await caches.match('./index.html', MATCH)) ?? (await caches.match('./', MATCH));
           if (cached !== undefined) {
             return cached;
           }
