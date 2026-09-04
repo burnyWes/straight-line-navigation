@@ -33,9 +33,12 @@ Abhängigkeiten zeigen ausschließlich nach innen.
 
 ## Dokumentation
 
-**[docs/design.md](docs/design.md)** ist die maßgebliche Quelle: was gebaut wird,
+**[docs/design.md](docs/design.md)** ist die maßgebliche Quelle für Entscheidungen: was gebaut wird,
 warum so, was bewusst nicht gebaut wird, und welche Gerätefragen noch offen sind.
 Entscheidungen werden dort geändert, nicht im Code umgangen.
+
+**[docs/notes.txt](docs/notes.txt)** hält den Stand der Umsetzung fest — was fertig ist,
+was als Nächstes ansteht, was bewusst nicht gebaut wird.
 
 ## Hinweis
 

@@ -108,6 +108,12 @@ nicht unterscheidbar, ob Zahlen aktuell oder eingefroren sind.
 (bei Gehgeschwindigkeit einige Dutzend Meter). Eine stabile Liste mit kleinem Fehler ist
 brauchbar; eine exakte Liste, die den Fokus zerstört, nicht.
 
+**Präzisierung aus der Umsetzung:** Im eingefrorenen Zustand aktualisieren sich die
+Entfernungen aller Zeilen **außer der gerade fokussierten**. Ändert sich der zugängliche
+Name eines fokussierten Elements, setzt VoiceOver mitten im Satz neu an — genau der
+Effekt, den das Einfrieren verhindern soll. Die Zeile unter dem Finger behält ihre
+Beschriftung, bis der Fokus sie verlässt.
+
 **Technische Voraussetzung:** Jede Listenzeile ist ein `<button>`. Nur bei
 fokussierbaren Elementen erzeugt der VoiceOver-Cursor `focus`-Ereignisse, an denen das
 Freeze hängt.

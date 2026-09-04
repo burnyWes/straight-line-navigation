@@ -1,24 +1,70 @@
-Notes 
+Notes
 
 --------------------------------------------------------------------------------
 
-Legende: 
+Legende:
 	- = todo
 	f = new big feature
 	/ = in progress
-	x = done 
-	m = maybe some day 
-	n = not gonna do that 
-	b = bug 
+	x = done
+	m = maybe some day
+	n = not gonna do that
+	b = bug
+
+--------------------------------------------------------------------------------
+
+Massgebliche Quelle fuer Entscheidungen: docs/design.md
+Diese Datei haelt nur den Stand der Umsetzung fest.
+
+Live: https://burnywes.github.io/straight-line-navigation/
+Spike (Messseite): https://burnywes.github.io/straight-line-navigation/spike/
 
 --------------------------------------------------------------------------------
 
 TODO-List
 
-DONE 
+DONE
 --------------------------------------------------------------------------------
+x  Spike: Kompass + GPS in Safari, auch im Standalone-Modus  -> funktioniert
+x  Spike: Haptik (M1)                                        -> geht nicht, endgueltig
+x  Spike: Ton bei Lautlos (M2)                               -> stumm, akzeptiert
+x  M3 Kompassguete                                           -> entschaerft, siehe design.md 4.5
+x  Entscheidungsdokument docs/design.md
+x  Java-Altlasten raus, TypeScript rein (Vite, Vitest, strict)
+x  Deploy ueber GitHub Actions nach Pages, Spike wird mitgeliefert
+x  Domaene: Coordinate, Haversine, Peilung, Winkel, Rundung
+x  Domaene: Sichtkegel mit Hysterese (20 rein / 25 raus)
+x  Domaene: Koordinaten-Parser (Dezimal, DMS, DM, geo:, Maps-Links, dt. Komma)
+x  Domaene: Kompassguete mit Hysterese
+x  Anwendung: NavigationService (Filter, Sortierung, Auto-Freeze)
+x  Anwendung: LocationService (anlegen, umbenennen, loeschen, Import-Merge)
+x  Adapter: Geolocation, DeviceOrientation, localStorage, Cues, Wake Lock
+x  UI: drei Tabs (Leiste oben), Navigation / Orte / Einstellungen
+x  UI: Kegel-Liste mit stabilen DOM-Knoten und Auto-Freeze
+x  UI: Sicherung als Datei und Zwischenablage, Import
+x  Navigation beenden (Wake Lock freigeben, Sensoren abmelden)
+x  Fehlgeschlagene Schreibzugriffe werden gemeldet statt geschluckt
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
+/  Praxistest auf dem Geraet: fuehlen sich +-20 Grad im Gehen richtig an?
+/  Praxistest: nerven die Ansagen "angehalten" / "aktualisiert" beim Swipen?
+/  Praxistest: bleibt der VoiceOver-Fokus beim Drehen wirklich stehen?
 
+f  Service Worker: App muss ohne Netz starten
+f  Manifest und Icons fuer den Home-Bildschirm
+
+-  Offene Frage: fokussierte Zeile im Freeze nicht neu beschriften - richtig so,
+   oder soll sie doch mitlaufen? (design.md 4.3)
+-  Fehlerfall pruefen: was passiert, wenn GPS ausfaellt, der Kompass aber laeuft?
+
+m  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
+m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
+m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
+
+n  Karte, Kartenkacheln
+n  Strassennavigation, Routing
+n  Backend, Konten, Sync
+n  Hintergrundbetrieb bei gesperrtem Bildschirm (auf einer PWA nicht moeglich)
+n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel)

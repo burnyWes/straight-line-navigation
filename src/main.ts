@@ -91,30 +91,47 @@ const navigationView = new NavigationView(announcer, {
 const locationsView = new LocationsView(announcer, {
   suggestName: () => locationService.suggestName(),
   onSaveHere: (name) => {
-    if (latestFix === null) {
+    // Den Fix festhalten: Gespeichert wird der Standort zum Zeitpunkt des
+    // Tippens, nicht der, der beim Schreiben zufaellig aktuell ist.
+    const fix = latestFix;
+    if (fix === null) {
       locationsView.reportFailure('no-coordinate-found');
       announcer.announce('Kein Standort verfuegbar. Zuerst die Navigation starten.');
       return;
     }
-    handleSave(locationService.saveCurrentPosition(name, latestFix));
+    handleSave(() => locationService.saveCurrentPosition(name, fix));
   },
   onSaveText: (name, text) => {
-    handleSave(locationService.saveFromText(name, text));
+    handleSave(() => locationService.saveFromText(name, text));
   },
   onRename: (id, name) => {
-    handleSave(locationService.rename(id, name));
+    handleSave(() => locationService.rename(id, name));
   },
   onRemove: (id) => {
-    locationService.remove(id);
-    locationsView.render(locationService.all());
-    dirty = true;
+    guardStorage(
+      () => {
+        locationService.remove(id);
+        locationsView.render(locationService.all());
+        dirty = true;
+      },
+      (message) => {
+        locationsView.reportStorageError(message);
+      },
+    );
   },
 });
 
 const settingsView = new SettingsView(settings, announcer, {
   onChange: (next) => {
     settings = next;
-    saveSettings(store, settings);
+    guardStorage(
+      () => {
+        saveSettings(store, settings);
+      },
+      (message) => {
+        settingsView.report(message);
+      },
+    );
     navigationService.updateSettings(toNavigationSettings(settings));
     // Der Kegel hat sich geaendert: Die Guetebewertung misst sich am Kegel,
     // also muss auch ihr Zustand neu anlaufen.
@@ -153,13 +170,20 @@ const settingsView = new SettingsView(settings, announcer, {
       );
       return;
     }
-    const result = locationService.merge(parsed.locations);
-    locationsView.render(locationService.all());
-    dirty = true;
-    settingsView.report(
-      `${result.added} Orte ergaenzt, ${result.duplicates} waren schon vorhanden` +
-        (parsed.skipped > 0 ? `, ${parsed.skipped} beschaedigt` : '') +
-        '.',
+    guardStorage(
+      () => {
+        const result = locationService.merge(parsed.locations);
+        locationsView.render(locationService.all());
+        dirty = true;
+        settingsView.report(
+          `${result.added} Orte ergaenzt, ${result.duplicates} waren schon vorhanden` +
+            (parsed.skipped > 0 ? `, ${parsed.skipped} beschaedigt` : '') +
+            '.',
+        );
+      },
+      (message) => {
+        settingsView.report(message);
+      },
     );
   },
 });
@@ -306,14 +330,36 @@ document.addEventListener('visibilitychange', () => {
 
 // --- Hilfen -----------------------------------------------------------------
 
-function handleSave(result: ReturnType<LocationService['saveCurrentPosition']>): void {
-  if (result.ok) {
-    locationsView.reportSaved(result.location);
-    locationsView.render(locationService.all());
-    dirty = true;
-  } else {
-    locationsView.reportFailure(result.reason);
+/**
+ * Jeder Schreibzugriff kann scheitern: voller Speicher, blockierte
+ * Website-Daten, privater Modus. Ohne Backend gibt es keine zweite Kopie -
+ * ein stillschweigend verlorener Ort waere der schlimmste Fehlermodus dieser
+ * App. Deshalb wird jeder Fehlschlag gemeldet, nie geschluckt.
+ */
+function guardStorage(action: () => void, report: (message: string) => void): void {
+  try {
+    action();
+  } catch {
+    report('Speichern fehlgeschlagen. Der Geraetespeicher ist voll oder blockiert.');
   }
+}
+
+function handleSave(save: () => ReturnType<LocationService['saveCurrentPosition']>): void {
+  guardStorage(
+    () => {
+      const result = save();
+      if (result.ok) {
+        locationsView.reportSaved(result.location);
+        locationsView.render(locationService.all());
+        dirty = true;
+      } else {
+        locationsView.reportFailure(result.reason);
+      }
+    },
+    (message) => {
+      locationsView.reportStorageError(message);
+    },
+  );
 }
 
 function exportContent(): string {

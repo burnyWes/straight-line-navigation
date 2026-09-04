@@ -118,6 +118,12 @@ export class LocationsView {
     this.announcer.announce(text);
   }
 
+  /** Assertiv, weil ein nicht gespeicherter Ort verloren ist, sobald man weiterklickt. */
+  reportStorageError(message: string): void {
+    setText(this.feedback, message);
+    this.announcer.announce(message);
+  }
+
   render(locations: readonly Location[]): void {
     this.list.textContent = '';
     this.emptyLine.hidden = locations.length > 0;
