@@ -365,9 +365,8 @@ die Eigenschaft zerstören, die sie haben soll.
 
 ### 9.1 Repository
 
-- **`github`** → `github.com/burnyWes/straight-line-navigation` (public, Upstream von
-  `main`, hostet Pages)
-- **`origin`** → MaibornWolff-GitLab (bleibt bestehen, wird explizit bedient)
+Ein einziges Remote: **`github`** → `github.com/burnyWes/straight-line-navigation`
+(public, Upstream von `main`, hostet Pages).
 
 **Weil das Repo öffentlich ist:**
 

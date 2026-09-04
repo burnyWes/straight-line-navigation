@@ -73,3 +73,5 @@ n  Backend, Konten, Sync
 n  Hintergrundbetrieb bei gesperrtem Bildschirm (auf einer PWA nicht moeglich)
 n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel)
 - Navigation deaktivieren, wenn ein anderer Tab offen ist.
+- Navigation Starten/Stoppen-Butteons nur Start und Stop Icons rechts neben dem Header
+- Liste Anhalten mit Pause-Icon und ohne Text an den unteren rechten Bildrand schieben 
