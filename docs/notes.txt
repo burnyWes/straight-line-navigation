@@ -44,6 +44,8 @@ x  UI: Kegel-Liste mit stabilen DOM-Knoten und Auto-Freeze
 x  UI: Sicherung als Datei und Zwischenablage, Import
 x  Navigation beenden (Wake Lock freigeben, Sensoren abmelden)
 x  Fehlgeschlagene Schreibzugriffe werden gemeldet statt geschluckt
+x  Praxistest 1: Ansage bei Ein- und Austritt entfernt, Earcon bleibt (design.md 4.4)
+x  Praxistest 1: helle Oberflaeche, weisser Grund, Kontraste ueber 7:1 (design.md 3)
 
 --------------------------------------------------------------------------------
 TODO

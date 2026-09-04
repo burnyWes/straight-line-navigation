@@ -19,7 +19,7 @@ import {
   DeviceOrientationHeadingProvider,
   requestHeadingPermission,
 } from './adapters/deviceOrientationHeadingProvider.js';
-import { CompositeCue, LiveRegionCue, WebAudioCue, silentCue } from './adapters/cues.js';
+import { WebAudioCue, silentCue } from './adapters/cues.js';
 import { ScreenWakeLock } from './adapters/wakeLock.js';
 import { deserializeLocations, serializeBackup } from './adapters/locationSerialization.js';
 import { newId } from './adapters/ids.js';
@@ -51,14 +51,7 @@ const announcer = new Announcer();
 const audioCue = new WebAudioCue();
 
 function cuePort(): CuePort {
-  const channels: CuePort[] = [];
-  if (settings.cues.earcon) {
-    channels.push(audioCue);
-  }
-  if (settings.cues.announcement) {
-    channels.push(new LiveRegionCue(announcer.element));
-  }
-  return channels.length === 0 ? silentCue : new CompositeCue(channels);
+  return settings.cues.earcon ? audioCue : silentCue;
 }
 
 // --- Zustand des Navigationslaufs -------------------------------------------

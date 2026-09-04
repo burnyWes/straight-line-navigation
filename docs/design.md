@@ -51,7 +51,7 @@ Diese Einschränkungen sind **akzeptiert**, nicht übersehen:
 | Kein Hintergrundbetrieb | Bei gesperrtem Bildschirm friert die Seite ein — kein Kompass, keine Töne | Wake Lock hält den Bildschirm wach; „Handy in der Tasche" ist **kein** unterstützter Anwendungsfall (bewusst verworfen) |
 | Keine Web Share Target API | Kein „Teilen → diese App" aus Apple/Google Maps | Koordinaten werden über die Zwischenablage eingefügt |
 | **Keine Haptik, gemessen** | Kein Vibrationssignal bei Ein-/Austritt | Akzeptiert. Weder `navigator.vibrate` noch der `switch`-Umweg funktionieren (M1, gemessen 2026-09-04) |
-| **Lautlos-Schalter schaltet Web Audio stumm, gemessen** | Earcons bei Lautlos unhörbar | Akzeptiert — Nutzerentscheidung. VoiceOver-Ansagen bleiben hörbar und tragen das Signal |
+| **Lautlos-Schalter schaltet Web Audio stumm, gemessen** | Earcons bei Lautlos unhörbar — und seit dem Wegfall der Ansage (§4.4) gibt es dann gar kein Ein-/Austritts-Signal | Akzeptiert — Nutzerentscheidung. Wer das Signal braucht, schaltet den Lautlos-Schalter aus |
 
 ---
 
@@ -66,6 +66,10 @@ Diese Einschränkungen sind **akzeptiert**, nicht übersehen:
 - Keine eigenen Touch-Gesten — bei aktivem VoiceOver werden sie abgefangen.
 - **Kein nachgebauter Bildschirmvorhang.** Das ist VoiceOver-Bordmittel
   (Dreifachtipp mit drei Fingern) und wird nicht dupliziert.
+- **Fester heller Farbsatz, kein Dunkelmodus.** Weißer Hintergrund, schwarze
+  Schrift, kräftige Ränder; alle Text-Hintergrund-Paare über 7:1 (WCAG AAA),
+  Ränder und Fokusring über 3:1. Die App folgt bewusst *nicht* der
+  Systemeinstellung — Nutzerentscheidung nach dem Praxistest.
 
 Der maßgebliche Test ist die Bedienung mit VoiceOver auf dem Gerät. Automatisierte
 Prüfungen finden fehlende Labels, aber nicht „der Fokus springt beim Drehen".
@@ -120,15 +124,21 @@ Freeze hängt.
 
 ### 4.4 Ein- und Austritts-Signale
 
-Wechselt eine Location den Kegel-Zustand, wird signalisiert:
+Wechselt eine Location den Kegel-Zustand, wird das mit einem **Earcon** signalisiert:
+aufsteigender Zweiklang bei Eintritt, absteigender bei Austritt. In den Einstellungen
+abschaltbar.
 
-- **Eintritt:** Name der Location.
-- **Austritt:** „raus".
-- Zusätzlich bzw. alternativ ein **Earcon** (aufsteigender Zweiklang bei Eintritt,
-  absteigend bei Austritt).
+**Keine gesprochene Ansage bei Ein- und Austritt.** Ursprünglich sprach die App beim
+Eintritt den Namen und beim Austritt „raus" über eine `aria-live`-Region. Der
+Praxistest hat das verworfen: Im Gehen wechseln Orte laufend den Zustand, und jede
+Ansage unterbricht VoiceOver — das stört mehr, als es trägt. Der Zustand steht in der
+Liste und wird erswiped; der Wechsel klingt nur.
 
-In den Einstellungen wählbar: nur Ton, nur Ansage, beides, aus. **Es werden nie die
-Locations im Kegel automatisch vorgelesen** — nur der Zustandswechsel wird gemeldet.
+Der Preis ist bekannt: Bei gestelltem Lautlos-Schalter bleibt der Ton stumm (M2, §11),
+und damit gibt es dann gar kein Ein-/Austritts-Signal.
+
+**Es werden nie die Locations im Kegel automatisch vorgelesen** — nur der
+Zustandswechsel wird gemeldet.
 
 ### 4.5 Kompassgüte
 
@@ -255,7 +265,7 @@ von DOM, Browser-APIs und Framework.
 │   GeolocationPositionProvider               │
 │   DeviceOrientationHeadingProvider          │
 │   LocalStorageLocationRepository            │
-│   WebAudioCue / LiveRegionCue               │
+│   WebAudioCue (CuePort)                     │
 │   DOM-Views (Navigation / Orte / Settings)  │
 │  ┌───────────────────────────────────────┐  │
 │  │  Anwendung                            │  │
@@ -283,9 +293,10 @@ Windows-Rechner testen, ohne iPhone. Fake-Provider einspeisen — „ich stehe h
 dorthin" — und prüfen, welche Locations herauskommen. Ohne diese Trennung müsste man für
 jede Änderung an der Kegel-Logik rausgehen und sich im Kreis drehen.
 
-`CuePort` ist der Grund, warum Messfrage M2 (§11) die Architektur nicht blockiert: Fällt
-Web Audio aus, wird die Ansage zum Standard und der Ton zur Zugabe — ohne Änderung an
-der Logik, die entscheidet, wer rein- und rausgefallen ist.
+`CuePort` ist der Grund, warum die Signalfrage die Architektur nicht blockiert: Die
+Ansage konnte nach dem Praxistest ersatzlos entfallen (§4.4), ohne eine Zeile in der
+Logik zu ändern, die entscheidet, wer rein- und rausgefallen ist. Ein anderer Kanal
+käme genauso hinter denselben Port.
 
 ---
 
@@ -348,8 +359,8 @@ Testseite liegt unter `spike/` und ist erreichbar unter
 
 | # | Frage | Ergebnis | Konsequenz |
 |---|---|---|---|
-| **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei programmatischem `click()` die Taptic Engine aus? | **Nein** (2026-09-04) | Haptik ist auf diesem Weg nicht erreichbar. Ein-/Austritt wird ausschließlich über Ton und Ansage signalisiert. |
-| **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? | **Ja** (2026-09-04) | Vom Nutzer als unproblematisch akzeptiert; das Verhalten bleibt so. Die VoiceOver-Ansage ist der Kanal, der auch bei Lautlos trägt — der Earcon ist die Zugabe für den entsperrten Fall. |
+| **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei programmatischem `click()` die Taptic Engine aus? | **Nein** (2026-09-04) | Haptik ist auf diesem Weg nicht erreichbar. Ein-/Austritt wird ausschließlich über den Ton signalisiert. |
+| **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? | **Ja** (2026-09-04) | Vom Nutzer akzeptiert; das Verhalten bleibt so. Nach dem Wegfall der Ansage (§4.4) ist der Earcon der einzige Signalkanal — bei Lautlos gibt es kein Ein-/Austritts-Signal. |
 | **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | **teilweise** (2026-09-04): in Innenräumen zeigt die Nadel korrekt nach Norden; der Zahlenwert wurde nicht abgelesen | Entschärft — siehe §4.5. Die App meldet die Kompassgüte grundsätzlich, unabhängig davon, wie gut sie im Einzelfall ist. |
 
 Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt** (2026-09-04).
@@ -383,8 +394,10 @@ das steht in keinem Verhältnis.
 | 13 | Name ist Pflicht, Vorschlag beim Speichern | Namenlose Einträge sind in einer Audio-App wertlos |
 | 14 | `localStorage` hinter Port; Export als Datei **und** Zwischenablage; Import ergänzt | Einfachster tragfähiger Speicher; Datenverlust ist das reale Risiko |
 | 15 | Wake Lock ja, Tasche-Fall verworfen, kein Schwarz-Modus | PWA kann nicht im Hintergrund laufen; Bildschirmvorhang ist Bordmittel |
-| 16 | Signalkanal als `CuePort` mit zwei Implementierungen | Entkoppelt die Architektur von Messfrage M2 |
+| 16 | Signalkanal als `CuePort` | Entkoppelt die Architektur von der Frage, welcher Kanal trägt |
 | 17 | Drei Tabs, Leiste oben, Start auf „Navigation" | VoiceOver läuft in DOM-Reihenfolge; oben ist ein Wisch statt vieler |
 | 18 | Vanilla TypeScript ohne UI-Framework | DOM-Knoten-Identität ist die kritischste Anforderung |
 | 19 | Keine Haptik — endgültig | M1 gemessen und negativ; kein weiterer Weg im Web vorhanden (§11) |
 | 20 | Stummschaltung bei Lautlos wird akzeptiert | M2 gemessen; Nutzerentscheidung, das Verhalten so zu belassen |
+| 21 | Ansage bei Ein- und Austritt ersatzlos entfernt | Praxistest: stört im Gehen mehr, als sie trägt; der Earcon bleibt |
+| 22 | Fester heller Farbsatz statt Dunkelmodus | Nutzerentscheidung nach dem Praxistest; weißer Grund, Kontraste über 7:1 |

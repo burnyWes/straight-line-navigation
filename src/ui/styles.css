@@ -3,18 +3,25 @@
  * aber sie muss auch sehend benutzbar sein, etwa wenn jemand mitschaut.
  * Grosse Trefferflaechen, klare Kontraste, keine Feinheiten, die nur optisch
  * Information tragen.
+ *
+ * Heller Hintergrund, fester Farbsatz: Die App folgt bewusst nicht dem
+ * Dunkelmodus des Systems (Nutzerentscheidung, docs/design.md 3). Alle
+ * Text-Hintergrund-Paare liegen ueber 7:1, Raender und Fokus ueber 3:1.
  */
 
 :root {
-  --bg: #0d1117;
-  --panel: #161b22;
-  --line: #30363d;
-  --fg: #e6edf3;
-  --dim: #9aa4b1;
-  --accent: #238636;
-  --danger: #a5231c;
-  --focus: #58a6ff;
-  color-scheme: dark;
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --surface: #f2f2f2;
+  --line: #1a1a1a;
+  --fg: #000000;
+  --dim: #333333;
+  --accent: #0b5d1e;
+  --danger: #a4130a;
+  --focus: #0b46c8;
+  --on-dark: #ffffff;
+  /* Kein Dunkelmodus: Formularelemente sollen hell bleiben. */
+  color-scheme: light;
 }
 
 * {
@@ -77,20 +84,23 @@ h3 {
   font: inherit;
   font-weight: 600;
   color: var(--fg);
-  background: var(--panel);
-  border: 1px solid var(--line);
+  background: var(--surface);
+  border: 2px solid var(--line);
   border-radius: 10px;
   cursor: pointer;
 }
 
+/* Nicht nur die Farbe traegt die Auswahl - der Rand wird zusaetzlich dick. */
 .tab[aria-selected='true'] {
+  color: var(--on-dark);
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: inset 0 -4px 0 var(--line);
 }
 
 .panel {
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: 12px;
   padding: 14px;
 }
@@ -106,9 +116,9 @@ button {
   padding: 14px;
   font: inherit;
   font-weight: 600;
-  color: #fff;
-  background: #21262d;
-  border: 1px solid var(--line);
+  color: var(--fg);
+  background: var(--surface);
+  border: 2px solid var(--line);
   border-radius: 10px;
   cursor: pointer;
   text-align: left;
@@ -116,19 +126,21 @@ button {
 }
 
 button.primary {
+  color: var(--on-dark);
   background: var(--accent);
   border-color: var(--accent);
 }
 
 button.danger {
+  color: var(--on-dark);
   background: var(--danger);
   border-color: var(--danger);
 }
 
 button[aria-pressed='true'] {
+  color: var(--on-dark);
   background: var(--focus);
   border-color: var(--focus);
-  color: #0d1117;
 }
 
 label {
@@ -146,8 +158,8 @@ textarea {
   padding: 12px;
   font: inherit;
   color: var(--fg);
-  background: #0d1117;
-  border: 1px solid var(--line);
+  background: var(--bg);
+  border: 2px solid var(--line);
   border-radius: 10px;
 }
 
@@ -162,6 +174,8 @@ textarea {
   width: 26px;
   height: 26px;
   flex: none;
+  /* Der Haken soll die dunkle Akzentfarbe tragen, nicht das Systemblau. */
+  accent-color: var(--accent);
 }
 
 .check label {
@@ -188,7 +202,7 @@ textarea {
 }
 
 .entries li {
-  border-top: 1px solid var(--line);
+  border-top: 2px solid var(--line);
   padding-top: 4px;
 }
 

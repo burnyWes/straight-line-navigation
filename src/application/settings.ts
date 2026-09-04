@@ -8,8 +8,6 @@ import type { NavigationSettings } from './navigationService.js';
 export interface CueChannels {
   /** Earcon ueber Web Audio - bei Lautlos stumm (gemessen). */
   readonly earcon: boolean;
-  /** Ansage ueber VoiceOver - traegt auch bei Lautlos. */
-  readonly announcement: boolean;
 }
 
 export interface AppSettings {
@@ -23,7 +21,7 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   coneHalfAngleDeg: 20,
   maxDistanceMetres: null,
-  cues: { earcon: true, announcement: true },
+  cues: { earcon: true },
   lastBackupAt: null,
 };
 

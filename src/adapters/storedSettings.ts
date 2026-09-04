@@ -40,7 +40,6 @@ export function loadSettings(store: KeyValueStore, key = SETTINGS_KEY): AppSetti
     maxDistanceMetres: nullableNumber(record['maxDistanceMetres']),
     cues: {
       earcon: boolean(cueRecord['earcon'], DEFAULT_SETTINGS.cues.earcon),
-      announcement: boolean(cueRecord['announcement'], DEFAULT_SETTINGS.cues.announcement),
     },
     lastBackupAt: typeof record['lastBackupAt'] === 'string' ? record['lastBackupAt'] : null,
   };

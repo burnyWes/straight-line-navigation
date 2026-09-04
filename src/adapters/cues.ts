@@ -1,18 +1,16 @@
 /**
- * Signalkanaele fuer Ein- und Austritt.
+ * Signalkanal fuer Ein- und Austritt.
  *
- * Zwei Implementierungen desselben Ports, in den Einstellungen kombinierbar
- * (docs/design.md 4.4):
+ * Earcon ueber Web Audio: kurz und unaufdringlich, aber **vom Lautlos-Schalter
+ * stummgeschaltet** (gemessen, M2 in docs/design.md 11).
  *
- * - Earcon ueber Web Audio: kurz und unaufdringlich, aber **vom
- *   Lautlos-Schalter stummgeschaltet** (gemessen). Damit ist er die Zugabe,
- *   nicht der Traeger.
- * - Ansage ueber eine aria-live-Region: laeuft ueber VoiceOver und ist auch
- *   bei Lautlos hoerbar. Das ist der Kanal, auf den Verlass ist.
+ * Eine zweite Ansage ueber eine aria-live-Region gab es hier einmal. Sie ist im
+ * Praxistest herausgeflogen: Bei jedem Ein- und Austritt zu reden hat mehr
+ * gestoert als geholfen (docs/design.md 4.4). Der Zustand steht in der Liste,
+ * der Wechsel klingt.
  */
 
 import type { CuePort } from '../application/ports.js';
-import type { Location } from '../domain/location.js';
 
 /** Aufsteigend = Eintritt, absteigend = Austritt. */
 const ENTER_TONES = [660, 990];
@@ -76,48 +74,6 @@ export class WebAudioCue implements CuePort {
       oscillator.start(at);
       oscillator.stop(at + NOTE_SECONDS);
     });
-  }
-}
-
-/**
- * Ansage ueber VoiceOver.
- *
- * Beim Eintritt der Name des Ortes, beim Austritt nur "raus" - bewusst keine
- * vollstaendige Vorlesung des Kegelinhalts (docs/design.md 4.4).
- */
-export class LiveRegionCue implements CuePort {
-  constructor(private readonly region: HTMLElement) {}
-
-  entered(location: Location): void {
-    this.announce(location.name);
-  }
-
-  left(): void {
-    this.announce('raus');
-  }
-
-  announce(text: string): void {
-    // Erst leeren: Ein unveraenderter Textinhalt loest bei manchen
-    // Screenreadern keine erneute Ansage aus.
-    this.region.textContent = '';
-    this.region.textContent = text;
-  }
-}
-
-/** Bündelt mehrere Kanäle, damit die Logik nur einen Port kennt. */
-export class CompositeCue implements CuePort {
-  constructor(private readonly channels: readonly CuePort[]) {}
-
-  entered(location: Location): void {
-    for (const channel of this.channels) {
-      channel.entered(location);
-    }
-  }
-
-  left(location: Location): void {
-    for (const channel of this.channels) {
-      channel.left(location);
-    }
   }
 }
 

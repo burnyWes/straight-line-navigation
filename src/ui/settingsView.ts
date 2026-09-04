@@ -29,7 +29,6 @@ export class SettingsView {
   private readonly coneSelect: HTMLSelectElement;
   private readonly distanceSelect: HTMLSelectElement;
   private readonly earconBox: HTMLInputElement;
-  private readonly announcementBox: HTMLInputElement;
   private readonly importField: HTMLTextAreaElement;
   private readonly backupLine: HTMLElement;
   private readonly feedback: HTMLElement;
@@ -71,9 +70,6 @@ export class SettingsView {
 
     this.earconBox = this.checkbox('earcon', initial.cues.earcon, (checked) => {
       this.update({ cues: { ...this.settings.cues, earcon: checked } });
-    });
-    this.announcementBox = this.checkbox('ansage', initial.cues.announcement, (checked) => {
-      this.update({ cues: { ...this.settings.cues, announcement: checked } });
     });
 
     const exportFile = el('button', {
@@ -124,11 +120,9 @@ export class SettingsView {
       el('h3', { text: 'Signale' }),
       el('p', {
         class: 'hint',
-        text:
-          'Der Ton ist bei gestelltem Lautlos-Schalter nicht hoerbar. Die Ansage laeuft ueber VoiceOver und ist auch dann da.',
+        text: 'Der Ton ist bei gestelltem Lautlos-Schalter nicht hoerbar.',
       }),
       this.labelledCheckbox('earcon', 'Ton bei Ein- und Austritt', this.earconBox),
-      this.labelledCheckbox('ansage', 'Ansage bei Ein- und Austritt', this.announcementBox),
 
       el('h3', { text: 'Sicherung' }),
       el('p', {
