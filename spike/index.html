@@ -98,6 +98,26 @@
 </div>
 
 <div class="panel">
+  <h2>Haptik</h2>
+  <button id="hapticStd">Vibration testen (Standard-API)</button>
+  <button id="hapticHack" class="secondary">Vibration testen (switch-Hack)</button>
+  <!--
+    iOS Safari kennt navigator.vibrate nicht. Seit iOS 17.4 gibt es aber
+    <input type="checkbox" switch>, dessen Umschalten die Taptic Engine
+    ausloest. Ob das auch bei programmatischem click() greift oder nur bei
+    echter Beruehrung, ist genau die Frage, die dieser Test beantwortet.
+  -->
+  <input type="checkbox" switch id="hapticSwitch" tabindex="-1" aria-hidden="true"
+         style="position:absolute;left:-9999px;width:1px;height:1px">
+  <div style="height:12px"></div>
+  <table>
+    <tr><td>navigator.vibrate</td><td id="vibApi">&ndash;</td></tr>
+    <tr><td>switch-Attribut erkannt</td><td id="switchSupport">&ndash;</td></tr>
+    <tr><td>Ergebnis</td><td id="hapticResult">noch nicht getestet</td></tr>
+  </table>
+</div>
+
+<div class="panel">
   <h2>Umgebung</h2>
   <table>
     <tr><td>Secure Context (HTTPS)</td><td id="secure">&ndash;</td></tr>
@@ -239,6 +259,39 @@
       timeout: 20000
     });
   }
+
+  // ---- Haptik ---------------------------------------------------------------
+
+  var hapticSwitch = $('hapticSwitch');
+
+  // Kennt der Browser das switch-Attribut? Wenn ja, spiegelt es als Property.
+  var switchSupported = ('switch' in hapticSwitch);
+
+  set('vibApi', typeof navigator.vibrate === 'function' ? 'vorhanden' : 'fehlt (erwartet auf iOS)',
+      typeof navigator.vibrate === 'function' ? 'ok' : 'warn');
+  set('switchSupport', switchSupported ? 'ja (iOS 17.4+)' : 'nein', switchSupported ? 'ok' : 'warn');
+
+  $('hapticStd').addEventListener('click', function () {
+    if (typeof navigator.vibrate !== 'function') {
+      set('hapticResult', 'navigator.vibrate existiert nicht', 'bad');
+      return;
+    }
+    var accepted = navigator.vibrate([120, 60, 120]);
+    set('hapticResult', accepted
+      ? 'vibrate() aufgerufen - hast du etwas gespuert?'
+      : 'vibrate() wurde abgelehnt', accepted ? 'ok' : 'bad');
+  });
+
+  $('hapticHack').addEventListener('click', function () {
+    if (!switchSupported) {
+      set('hapticResult', 'switch-Attribut nicht unterstuetzt', 'bad');
+      return;
+    }
+    // Zweimal umschalten, damit der Ausgangszustand erhalten bleibt.
+    hapticSwitch.click();
+    setTimeout(function () { hapticSwitch.click(); }, 150);
+    set('hapticResult', 'switch zweimal umgeschaltet - hast du etwas gespuert?');
+  });
 
   // ---- Start (muss aus echter User-Geste heraus laufen) ---------------------
 
