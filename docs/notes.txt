@@ -46,6 +46,7 @@ x  Navigation beenden (Wake Lock freigeben, Sensoren abmelden)
 x  Fehlgeschlagene Schreibzugriffe werden gemeldet statt geschluckt
 x  Praxistest 1: Ansage bei Ein- und Austritt entfernt, Earcon bleibt (design.md 4.4)
 x  Praxistest 1: helle Oberflaeche, weisser Grund, Kontraste ueber 7:1 (design.md 3)
+x  Praxistest 1: Kegel-Liste umgedreht - weitestes oben, naechstes unten (design.md 4.2)
 
 --------------------------------------------------------------------------------
 TODO
@@ -70,3 +71,4 @@ n  Strassennavigation, Routing
 n  Backend, Konten, Sync
 n  Hintergrundbetrieb bei gesperrtem Bildschirm (auf einer PWA nicht moeglich)
 n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel)
+- Navigation deaktivieren, wenn ein anderer Tab offen ist.

@@ -41,7 +41,11 @@ export interface NavigationEntry {
 }
 
 export interface NavigationSnapshot {
-  /** Was angezeigt wird: nur der Kegelinhalt, naechstes Ziel zuerst. */
+  /**
+   * Was angezeigt wird: nur der Kegelinhalt, **weitestes Ziel oben, naechstes
+   * unten**. Erswiped wird von oben nach unten, und das naechste Ziel ist das
+   * wichtigste - es steht am Ende des Weges, nicht am Anfang (design.md 4.2).
+   */
   readonly entries: readonly NavigationEntry[];
   readonly entered: readonly Location[];
   readonly left: readonly Location[];
@@ -134,7 +138,7 @@ export class NavigationService {
         this.frozenOrder
           .map((id) => byId.get(id))
           .filter((entry): entry is NavigationEntry => entry !== undefined)
-      : sortNearestFirst(inside);
+      : sortFarthestFirst(inside);
 
     if (!this.frozen) {
       this.lastOrder = entries.map((entry) => entry.location.id);
@@ -176,10 +180,10 @@ export class NavigationService {
   }
 }
 
-/** Naechstes Ziel zuerst; bei gleicher Entfernung alphabetisch, damit die Reihenfolge stabil ist. */
-function sortNearestFirst(entries: readonly NavigationEntry[]): NavigationEntry[] {
+/** Weitestes Ziel zuerst; bei gleicher Entfernung alphabetisch, damit die Reihenfolge stabil ist. */
+function sortFarthestFirst(entries: readonly NavigationEntry[]): NavigationEntry[] {
   return [...entries].sort((a, b) => {
-    const byDistance = a.distanceMetres - b.distanceMetres;
+    const byDistance = b.distanceMetres - a.distanceMetres;
     return byDistance !== 0 ? byDistance : a.location.name.localeCompare(b.location.name, 'de');
   });
 }

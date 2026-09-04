@@ -91,8 +91,11 @@ Prüfungen finden fehlende Labels, aber nicht „der Fokus springt beim Drehen".
 
 ### 4.2 Anzeige
 
-- **Sortierung: nächstes Ziel zuerst.** *(Angenommen aus dem Gespräch; falls doch
-  „weitestes zuerst" gewünscht ist, ist das eine Zeile.)*
+- **Sortierung: weitestes Ziel oben, nächstes unten.** Erswiped wird von oben nach
+  unten; das nächste Ziel ist das wichtigste und steht deshalb am Ende des Weges, nicht
+  am Anfang. *(Ursprünglich andersherum angenommen, im Praxistest umgedreht —
+  Nutzerentscheidung.)* Bei gleicher Entfernung alphabetisch, damit die Reihenfolge
+  nicht springt.
 - Entfernung als **Großkreisdistanz** (Haversine).
 - **Gerundet in Stufen:** unter 1 km in 10-m-Schritten, darüber in 100-m-Schritten.
   Metergenaue Labels ändern sich mehrmals pro Sekunde und lassen VoiceOver mitten im
@@ -401,3 +404,4 @@ das steht in keinem Verhältnis.
 | 20 | Stummschaltung bei Lautlos wird akzeptiert | M2 gemessen; Nutzerentscheidung, das Verhalten so zu belassen |
 | 21 | Ansage bei Ein- und Austritt ersatzlos entfernt | Praxistest: stört im Gehen mehr, als sie trägt; der Earcon bleibt |
 | 22 | Fester heller Farbsatz statt Dunkelmodus | Nutzerentscheidung nach dem Praxistest; weißer Grund, Kontraste über 7:1 |
+| 23 | Kegel-Liste: weitestes Ziel oben, nächstes unten | Nutzerentscheidung; beim Durchswipen endet man auf dem wichtigsten Eintrag |

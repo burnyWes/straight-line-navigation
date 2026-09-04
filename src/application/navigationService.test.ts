@@ -32,13 +32,22 @@ describe('NavigationService', () => {
     expect(snapshot.entries.map((e) => e.location.name)).toEqual(['Bahnhof']);
   });
 
-  it('sortiert das naechste Ziel nach oben', () => {
+  it('sortiert das naechste Ziel nach unten und das weiteste nach oben', () => {
     const fern = target('Bahnhof', 5, 1200);
     const nah = target('Zuhause', -10, 500);
 
     const snapshot = service.update(HERE, NORTH, [fern, nah]);
 
-    expect(snapshot.entries.map((e) => e.location.name)).toEqual(['Zuhause', 'Bahnhof']);
+    expect(snapshot.entries.map((e) => e.location.name)).toEqual(['Bahnhof', 'Zuhause']);
+  });
+
+  it('sortiert bei gleicher Entfernung alphabetisch, damit die Liste nicht springt', () => {
+    const b = target('Bahnhof', 5, 800);
+    const a = target('Apotheke', -5, 800);
+
+    const snapshot = service.update(HERE, NORTH, [b, a]);
+
+    expect(snapshot.entries.map((e) => e.location.name)).toEqual(['Apotheke', 'Bahnhof']);
   });
 
   it('laesst die Liste leer, wenn nichts im Kegel liegt', () => {
@@ -138,7 +147,7 @@ describe('NavigationService', () => {
       const zuhause = target('Zuhause', -5, 500);
 
       const before = service.update(HERE, NORTH, [bahnhof, zuhause]);
-      expect(before.entries.map((e) => e.location.name)).toEqual(['Zuhause', 'Bahnhof']);
+      expect(before.entries.map((e) => e.location.name)).toEqual(['Bahnhof', 'Zuhause']);
 
       service.freeze();
 
@@ -148,7 +157,7 @@ describe('NavigationService', () => {
       const frozen = service.update(naeherAmBahnhof, NORTH, [bahnhof, zuhause]);
 
       expect(frozen.frozen).toBe(true);
-      expect(frozen.entries.map((e) => e.location.name)).toEqual(['Zuhause', 'Bahnhof']);
+      expect(frozen.entries.map((e) => e.location.name)).toEqual(['Bahnhof', 'Zuhause']);
     });
 
     it('aktualisiert die Entfernungen auch im eingefrorenen Zustand', () => {
@@ -190,7 +199,7 @@ describe('NavigationService', () => {
       service.freeze();
 
       const weggedreht = service.update(HERE, 90, [fern, nah]);
-      expect(weggedreht.entries.map((e) => e.location.name)).toEqual(['Nah', 'Fern']);
+      expect(weggedreht.entries.map((e) => e.location.name)).toEqual(['Fern', 'Nah']);
 
       service.unfreeze();
       const after = service.update(HERE, 90, [fern, nah]);
