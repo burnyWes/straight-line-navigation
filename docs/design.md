@@ -124,6 +124,30 @@ Wechselt eine Location den Kegel-Zustand, wird signalisiert:
 In den Einstellungen wählbar: nur Ton, nur Ansage, beides, aus. **Es werden nie die
 Locations im Kegel automatisch vorgelesen** — nur der Zustandswechsel wird gemeldet.
 
+### 4.5 Kompassgüte
+
+Die App meldet, wie verlässlich ihre Richtungsangabe gerade ist. Nicht als Reaktion
+auf ein Messergebnis, sondern grundsätzlich: Ein sehender Nutzer sieht einen zittrigen
+Zeiger und misstraut ihm von selbst. Diese Rückmeldung fehlt hier vollständig, also muss
+sie ausgesprochen werden — sonst klingt eine unbrauchbare Peilung genauso souverän wie
+eine gute.
+
+Vier Zustände, abgeleitet aus `webkitCompassAccuracy` und dem eingestellten Kegel:
+
+| Zustand | Bedingung | Bedeutung |
+|---|---|---|
+| `unbekannt` | kein Wert vom Gerät | Güte nicht beurteilbar |
+| `unkalibriert` | Wert negativ | Sensor braucht die Achterschleife |
+| `ungenau` | Wert größer als der halbe Kegelwinkel | Der Messfehler ist breiter als der Kegel — die Auswahl ist Zufall |
+| `gut` | sonst | Verlässlich |
+
+**`ungenau` ist die eigentliche Aussage:** Ist der Fehler größer als ±20°, entscheidet
+nicht mehr die Blickrichtung, welche Orte erscheinen. Das muss der Nutzer wissen dürfen.
+
+**Angesagt wird nur der Wechsel**, nie der Dauerzustand, und mit Hysterese gegen
+Flattern an der Grenze. Eine App, die alle zwei Sekunden „ungenau" sagt, wird
+weggeschaltet und meldet dann gar nichts mehr.
+
 ---
 
 ## 5. Interaktionsmodell
@@ -320,7 +344,7 @@ Testseite liegt unter `spike/` und ist erreichbar unter
 |---|---|---|---|
 | **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei programmatischem `click()` die Taptic Engine aus? | **Nein** (2026-09-04) | Haptik ist auf diesem Weg nicht erreichbar. Ein-/Austritt wird ausschließlich über Ton und Ansage signalisiert. |
 | **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? | **Ja** (2026-09-04) | Vom Nutzer als unproblematisch akzeptiert; das Verhalten bleibt so. Die VoiceOver-Ansage ist der Kanal, der auch bei Lautlos trägt — der Earcon ist die Zugabe für den entsperrten Fall. |
-| **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | **offen** | Dauerhaft negativ oder >30° wäre ein Produktproblem, kein Implementierungsfehler — dann muss die App schlechte Genauigkeit sichtbar und hörbar machen. |
+| **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | **teilweise** (2026-09-04): in Innenräumen zeigt die Nadel korrekt nach Norden; der Zahlenwert wurde nicht abgelesen | Entschärft — siehe §4.5. Die App meldet die Kompassgüte grundsätzlich, unabhängig davon, wie gut sie im Einzelfall ist. |
 
 Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt** (2026-09-04).
 
