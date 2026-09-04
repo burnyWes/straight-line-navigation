@@ -216,6 +216,46 @@ nicht mehr die Blickrichtung, welche Orte erscheinen. Das muss der Nutzer wissen
 Flattern an der Grenze. Eine App, die alle zwei Sekunden „ungenau" sagt, wird
 weggeschaltet und meldet dann gar nichts mehr.
 
+### 4.6 Veralteter Standort
+
+Fällt das GPS aus, während der Kompass weiterläuft, entsteht der gefährlichste
+Zustand dieser App: Sie rechnet mit dem letzten bekannten Fix weiter. Die Liste
+sortiert sich beim Drehen um, die Entfernungen klingen plausibel — und stimmen
+nicht. Ein sehender Nutzer sähe ein eingefrorenes Kartenbild; hier gibt es nichts
+zu sehen. **Plausibel, aber falsch ist der schlechteste Ausgang** — dieselbe
+Begründung wie bei der Kompassgüte (§4.5) und bei fehlgeschlagenen Schreibzugriffen (§7).
+
+**Ein Fix gilt 12 Sekunden.** Danach wird die zuletzt gezeigte Liste **gehalten**,
+nicht neu gerechnet: Die Zahlen bleiben stehen, wo sie zuletzt stimmten, und die
+Liste sortiert sich beim Drehen nicht mehr um. Die Grenze folgt aus drei Größen:
+
+- Bei Gehgeschwindigkeit sind 12 s rund 17 m — innerhalb des Fehlers, den die
+  eingefrorene Liste ohnehin in Kauf nimmt (§4.3). Gemeldet wird der Ausfall,
+  nicht jede Ungenauigkeit.
+- Im städtischen Raum, dem Schwerpunkt der App, sind Lücken von wenigen Sekunden
+  normal. Eine engere Grenze meldete ständig Fehlalarm — und eine App, die dauernd
+  „veraltet" sagt, wird weggeschaltet.
+- Die Geolocation-API meldet einen Ausfall erst nach ihrem eigenen Timeout von
+  20 s. Bis dahin darf der Nutzer nicht im Unklaren bleiben.
+
+**Keine Ein- und Austritts-Signale aus veralteten Daten.** Ein Earcon, der aus
+einem alten Standort folgt, klingt genau wie ein echter. Lieber kein Signal als
+ein falsches; beim nächsten gültigen Fix setzt der Kegel mit seiner Hysterese
+dort wieder auf, wo er stand.
+
+**Angesagt wird nur der Wechsel** — „veraltet" beim Eintreten, „wieder da" beim
+Verlassen. `watchPosition` meldet einen ausgefallenen Standort im Sekundentakt
+erneut; jede Wiederholung anzusagen macht die App unbenutzbar.
+
+**„Hier speichern" lehnt einen veralteten Fix ab.** Dort ist er schlimmer als gar
+keiner: Der Ort landet dauerhaft in der Liste und sieht danach aus wie jeder andere.
+
+**Die Statuszeile gehört dem Render.** Sie zeigt in dieser Reihenfolge: gemeldete
+Störung, veralteter Standort, angehaltene Liste, laufende Navigation. *(Vorher
+schrieb der Render unbedingt „Navigation läuft." und wischte damit jede
+Fehlermeldung im nächsten Bild wieder weg — der Fehler, der zu diesem Abschnitt
+geführt hat.)*
+
 ---
 
 ## 5. Interaktionsmodell
@@ -463,3 +503,4 @@ das steht in keinem Verhältnis.
 | 25 | Symbole per Skript erzeugt, ohne Bildbibliothek | Drei PNG rechtfertigen keine Abhängigkeit; `tools/make-icons.mjs`, Dateien eingecheckt |
 | 26 | Start/Stopp als Symbol im Kopf, Anhalten schwebend unten rechts | Nutzerentscheidung; die Liste soll früh im Wischweg beginnen, der Daumen den Pausenknopf ohne Suchen treffen |
 | 27 | Bereichswechsel hält die Liste an, beendet den Lauf aber nicht | Nutzerentscheidung; die Liste soll beim Zurückkommen nicht umsortiert sein, „Hier speichern" braucht weiter einen frischen Fix |
+| 28 | Fix gilt 12 s, danach wird die Liste gehalten und der Zustand angesagt | Ein veralteter Standort klingt genauso souverän wie ein gültiger; das Halten macht die Grenze hörbar (§4.6) |

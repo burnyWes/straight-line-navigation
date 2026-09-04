@@ -15,6 +15,29 @@ const QUALITY_TEXT: Record<HeadingQuality, string> = {
   unbekannt: 'Kompassguete unbekannt',
 };
 
+const STALE_STATUS = 'Standort veraltet. Die Liste ist angehalten.';
+const STALE_ANNOUNCEMENT =
+  'Standort veraltet. Die Entfernungen stammen von der letzten Messung und die Liste steht still.';
+
+/**
+ * Was in der Statuszeile steht, in der Reihenfolge der Dringlichkeit.
+ *
+ * Eine gemeldete Stoerung nennt den Grund und steht deshalb vorn; ohne sie
+ * bleibt der veraltete Standort die wichtigste Aussage. Erst danach kommt, ob
+ * die Liste angehalten ist. Frueher schrieb der Render hier unbedingt
+ * "Navigation laeuft." - und wischte damit jede Fehlermeldung im naechsten
+ * Bild wieder weg.
+ */
+function statusText(snapshot: NavigationSnapshot, problem: string | null): string {
+  if (problem !== null) {
+    return problem;
+  }
+  if (snapshot.positionStale) {
+    return STALE_STATUS;
+  }
+  return snapshot.frozen ? 'Liste angehalten.' : 'Navigation laeuft.';
+}
+
 interface Row {
   readonly item: HTMLLIElement;
   readonly button: HTMLButtonElement;
@@ -43,6 +66,18 @@ export class NavigationView {
   private focusFreeze = false;
   private tabFreeze = false;
   private running = false;
+  /**
+   * Zuletzt gemeldete Stoerung je Kanal, oder null.
+   *
+   * Getrennt gehalten, weil sie getrennt vergehen: Ein Standortfehler
+   * verschwindet mit dem naechsten Fix, ein Kompassfehler mit der naechsten
+   * Messung. In einem gemeinsamen Feld loeschte der eine Kanal die Meldung des
+   * anderen - Kompassereignisse kommen um ein Vielfaches haeufiger.
+   */
+  private positionProblem: string | null = null;
+  private headingProblem: string | null = null;
+  /** Zuletzt angezeigter Standort-Zustand - Grundlage fuer die Ansage des Wechsels. */
+  private stale = false;
 
   constructor(
     private readonly announcer: Announcer,
@@ -144,6 +179,7 @@ export class NavigationView {
 
   markRunning(): void {
     this.running = true;
+    this.clearProblems();
     this.startButton.hidden = true;
     this.stopButton.hidden = false;
     this.freezeButton.hidden = false;
@@ -153,6 +189,7 @@ export class NavigationView {
 
   markStopped(): void {
     this.running = false;
+    this.clearProblems();
     this.startButton.hidden = false;
     this.stopButton.hidden = true;
     this.freezeButton.hidden = true;
@@ -185,9 +222,43 @@ export class NavigationView {
     this.syncFreeze();
   }
 
+  /**
+   * Meldung, bevor der Lauf beginnt - etwa eine abgelehnte Berechtigung.
+   *
+   * Schreibt direkt in die Statuszeile: Solange nicht gestartet ist, rendert
+   * niemand dagegen an.
+   */
   showError(message: string): void {
     setText(this.statusLine, message);
     this.announcer.announce(message);
+  }
+
+  /**
+   * Stoerung des Standorts, oder null, wenn wieder Fixe eintreffen.
+   *
+   * Angesagt wird nur der Wechsel. `watchPosition` meldet einen ausgefallenen
+   * Standort im Sekundentakt erneut; wer das jedes Mal ansagt, macht die App
+   * unbenutzbar - dieselbe Regel wie bei der Kompassguete (design.md 4.5).
+   */
+  setPositionProblem(message: string | null): void {
+    if (message === this.positionProblem) {
+      return;
+    }
+    this.positionProblem = message;
+    if (message !== null) {
+      this.announcer.announce(message);
+    }
+  }
+
+  /** Stoerung des Kompasses, oder null bei der naechsten gueltigen Messung. */
+  setHeadingProblem(message: string | null): void {
+    if (message === this.headingProblem) {
+      return;
+    }
+    this.headingProblem = message;
+    if (message !== null) {
+      this.announcer.announce(message);
+    }
   }
 
   showQuality(quality: HeadingQuality, announce: boolean): void {
@@ -202,7 +273,17 @@ export class NavigationView {
     if (!this.running) {
       return;
     }
-    setText(this.statusLine, snapshot.frozen ? 'Liste angehalten.' : 'Navigation laeuft.');
+    setText(this.statusLine, statusText(snapshot, this.positionProblem ?? this.headingProblem));
+
+    // Der Wechsel auf "veraltet" ist die eigentliche Nachricht: Ab hier stimmen
+    // die Zahlen nicht mehr. Wer nur die Liste erswiped, wuerde ihn sonst nicht
+    // bemerken - sie steht ja weiterhin da und klingt unveraendert plausibel.
+    if (snapshot.positionStale !== this.stale) {
+      this.stale = snapshot.positionStale;
+      this.announcer.announce(
+        this.stale ? STALE_ANNOUNCEMENT : 'Standort wieder da. Die Liste laeuft.',
+      );
+    }
 
     const wanted = snapshot.entries.map((entry) => entry.location.id);
     this.dropRemoved(new Set(wanted));
@@ -263,6 +344,12 @@ export class NavigationView {
       `${entry.location.name}, ${formatDistance(entry.displayDistanceMetres)}`,
     );
     row.label = label;
+  }
+
+  private clearProblems(): void {
+    this.positionProblem = null;
+    this.headingProblem = null;
+    this.stale = false;
   }
 
   private syncFreeze(): void {

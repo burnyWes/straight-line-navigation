@@ -8,13 +8,18 @@ import type { Location } from '../domain/location.js';
 import type { CoordinateParseFailure } from '../domain/coordinateParser.js';
 import { formatSaveConfirmation } from './format.js';
 
-const PARSE_ERROR: Record<CoordinateParseFailure | 'name-required', string> = {
+/** Gruende, aus denen ein Ort nicht angelegt werden kann. */
+type SaveFailure = CoordinateParseFailure | 'name-required' | 'position-stale';
+
+const PARSE_ERROR: Record<SaveFailure, string> = {
   empty: 'Bitte eine Koordinate eingeben.',
   'shortlink-unresolvable':
     'Kurzlinks lassen sich nicht auswerten. Den Link zuerst in der Karten-App oeffnen und die Koordinate kopieren.',
   'no-coordinate-found': 'Darin war keine Koordinate zu finden.',
   'out-of-range': 'Diese Koordinate liegt ausserhalb des gueltigen Bereichs.',
   'name-required': 'Bitte einen Namen eingeben.',
+  'position-stale':
+    'Der Standort ist veraltet. Kurz warten, bis das Geraet wieder misst, dann erneut speichern.',
 };
 
 export interface LocationsViewCallbacks {
@@ -112,7 +117,7 @@ export class LocationsView {
     this.coordinateInput.value = '';
   }
 
-  reportFailure(reason: CoordinateParseFailure | 'name-required'): void {
+  reportFailure(reason: SaveFailure): void {
     const text = PARSE_ERROR[reason];
     setText(this.feedback, text);
     this.announcer.announce(text);

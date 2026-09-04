@@ -209,6 +209,67 @@ describe('NavigationService', () => {
     });
   });
 
+  describe('veralteter Standort', () => {
+    it('haelt die zuletzt gezeigte Liste unveraendert', () => {
+      const bahnhof = target('Bahnhof', 5, 1200);
+      const zuhause = target('Zuhause', -10, 500);
+      const live = service.update(HERE, NORTH, [bahnhof, zuhause]);
+
+      const held = service.holdStale();
+
+      expect(held.entries).toEqual(live.entries);
+      expect(held.positionStale).toBe(true);
+      expect(held.frozen).toBe(true);
+    });
+
+    it('sortiert nicht um, wenn sich der Nutzer beim Ausfall weiterdreht', () => {
+      const bahnhof = target('Bahnhof', 5, 1200);
+      service.update(HERE, NORTH, [bahnhof]);
+
+      // Ohne gueltigen Standort wird die Blickrichtung gar nicht erst gefragt.
+      const held = service.holdStale();
+
+      expect(held.entries.map((e) => e.location.name)).toEqual(['Bahnhof']);
+    });
+
+    it('gibt kein Ein- oder Austrittssignal aus veralteten Daten', () => {
+      const bahnhof = target('Bahnhof', 5, 1200);
+      service.update(HERE, NORTH, [bahnhof]);
+
+      const held = service.holdStale();
+
+      expect(held.entered).toEqual([]);
+      expect(held.left).toEqual([]);
+    });
+
+    it('meldet einen gueltigen Standort wieder als frisch', () => {
+      const bahnhof = target('Bahnhof', 5, 1200);
+      service.update(HERE, NORTH, [bahnhof]);
+      service.holdStale();
+
+      const wieder = service.update(HERE, NORTH, [bahnhof]);
+
+      expect(wieder.positionStale).toBe(false);
+    });
+
+    it('haelt nach dem Ende des Laufs nichts Altes fest', () => {
+      service.update(HERE, NORTH, [target('Bahnhof', 5, 1200)]);
+      service.reset();
+
+      expect(service.holdStale().entries).toEqual([]);
+    });
+
+    it('haelt die eingefrorene Liste, nicht die volle Kegelliste', () => {
+      const bahnhof = target('Bahnhof', 5, 1200);
+      const zuhause = target('Zuhause', -10, 500);
+      service.update(HERE, NORTH, [bahnhof, zuhause]);
+      service.freeze();
+      const eingefroren = service.update(HERE, NORTH, [bahnhof, zuhause]);
+
+      expect(service.holdStale().entries).toEqual(eingefroren.entries);
+    });
+  });
+
   it('uebernimmt einen geaenderten Kegelwinkel', () => {
     const seitlich = target('Seitlich', 30, 800);
 

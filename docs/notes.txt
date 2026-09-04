@@ -52,6 +52,9 @@ x  Bereichswechsel haelt die Liste an, Lauf und Sensoren laufen weiter
 x  Start und Stopp als Symbol rechts neben der Ueberschrift, ohne Text
 x  Anhalten als Pausensymbol, schwebend unten rechts
 x  Service Worker: App startet ohne Netz - Server gestoppt und geprueft
+x  GPS-Ausfall bei laufendem Kompass: Fix gilt 12 Sekunden, danach wird die
+   Liste gehalten und der Zustand angesagt (design.md 4.6). Fehlermeldungen
+   werden nicht mehr vom naechsten Bild ueberschrieben.
 
 --------------------------------------------------------------------------------
 TODO
@@ -62,11 +65,12 @@ TODO
 
 -  Offene Frage: fokussierte Zeile im Freeze nicht neu beschriften - richtig so,
    oder soll sie doch mitlaufen? (design.md 4.3)
--  Fehlerfall pruefen: was passiert, wenn GPS ausfaellt, der Kompass aber laeuft?
 -  Auf dem Geraet pruefen: laesst sich die App vom Home-Bildschirm starten und
    startet sie im Flugmodus? (am Rechner geprueft, auf dem Geraet noch nicht)
 -  Praxistest: trifft der Daumen den schwebenden Anhalten-Knopf im Gehen, und
    verdeckt er nichts Wichtiges?
+-  Praxistest: sind 12 Sekunden bis "Standort veraltet" richtig gewaehlt - kommt
+   die Meldung im staedtischen Raum zu oft oder zu spaet? (design.md 4.6)
 
 m  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
 m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)

@@ -50,6 +50,11 @@ export interface NavigationSnapshot {
   readonly entered: readonly Location[];
   readonly left: readonly Location[];
   readonly frozen: boolean;
+  /**
+   * Der Standort ist zu alt, um noch etwas zu behaupten - die Liste steht
+   * still und die Zahlen stammen aus der letzten gueltigen Messung.
+   */
+  readonly positionStale: boolean;
 }
 
 export class NavigationService {
@@ -60,6 +65,14 @@ export class NavigationService {
   private lastOrder: readonly string[] = [];
   /** Reihenfolge, die beim Einfrieren galt - sie bleibt bis zum Auftauen. */
   private frozenOrder: readonly string[] = [];
+  /**
+   * Zuletzt aus einem gueltigen Standort gerechnete Liste.
+   *
+   * Faellt der Standort aus, wird sie unveraendert weitergereicht, statt sie
+   * aus dem alten Fix neu zu rechnen: Die Zahlen bleiben stehen, wo sie zuletzt
+   * stimmten, und die Liste sortiert sich beim Drehen nicht mehr um.
+   */
+  private lastEntries: readonly NavigationEntry[] = [];
   /**
    * Zuletzt gesehene Orte je Kennung.
    *
@@ -103,6 +116,7 @@ export class NavigationService {
     this.cone.reset();
     this.unfreeze();
     this.lastOrder = [];
+    this.lastEntries = [];
     this.known.clear();
   }
 
@@ -144,11 +158,33 @@ export class NavigationService {
       this.lastOrder = entries.map((entry) => entry.location.id);
     }
 
+    this.lastEntries = entries;
+
     return {
       entries,
       entered: this.resolve(transition.entered),
       left: this.resolve(transition.left),
       frozen: this.frozen,
+      positionStale: false,
+    };
+  }
+
+  /**
+   * Kein gueltiger Standort: haelt die zuletzt gezeigte Liste.
+   *
+   * Der Kegel wird bewusst **nicht** fortgeschrieben. Ein Ein- oder Austritt,
+   * der aus einem veralteten Standort folgt, ist eine Behauptung ueber die
+   * Wirklichkeit, die niemand geprueft hat - und er klaenge genauso wie ein
+   * echter. Lieber kein Signal als ein falsches. Beim naechsten gueltigen Fix
+   * setzt der Kegel mit seiner Hysterese dort wieder auf, wo er stand.
+   */
+  holdStale(): NavigationSnapshot {
+    return {
+      entries: this.lastEntries,
+      entered: [],
+      left: [],
+      frozen: true,
+      positionStale: true,
     };
   }
 

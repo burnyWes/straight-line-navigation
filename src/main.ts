@@ -9,6 +9,7 @@ import './ui/styles.css';
 import { NavigationService } from './application/navigationService.js';
 import { LocationService } from './application/locationService.js';
 import { toNavigationSettings, type AppSettings } from './application/settings.js';
+import { isPositionStale } from './application/positionFreshness.js';
 import { systemClock, type CuePort, type PositionFix, type Unsubscribe } from './application/ports.js';
 import { HeadingQualityMonitor } from './domain/headingQuality.js';
 
@@ -61,6 +62,8 @@ let latestFix: PositionFix | null = null;
 let latestHeading: number | null = null;
 let dirty = false;
 let running = false;
+/** Zeitpunkt des letzten Bildes - Grundlage fuer den Herzschlag in tick(). */
+let lastRenderMs = 0;
 const subscriptions: Unsubscribe[] = [];
 
 // Muss ohne Netz starten koennen - genau dafuer ist die App gedacht. Eine
@@ -96,6 +99,12 @@ const locationsView = new LocationsView(announcer, {
     if (fix === null) {
       locationsView.reportFailure('no-coordinate-found');
       announcer.announce('Kein Standort verfuegbar. Zuerst die Navigation starten.');
+      return;
+    }
+    // Ein veralteter Fix ist hier schlimmer als gar keiner: Der Ort landet
+    // dauerhaft in der Liste und sieht danach aus wie jeder andere.
+    if (isPositionStale(fix, systemClock.now().getTime())) {
+      locationsView.reportFailure('position-stale');
       return;
     }
     handleSave(() => locationService.saveCurrentPosition(name, fix));
@@ -248,10 +257,14 @@ async function startNavigation(): Promise<void> {
     new GeolocationPositionProvider().subscribe(
       (fix) => {
         latestFix = fix;
+        navigationView.setPositionProblem(null);
         dirty = true;
       },
       (error) => {
-        navigationView.showError(error.message);
+        // watchPosition meldet einen Ausfall im Sekundentakt erneut. Die
+        // Ansicht sagt deshalb nur den Wechsel an, nicht jede Wiederholung.
+        navigationView.setPositionProblem(error.message);
+        dirty = true;
       },
     ),
   );
@@ -260,6 +273,7 @@ async function startNavigation(): Promise<void> {
     new DeviceOrientationHeadingProvider().subscribe(
       (reading) => {
         latestHeading = reading.headingDeg;
+        navigationView.setHeadingProblem(null);
         const changed = qualityMonitor.update(reading.accuracyDeg);
         if (changed !== null) {
           // Nur der Wechsel wird gemeldet, nie der Dauerzustand.
@@ -268,11 +282,13 @@ async function startNavigation(): Promise<void> {
         dirty = true;
       },
       (error) => {
-        navigationView.showError(error.message);
+        navigationView.setHeadingProblem(error.message);
+        dirty = true;
       },
     ),
   );
 
+  lastRenderMs = 0;
   requestAnimationFrame(tick);
 }
 
@@ -299,10 +315,21 @@ function tick(): void {
   if (running) {
     requestAnimationFrame(tick);
   }
+
+  // Ein Bild pro Sekunde, auch wenn nichts hereinkommt: Ein veralteter Standort
+  // meldet sich nicht selbst. Ohne diesen Herzschlag bliebe die Liste genau
+  // dann stumm stehen, wenn auch der Kompass verstummt - also im schlimmsten
+  // Fall. Gerechnet wird dabei nur, was ohnehin schon gemessen ist.
+  const now = systemClock.now().getTime();
+  if (running && now - lastRenderMs >= 1000) {
+    dirty = true;
+  }
+
   if (!dirty) {
     return;
   }
   dirty = false;
+  lastRenderMs = now;
   renderNavigation();
 }
 
@@ -310,6 +337,15 @@ function renderNavigation(): void {
   const fix = latestFix;
   const heading = latestHeading;
   if (fix === null || heading === null) {
+    return;
+  }
+
+  // Der Standort ist zu alt: Die Liste wird gehalten, nicht neu gerechnet.
+  // Der Kompass laeuft in diesem Fall meist weiter - genau daraus entstuende
+  // sonst eine Liste, die sich beim Drehen umsortiert und Entfernungen zu
+  // einem Standort nennt, an dem der Nutzer laengst nicht mehr steht.
+  if (isPositionStale(fix, systemClock.now().getTime())) {
+    navigationView.render(navigationService.holdStale());
     return;
   }
 
