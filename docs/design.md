@@ -53,6 +53,47 @@ Diese Einschränkungen sind **akzeptiert**, nicht übersehen:
 | **Keine Haptik, gemessen** | Kein Vibrationssignal bei Ein-/Austritt | Akzeptiert. Weder `navigator.vibrate` noch der `switch`-Umweg funktionieren (M1, gemessen 2026-09-04) |
 | **Lautlos-Schalter schaltet Web Audio stumm, gemessen** | Earcons bei Lautlos unhörbar — und seit dem Wegfall der Ansage (§4.4) gibt es dann gar kein Ein-/Austritts-Signal | Akzeptiert — Nutzerentscheidung. Wer das Signal braucht, schaltet den Lautlos-Schalter aus |
 
+
+### 2.2 Installation und Offline-Start
+
+Die App wird über Safari zum Home-Bildschirm hinzugefügt und startet von dort im
+Standalone-Modus. Zwei Dinge tragen das:
+
+**Manifest** (`public/manifest.webmanifest`): Name „Luftlinie", `display: standalone`,
+`start_url` und `scope` relativ — die App liegt unter einem Unterpfad, absolute Pfade
+wären hier die klassische Falle. Symbole liegen als PNG in 180, 192 und 512 px vor.
+iOS nimmt für den Home-Bildschirm das `apple-touch-icon` aus dem HTML, nicht das aus dem
+Manifest; beide sind gesetzt.
+
+**Service Worker** (`public/sw.js`): Die App muss **ohne Netz starten**. Genau dafür ist
+sie gedacht — draußen, schlechter Empfang, kein Backend. Eine App, die zum Losgehen erst
+ein Netz braucht, wäre in dem Moment unbrauchbar, in dem sie gebraucht wird.
+
+| Anfrage | Strategie | Warum |
+|---|---|---|
+| Seitenaufruf | Netz zuerst, sonst gespeicherte `index.html` | Eine neue Fassung kommt an, sobald Netz da ist |
+| Alles andere | Zwischenspeicher zuerst | Die Dateinamen tragen einen Inhalts-Hash: gleicher Name heißt gleicher Inhalt |
+
+Drei Entscheidungen dazu:
+
+- **Handgeschrieben statt Workbox.** Knapp hundert Zeilen gegen eine Build-Abhängigkeit —
+  bei einem Projekt mit drei Entwicklungspaketen (§9) ein schlechter Tausch.
+- **Die gehashten Dateinamen kennt der Worker nicht.** Deshalb schreibt Vite eine Bauliste
+  (`build.manifest`), die der Worker beim Einbau abfragt. Ohne das wäre die App erst nach
+  dem **zweiten** Besuch offline lauffähig — und der zweite Besuch ist womöglich schon der
+  ohne Netz.
+- **`ignoreVary` beim Nachschlagen.** Der Server schickt `Vary: Origin`; der Worker füllt
+  den Speicher mit eigenen Aufrufen ohne `Origin`, die Seite fordert JS und CSS aber mit
+  `crossorigin` an, also *mit* `Origin`. Ohne `ignoreVary` findet die Cache-API nichts und
+  die App bleibt offline weiß — **gemessen, nicht vermutet** (2026-09-04). Da die
+  Dateinamen inhaltsadressiert sind, ist das Ignorieren hier sicher.
+
+**Kein `skipWaiting`.** Eine neue Fassung übernimmt beim nächsten Kaltstart. Assets unter
+laufender Navigation auszutauschen bringt nichts und kann einen Lauf zerlegen.
+
+**Verifiziert am 2026-09-04:** Build ausgeliefert, Server gestoppt, Seite neu geladen —
+Oberfläche vollständig, alle Ressourcen aus dem Zwischenspeicher.
+
 ---
 
 ## 3. Barrierefreiheit
@@ -405,3 +446,5 @@ das steht in keinem Verhältnis.
 | 21 | Ansage bei Ein- und Austritt ersatzlos entfernt | Praxistest: stört im Gehen mehr, als sie trägt; der Earcon bleibt |
 | 22 | Fester heller Farbsatz statt Dunkelmodus | Nutzerentscheidung nach dem Praxistest; weißer Grund, Kontraste über 7:1 |
 | 23 | Kegel-Liste: weitestes Ziel oben, nächstes unten | Nutzerentscheidung; beim Durchswipen endet man auf dem wichtigsten Eintrag |
+| 24 | Service Worker handgeschrieben, keine Workbox | Hundert Zeilen gegen eine Build-Abhängigkeit; passt zum Stack ohne Framework (§2.2) |
+| 25 | Symbole per Skript erzeugt, ohne Bildbibliothek | Drei PNG rechtfertigen keine Abhängigkeit; `tools/make-icons.mjs`, Dateien eingecheckt |

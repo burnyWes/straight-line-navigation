@@ -14,7 +14,13 @@ npm run dev        # Dev-Server
 npm test           # Vitest
 npm run typecheck  # tsc --noEmit
 npm run build      # Produktions-Build nach dist/
+npm run preview    # Build ausliefern - nur hier läuft der Service Worker
+npm run icons      # App-Symbole neu erzeugen
 ```
+
+Der Service Worker ist im Entwicklungsbetrieb bewusst abgeschaltet: Er würde alte
+Stände ausliefern, während Vite neue schickt. Zum Prüfen des Offline-Starts
+`npm run build && npm run preview` verwenden.
 
 Domäne und Anwendungsschicht sind frei von DOM und Browser-APIs und laufen ohne
 Gerät — die gesamte Navigationslogik ist am Rechner testbar.
@@ -27,6 +33,8 @@ src/application/  Ports und NavigationService                          (rein)
 src/ui/           Formatierung und Oberfläche                          (Adapter)
 src/testing/      Testdaten
 spike/            Messseite für Gerätefragen (Kompass, GPS, Ton, Haptik)
+public/           Manifest, Symbole, Service Worker
+tools/            Symbole erzeugen (npm run icons)
 ```
 
 Abhängigkeiten zeigen ausschließlich nach innen.

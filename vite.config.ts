@@ -9,6 +9,11 @@ export default defineConfig({
   build: {
     target: 'es2022',
     outDir: 'dist',
+
+    // Der Service Worker kann die gehashten Dateinamen nicht kennen. Ueber
+    // diese Liste holt er sie sich beim Einbau - sonst waere die App erst nach
+    // dem zweiten Besuch offline lauffaehig.
+    manifest: 'assets-manifest.json',
   },
 
   test: {

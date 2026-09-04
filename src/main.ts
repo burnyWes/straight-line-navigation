@@ -23,6 +23,7 @@ import { WebAudioCue, silentCue } from './adapters/cues.js';
 import { ScreenWakeLock } from './adapters/wakeLock.js';
 import { deserializeLocations, serializeBackup } from './adapters/locationSerialization.js';
 import { newId } from './adapters/ids.js';
+import { registerServiceWorker } from './adapters/serviceWorker.js';
 
 import { Announcer } from './ui/announcer.js';
 import { Tabs } from './ui/tabs.js';
@@ -30,6 +31,9 @@ import { NavigationView } from './ui/navigationView.js';
 import { LocationsView } from './ui/locationsView.js';
 import { SettingsView } from './ui/settingsView.js';
 import { el } from './ui/dom.js';
+
+// Muss ohne Netz starten koennen - genau dafuer ist die App gedacht.
+registerServiceWorker();
 
 const root = document.getElementById('app');
 if (root === null) {
