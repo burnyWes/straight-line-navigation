@@ -48,6 +48,9 @@ x  Praxistest 1: Ansage bei Ein- und Austritt entfernt, Earcon bleibt (design.md
 x  Praxistest 1: helle Oberflaeche, weisser Grund, Kontraste ueber 7:1 (design.md 3)
 x  Praxistest 1: Kegel-Liste umgedreht - weitestes oben, naechstes unten (design.md 4.2)
 x  Manifest und Symbole fuer den Home-Bildschirm (design.md 2.2)
+x  Bereichswechsel haelt die Liste an, Lauf und Sensoren laufen weiter
+x  Start und Stopp als Symbol rechts neben der Ueberschrift, ohne Text
+x  Anhalten als Pausensymbol, schwebend unten rechts
 x  Service Worker: App startet ohne Netz - Server gestoppt und geprueft
 
 --------------------------------------------------------------------------------
@@ -62,6 +65,8 @@ TODO
 -  Fehlerfall pruefen: was passiert, wenn GPS ausfaellt, der Kompass aber laeuft?
 -  Auf dem Geraet pruefen: laesst sich die App vom Home-Bildschirm starten und
    startet sie im Flugmodus? (am Rechner geprueft, auf dem Geraet noch nicht)
+-  Praxistest: trifft der Daumen den schwebenden Anhalten-Knopf im Gehen, und
+   verdeckt er nichts Wichtiges?
 
 m  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
 m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
@@ -71,7 +76,4 @@ n  Karte, Kartenkacheln
 n  Strassennavigation, Routing
 n  Backend, Konten, Sync
 n  Hintergrundbetrieb bei gesperrtem Bildschirm (auf einer PWA nicht moeglich)
-n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel)
-- Navigation deaktivieren, wenn ein anderer Tab offen ist.
-- Navigation Starten/Stoppen-Butteons nur Start und Stop Icons rechts neben dem Header
-- Liste Anhalten mit Pause-Icon und ohne Text an den unteren rechten Bildrand schieben 
+n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel) 

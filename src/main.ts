@@ -193,6 +193,12 @@ const tabs = new Tabs(
   ],
   // Die App wird geoeffnet, um zu navigieren.
   'navigation',
+  (id) => {
+    // Auf einem anderen Bereich haelt die Liste an. Der Lauf selbst geht
+    // weiter: Die Sensoren bleiben angemeldet, damit "Hier speichern" im
+    // Bereich Orte einen frischen Standort vorfindet (docs/design.md 4.3).
+    navigationView.setPanelActive(id === 'navigation');
+  },
 );
 
 root.append(

@@ -40,3 +40,31 @@ export function setText(node: HTMLElement, text: string): void {
     node.textContent = text;
   }
 }
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * Rein dekoratives Symbol fuer Knoepfe ohne Beschriftung.
+ *
+ * Der Name des Knopfes steht im aria-label, nie im Symbol: Ein SVG traegt fuer
+ * VoiceOver keine Bedeutung und ist deshalb konsequent aria-hidden.
+ */
+export function icon(path: string): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '26');
+  svg.setAttribute('height', '26');
+  svg.setAttribute('fill', 'currentColor');
+  svg.setAttribute('aria-hidden', 'true');
+  // Ohne dies nimmt das SVG in aelteren Safaris den Tastaturfokus an.
+  svg.setAttribute('focusable', 'false');
+
+  const shape = document.createElementNS(SVG_NS, 'path');
+  shape.setAttribute('d', path);
+  svg.append(shape);
+  return svg;
+}
+
+export const ICON_PLAY = 'M8 5l12 7-12 7z';
+export const ICON_STOP = 'M6 6h12v12H6z';
+export const ICON_PAUSE = 'M7 5h4v14H7zm6 0h4v14h-4z';

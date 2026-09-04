@@ -28,6 +28,16 @@
   box-sizing: border-box;
 }
 
+/*
+ * Die Sichtbarkeit haengt in dieser App durchgehend am hidden-Attribut - es
+ * nimmt das Element zugleich aus dem Baum fuer den Screenreader. Klassenregeln
+ * weiter unten (display: flex und Verwandte) wuerden die Vorgabe des Browsers
+ * sonst ueberstimmen und versteckte Knoepfe wieder sichtbar machen.
+ */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
@@ -141,6 +151,59 @@ button[aria-pressed='true'] {
   color: var(--on-dark);
   background: var(--focus);
   border-color: var(--focus);
+}
+
+/* Gedrueckt traegt der Knopf die Fokusfarbe - der Ring braucht dann eine andere. */
+button[aria-pressed='true']:focus-visible {
+  outline-color: var(--fg);
+}
+
+/* Ueberschrift links, Start bzw. Stopp als Symbol rechts daneben. */
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.panel-head h2 {
+  flex: 1;
+  margin: 0;
+}
+
+/*
+ * Knopf ohne Beschriftung. Trotzdem mindestens 52 Pixel im Quadrat: Die App
+ * wird im Gehen bedient, und der Name steckt im aria-label, nicht im Bild.
+ */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 52px;
+  min-height: 52px;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+ * Schwebt unten rechts ueber dem Inhalt, damit der Daumen ihn ohne Suchen
+ * trifft. Im DOM steht er weiterhin vor der Liste (siehe navigationView.ts).
+ */
+.freeze {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 20;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+}
+
+/* Platz, damit der schwebende Knopf nicht auf dem letzten Listeneintrag liegt. */
+.panel-navigation {
+  padding-bottom: 88px;
 }
 
 label {

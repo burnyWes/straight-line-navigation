@@ -149,6 +149,14 @@ Solange der Fokus **innerhalb** der Kegel-Liste steht, friert sie ein: keine
 Umsortierung, kein Entfernen von Einträgen. Verlässt der Fokus die Liste, läuft sie
 wieder live. Zusätzlich gibt es einen expliziten **Anhalten-Schalter**.
 
+**Ein anderer Bereich hält die Liste ebenfalls an.** Wer in „Orte" oder
+„Einstellungen" wechselt, liest die Liste gerade nicht; liefe sie dort weiter, stünde
+sie beim Zurückkommen in völlig anderer Reihenfolge. Der Navigationslauf selbst geht
+weiter — Sensoren bleiben angemeldet, der Bildschirm wach, die Ein-/Austritts-Signale
+klingen —, denn „Hier speichern" im Bereich Orte braucht einen frischen Fix. Dieses
+Anhalten wird **nicht angesagt**: Gemeldet wird ein Freeze nur dort, wo er die gerade
+gelesene Liste betrifft.
+
 Ein- und Auftauchen des Freeze wird angesagt („angehalten" / „aktualisiert"), sonst ist
 nicht unterscheidbar, ob Zahlen aktuell oder eingefroren sind.
 
@@ -218,15 +226,21 @@ unten" ist Daumen-Ergonomie für Sehende und hier ein Umweg.
 
 | Tab | Inhalt |
 |---|---|
-| **Navigation** | „Navigation starten"-Button, Kegel-Liste, Anhalten-Schalter |
+| **Navigation** | Start/Stopp als Symbol im Kopf, Kegel-Liste, schwebender Anhalten-Schalter |
 | **Orte** | Alle gespeicherten Locations: anlegen, umbenennen, löschen |
 | **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Export/Import, Datum der letzten Sicherung |
 
 - Die App startet **immer** auf „Navigation".
-- Der Navigations-Tab beginnt mit einem bildschirmbreiten **„Navigation starten"**-Button
-  als erstem Element nach der Überschrift. Das ist keine Design-Entscheidung: iOS gibt
-  den Kompass erst nach `DeviceOrientationEvent.requestPermission()` aus einer echten
-  Berührung frei. Die App kann nicht von selbst loslaufen.
+- **Starten und Beenden stehen als Symbol rechts neben der Überschrift** — ein
+  Dreieck, während der Navigation ein Quadrat, beide ohne sichtbaren Text und mit
+  `aria-label` benannt. Sie werden einmal pro Weg gedrückt; die Liste dagegen wird
+  ständig erswiped und soll deshalb früh im Wischweg beginnen. *(Ursprünglich ein
+  bildschirmbreiter Knopf unter der Überschrift — Nutzerentscheidung.)* Unverändert
+  gilt: iOS gibt den Kompass erst nach `DeviceOrientationEvent.requestPermission()`
+  aus einer echten Berührung frei. Die App kann nicht von selbst loslaufen.
+- **Der Anhalten-Schalter schwebt als Pausensymbol unten rechts** über dem Inhalt, im
+  Gehen mit dem Daumen erreichbar. Im DOM steht er weiterhin **vor** der Liste:
+  VoiceOver wischt in DOM-Reihenfolge, dahinter läge er hinter allen Einträgen.
 - Während der Navigation hält `navigator.wakeLock` den Bildschirm wach.
 
 ---
@@ -447,3 +461,5 @@ das steht in keinem Verhältnis.
 | 23 | Kegel-Liste: weitestes Ziel oben, nächstes unten | Nutzerentscheidung; beim Durchswipen endet man auf dem wichtigsten Eintrag |
 | 24 | Service Worker handgeschrieben, keine Workbox | Hundert Zeilen gegen eine Build-Abhängigkeit; passt zum Stack ohne Framework (§2.2) |
 | 25 | Symbole per Skript erzeugt, ohne Bildbibliothek | Drei PNG rechtfertigen keine Abhängigkeit; `tools/make-icons.mjs`, Dateien eingecheckt |
+| 26 | Start/Stopp als Symbol im Kopf, Anhalten schwebend unten rechts | Nutzerentscheidung; die Liste soll früh im Wischweg beginnen, der Daumen den Pausenknopf ohne Suchen treffen |
+| 27 | Bereichswechsel hält die Liste an, beendet den Lauf aber nicht | Nutzerentscheidung; die Liste soll beim Zurückkommen nicht umsortiert sein, „Hier speichern" braucht weiter einen frischen Fix |

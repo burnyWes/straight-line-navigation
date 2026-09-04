@@ -20,7 +20,12 @@ export class Tabs {
   private readonly tabs: readonly TabDefinition[];
   private activeId: string;
 
-  constructor(tabs: readonly TabDefinition[], initialId: string) {
+  constructor(
+    tabs: readonly TabDefinition[],
+    initialId: string,
+    /** Wird bei jedem Wechsel gerufen - auch beim ersten Setzen im Konstruktor. */
+    private readonly onChange: (id: string) => void = () => {},
+  ) {
     this.tabs = tabs;
     this.activeId = initialId;
 
@@ -80,6 +85,8 @@ export class Tabs {
       // sich der Inhalt geaendert hat.
       this.tabs.find((tab) => tab.id === id)?.panel.focus();
     }
+
+    this.onChange(id);
   }
 
   private onKeydown(event: KeyboardEvent, currentId: string): void {

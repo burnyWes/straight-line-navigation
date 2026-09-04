@@ -2,7 +2,7 @@
  * Navigationsbereich: Kegel-Liste, Auto-Freeze, Gueteanzeige.
  */
 
-import { el, setText } from './dom.js';
+import { el, setText, icon, ICON_PLAY, ICON_STOP, ICON_PAUSE } from './dom.js';
 import { formatDistance, formatEntryLabel } from './format.js';
 import type { Announcer } from './announcer.js';
 import type { NavigationEntry, NavigationSnapshot } from '../application/navigationService.js';
@@ -41,17 +41,17 @@ export class NavigationView {
 
   private manualFreeze = false;
   private focusFreeze = false;
+  private tabFreeze = false;
   private running = false;
 
   constructor(
     private readonly announcer: Announcer,
     private readonly callbacks: NavigationViewCallbacks,
   ) {
-    this.startButton = el('button', {
-      type: 'button',
-      class: 'primary',
-      text: 'Navigation starten',
-    }) as HTMLButtonElement;
+    // Start und Stopp stehen als Symbol rechts neben der Ueberschrift, nicht
+    // mehr bildschirmbreit darunter: Sie werden einmal pro Weg gedrueckt, die
+    // Liste dagegen dauernd erswiped - sie soll frueh im Wischweg beginnen.
+    this.startButton = headerButton('Navigation starten', ICON_PLAY, 'primary');
 
     // iOS gibt den Kompass erst nach einer echten Beruehrung frei - die App
     // kann nicht von selbst loslaufen (docs/design.md 5).
@@ -61,12 +61,8 @@ export class NavigationView {
 
     // Ohne Gegenstueck liefe die Bildschirmsperre bis zum Schliessen der App
     // weiter und zoege dabei Akku.
-    this.stopButton = el('button', {
-      type: 'button',
-      class: 'secondary',
-      text: 'Navigation beenden',
-      hidden: true,
-    }) as HTMLButtonElement;
+    this.stopButton = headerButton('Navigation beenden', ICON_STOP, 'secondary');
+    this.stopButton.hidden = true;
     this.stopButton.addEventListener('click', () => {
       this.callbacks.onStop();
     });
@@ -79,17 +75,29 @@ export class NavigationView {
       hidden: true,
     });
 
-    this.freezeButton = el('button', {
-      type: 'button',
-      class: 'secondary',
-      'aria-pressed': 'false',
-      text: 'Liste anhalten',
-    }) as HTMLButtonElement;
+    // Symbol ohne Text, schwebend unten rechts - im Gehen mit dem Daumen
+    // erreichbar. Im DOM steht der Knopf trotzdem **vor** der Liste: VoiceOver
+    // wischt in DOM-Reihenfolge, dahinter laege er hinter allen Eintraegen.
+    this.freezeButton = el(
+      'button',
+      {
+        type: 'button',
+        class: 'icon-button freeze',
+        'aria-pressed': 'false',
+        'aria-label': 'Liste anhalten',
+        title: 'Liste anhalten',
+      },
+      [icon(ICON_PAUSE)],
+    ) as HTMLButtonElement;
 
     this.freezeButton.addEventListener('click', () => {
       this.manualFreeze = !this.manualFreeze;
       this.freezeButton.setAttribute('aria-pressed', String(this.manualFreeze));
-      setText(this.freezeButton, this.manualFreeze ? 'Liste fortsetzen' : 'Liste anhalten');
+      setButtonLabel(
+        this.freezeButton,
+        this.manualFreeze ? 'Liste fortsetzen' : 'Liste anhalten',
+        this.manualFreeze ? ICON_PLAY : ICON_PAUSE,
+      );
       this.announcer.announce(this.manualFreeze ? 'angehalten' : 'aktualisiert');
       this.syncFreeze();
     });
@@ -117,10 +125,12 @@ export class NavigationView {
       }
     });
 
-    this.panel = el('section', { class: 'panel' }, [
-      el('h2', { text: 'Navigation' }),
-      this.startButton,
-      this.stopButton,
+    this.panel = el('section', { class: 'panel panel-navigation' }, [
+      el('div', { class: 'panel-head' }, [
+        el('h2', { text: 'Navigation' }),
+        this.startButton,
+        this.stopButton,
+      ]),
       this.statusLine,
       this.qualityLine,
       this.freezeButton,
@@ -154,6 +164,25 @@ export class NavigationView {
     setText(this.qualityLine, '');
     // Fokus auf den Startknopf, damit er nicht ins Leere faellt.
     this.startButton.focus();
+  }
+
+  /**
+   * Meldet, ob der Navigationsbereich gerade sichtbar ist.
+   *
+   * Ist er es nicht, haelt die Liste an: Sie wird dort weder gesehen noch
+   * erswiped, und beim Zurueckkommen soll sie nicht in voellig anderer
+   * Reihenfolge stehen. Sensoren und Signale laufen weiter - "Hier speichern"
+   * im Bereich Orte braucht einen frischen Standort (docs/design.md 4.3).
+   *
+   * Bewusst ohne Ansage: Gemeldet wird das Anhalten nur dort, wo es die
+   * gerade gelesene Liste betrifft.
+   */
+  setPanelActive(active: boolean): void {
+    if (this.tabFreeze === !active) {
+      return;
+    }
+    this.tabFreeze = !active;
+    this.syncFreeze();
   }
 
   showError(message: string): void {
@@ -237,6 +266,27 @@ export class NavigationView {
   }
 
   private syncFreeze(): void {
-    this.callbacks.onFreezeChange(this.manualFreeze || this.focusFreeze);
+    this.callbacks.onFreezeChange(this.manualFreeze || this.focusFreeze || this.tabFreeze);
   }
+}
+
+/** Knopf ohne Beschriftung: Was er tut, steht im aria-label, nicht im Symbol. */
+function headerButton(label: string, path: string, variant: string): HTMLButtonElement {
+  return el(
+    'button',
+    {
+      type: 'button',
+      class: `icon-button ${variant}`,
+      'aria-label': label,
+      title: label,
+    },
+    [icon(path)],
+  ) as HTMLButtonElement;
+}
+
+/** Name und Symbol gehoeren zusammen - sonst zeigt der Knopf etwas anderes, als er heisst. */
+function setButtonLabel(button: HTMLButtonElement, label: string, path: string): void {
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+  button.replaceChildren(icon(path));
 }
