@@ -124,33 +124,6 @@ describe('StoredLocationRepository', () => {
     expect(repository.all()).toEqual([]);
   });
 
-  describe('merge', () => {
-    it('ergaenzt neue Orte', () => {
-      repository.save(testLocation('Bahnhof', coordinate(52.5, 13.4)));
-      const result = repository.merge([testLocation('Dom', coordinate(50.94, 6.96))]);
-
-      expect(result).toEqual({ added: 1, duplicates: 0 });
-      expect(repository.all()).toHaveLength(2);
-    });
-
-    it('erkennt Dubletten ueber die Koordinate, nicht ueber die Kennung', () => {
-      // Ein Export von einem anderen Geraet hat andere Kennungen fuer
-      // denselben Ort.
-      repository.save(testLocation('Bahnhof', coordinate(52.5, 13.4)));
-      const result = repository.merge([testLocation('Bahnhof (Kopie)', coordinate(52.5, 13.4))]);
-
-      expect(result).toEqual({ added: 0, duplicates: 1 });
-      expect(repository.all()).toHaveLength(1);
-    });
-
-    it('loescht nichts Bestehendes', () => {
-      // "Ersetzen" waere der Klick, der im falschen Moment alles kostet.
-      repository.save(testLocation('Bahnhof', coordinate(52.5, 13.4)));
-      repository.merge([]);
-      expect(repository.all()).toHaveLength(1);
-    });
-  });
-
   it('startet leer, wenn der Speicher blockiert ist', () => {
     // Privater Modus oder blockierte Website-Daten duerfen nicht zum Absturz
     // beim Laden fuehren.

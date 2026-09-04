@@ -38,6 +38,17 @@ export function serializeLocations(locations: readonly Location[]): string {
   return JSON.stringify(document);
 }
 
+/**
+ * Sicherungsdatei.
+ *
+ * Bewusst dasselbe Format wie der Geraetespeicher, nur eingerueckt und mit
+ * Zeitstempel: So kann eine Sicherung ohne Sonderweg wieder eingelesen werden.
+ */
+export function serializeBackup(locations: readonly Location[], exportedAt: Date): string {
+  const parsed = JSON.parse(serializeLocations(locations)) as StoredDocument;
+  return JSON.stringify({ ...parsed, exportedAt: exportedAt.toISOString() }, null, 2);
+}
+
 export function deserializeLocations(raw: string | null): DeserializeResult {
   if (raw === null || raw.trim().length === 0) {
     return { locations: [], skipped: 0 };

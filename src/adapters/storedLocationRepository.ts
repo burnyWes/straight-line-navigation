@@ -9,7 +9,6 @@
 
 import type { LocationRepository } from '../application/ports.js';
 import type { Location } from '../domain/location.js';
-import { isSameCoordinate } from '../domain/coordinate.js';
 import { deserializeLocations, serializeLocations } from './locationSerialization.js';
 
 export interface KeyValueStore {
@@ -59,37 +58,6 @@ export class StoredLocationRepository implements LocationRepository {
 
   replaceAll(locations: readonly Location[]): void {
     this.write([...locations]);
-  }
-
-  /**
-   * Import ergaenzt, er ersetzt nicht.
-   *
-   * "Ersetzen" waere der Klick, der im falschen Moment alles kostet
-   * (docs/design.md 7). Dubletten werden ueber die Koordinate erkannt, nicht
-   * ueber die Kennung - ein Export von einem anderen Geraet hat andere
-   * Kennungen fuer denselben Ort.
-   */
-  merge(incoming: readonly Location[]): { added: number; duplicates: number } {
-    const existing = [...this.all()];
-    let added = 0;
-    let duplicates = 0;
-
-    for (const candidate of incoming) {
-      const isDuplicate = existing.some(
-        (known) =>
-          known.id === candidate.id ||
-          isSameCoordinate(known.coordinate, candidate.coordinate),
-      );
-      if (isDuplicate) {
-        duplicates += 1;
-      } else {
-        existing.push(candidate);
-        added += 1;
-      }
-    }
-
-    this.write(existing);
-    return { added, duplicates };
   }
 
   private readRaw(): string | null {
