@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kompass-Spike">
+<meta name="theme-color" content="#0d1117">
+<title>Kompass &amp; GPS Spike</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #30363d;
+    --fg: #e6edf3; --dim: #8b949e;
+    --ok: #3fb950; --bad: #f85149; --warn: #d29922;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1 { font-size: 17px; margin: 0 0 14px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 0 0 8px; font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  button {
+    -webkit-appearance: none; appearance: none; width: 100%;
+    background: #238636; color: #fff; border: 0; border-radius: 10px;
+    padding: 16px; font-size: 17px; font-weight: 600; font-family: inherit;
+    cursor: pointer; touch-action: manipulation;
+  }
+  button:active { background: #1f7031; }
+  button.secondary { background: #21262d; border: 1px solid var(--line); margin-top: 8px; }
+  .heading-big { font-size: 56px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; text-align: center; margin: 4px 0 2px; }
+  .heading-sub { text-align: center; color: var(--dim); font-size: 13px; margin-bottom: 12px; }
+  svg { display: block; margin: 0 auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  td { padding: 5px 0; vertical-align: top; border-top: 1px solid var(--line); font-size: 14px; }
+  tr:first-child td { border-top: 0; }
+  td:first-child { color: var(--dim); width: 46%; padding-right: 10px; }
+  td:last-child { text-align: right; word-break: break-word; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .verdict { font-size: 14px; padding: 12px; border-radius: 10px; margin-bottom: 14px; border: 1px solid; }
+  .verdict.pending { border-color: var(--line); color: var(--dim); }
+  .verdict.pass { border-color: var(--ok); color: var(--ok); background: rgba(63,185,80,.08); }
+  .verdict.fail { border-color: var(--bad); color: var(--bad); background: rgba(248,81,73,.08); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Kompass- &amp; GPS-Spike</h1>
+
+<div id="verdict" class="verdict pending">Noch nicht getestet. Button unten tippen.</div>
+
+<div class="panel">
+  <button id="start">Kompass &amp; GPS freischalten</button>
+  <button id="reload" class="secondary">Neu laden</button>
+</div>
+
+<div class="panel">
+  <h2>Kompass</h2>
+  <div class="heading-big" id="hdg">&ndash;</div>
+  <div class="heading-sub" id="hdgSrc">keine Daten</div>
+  <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+    <circle cx="75" cy="75" r="66" fill="none" stroke="#30363d" stroke-width="2"/>
+    <g id="rose">
+      <text x="75" y="24" text-anchor="middle" fill="#f85149" font-size="14" font-weight="700" font-family="system-ui">N</text>
+      <text x="75" y="133" text-anchor="middle" fill="#8b949e" font-size="13" font-family="system-ui">S</text>
+      <text x="130" y="80" text-anchor="middle" fill="#8b949e" font-size="13" font-family="system-ui">O</text>
+      <text x="20" y="80" text-anchor="middle" fill="#8b949e" font-size="13" font-family="system-ui">W</text>
+      <line x1="75" y1="30" x2="75" y2="75" stroke="#f85149" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <circle cx="75" cy="75" r="4" fill="#e6edf3"/>
+    <polygon points="75,4 70,14 80,14" fill="#e6edf3"/>
+  </svg>
+  <div style="height:12px"></div>
+  <table>
+    <tr><td>webkitCompassHeading</td><td id="wkh">&ndash;</td></tr>
+    <tr><td>webkitCompassAccuracy</td><td id="wka">&ndash;</td></tr>
+    <tr><td>alpha / absolute</td><td id="alpha">&ndash;</td></tr>
+    <tr><td>Events empfangen</td><td id="evt">0</td></tr>
+    <tr><td>letztes Event</td><td id="age">&ndash;</td></tr>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>GPS</h2>
+  <table>
+    <tr><td>Breite / L&auml;nge</td><td id="latlon">&ndash;</td></tr>
+    <tr><td>Genauigkeit</td><td id="acc">&ndash;</td></tr>
+    <tr><td>GPS-Kurs (course)</td><td id="gpshdg">&ndash;</td></tr>
+    <tr><td>Fixes empfangen</td><td id="fixes">0</td></tr>
+    <tr><td>Fehler</td><td id="geoerr">&ndash;</td></tr>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>Umgebung</h2>
+  <table>
+    <tr><td>Secure Context (HTTPS)</td><td id="secure">&ndash;</td></tr>
+    <tr><td>Standalone (Homescreen)</td><td id="standalone">&ndash;</td></tr>
+    <tr><td>requestPermission vorhanden</td><td id="hasReq">&ndash;</td></tr>
+    <tr><td>Permission-Ergebnis</td><td id="perm">&ndash;</td></tr>
+    <tr><td>User-Agent</td><td id="ua"><code>&ndash;</code></td></tr>
+  </table>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+
+  function set(id, text, cls) {
+    var el = $(id);
+    el.textContent = text;
+    el.className = cls || '';
+  }
+
+  function verdict(kind, text) {
+    var el = $('verdict');
+    el.className = 'verdict ' + kind;
+    el.textContent = text;
+  }
+
+  var state = {
+    orientEvents: 0,
+    lastOrient: 0,
+    fixes: 0,
+    headingSeen: false
+  };
+
+  // ---- Umgebung sofort anzeigen -------------------------------------------
+
+  var isStandalone =
+    window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+
+  var hasRequestPermission =
+    typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function';
+
+  set('secure', window.isSecureContext ? 'ja' : 'NEIN', window.isSecureContext ? 'ok' : 'bad');
+  set('standalone', isStandalone ? 'ja (Homescreen)' : 'nein (Safari-Tab)', isStandalone ? 'ok' : 'warn');
+  set('hasReq', hasRequestPermission ? 'ja (iOS 13+)' : 'nein', hasRequestPermission ? 'ok' : 'warn');
+  $('ua').textContent = navigator.userAgent;
+
+  if (!window.isSecureContext) {
+    verdict('fail', 'Kein Secure Context. Die Seite muss ueber HTTPS geladen werden - ueber http:// oder eine nackte IP verweigert iOS Kompass und GPS grundsaetzlich.');
+  }
+
+  // ---- Kompass -------------------------------------------------------------
+
+  function onOrientation(e) {
+    state.orientEvents++;
+    state.lastOrient = Date.now();
+    set('evt', String(state.orientEvents));
+
+    var heading = null;
+    var source = null;
+
+    if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
+      // iOS: bereits Grad im Uhrzeigersinn gegen geografisch Nord.
+      heading = e.webkitCompassHeading;
+      source = 'webkitCompassHeading (geografisch Nord)';
+      set('wkh', e.webkitCompassHeading.toFixed(1) + '°', 'ok');
+      var a = e.webkitCompassAccuracy;
+      if (typeof a === 'number') {
+        // Negativ heisst: Sensor unkalibriert, Wert unbrauchbar.
+        set('wka', a.toFixed(0) + '°', a < 0 ? 'bad' : (a > 20 ? 'warn' : 'ok'));
+      }
+    } else if (e.absolute === true && typeof e.alpha === 'number') {
+      // Android-Fallback: alpha zaehlt gegen den Uhrzeigersinn.
+      heading = (360 - e.alpha) % 360;
+      source = 'alpha (absolute) - Android-Fallback';
+      set('wkh', 'nicht vorhanden', 'warn');
+    }
+
+    if (typeof e.alpha === 'number') {
+      set('alpha', e.alpha.toFixed(1) + '° / ' + (e.absolute === true ? 'true' : String(e.absolute)));
+    }
+
+    if (heading !== null) {
+      state.headingSeen = true;
+      set('hdg', heading.toFixed(0) + '°');
+      set('hdgSrc', source);
+      $('rose').setAttribute('transform', 'rotate(' + (-heading).toFixed(1) + ' 75 75)');
+      verdict('pass', isStandalone
+        ? 'Kompass liefert Daten - und das im Standalone-Modus. Weg A ist tragfaehig.'
+        : 'Kompass liefert Daten. Jetzt bitte noch ueber den Homescreen testen.');
+    }
+  }
+
+  setInterval(function () {
+    if (!state.lastOrient) { return; }
+    var s = (Date.now() - state.lastOrient) / 1000;
+    set('age', s.toFixed(1) + ' s her', s > 3 ? 'bad' : 'ok');
+  }, 250);
+
+  function listenOrientation() {
+    window.addEventListener('deviceorientation', onOrientation, true);
+    window.addEventListener('deviceorientationabsolute', onOrientation, true);
+
+    // Wenn nach 3 s nichts ankommt, ist der Sensor stumm.
+    setTimeout(function () {
+      if (state.orientEvents === 0) {
+        verdict('fail', 'Permission erteilt, aber es kommen keine deviceorientation-Events an. Weg A traegt so nicht.');
+      } else if (!state.headingSeen) {
+        verdict('fail', 'Events kommen an, aber ohne nutzbaren Heading (kein webkitCompassHeading, kein absolute alpha). Fuer Sichtrichtung unbrauchbar.');
+      }
+    }, 3000);
+  }
+
+  // ---- GPS -----------------------------------------------------------------
+
+  function startGeo() {
+    if (!('geolocation' in navigator)) {
+      set('geoerr', 'Geolocation-API fehlt', 'bad');
+      return;
+    }
+    navigator.geolocation.watchPosition(function (pos) {
+      state.fixes++;
+      var c = pos.coords;
+      set('fixes', String(state.fixes));
+      set('latlon', c.latitude.toFixed(6) + ' / ' + c.longitude.toFixed(6), 'ok');
+      set('acc', '±' + c.accuracy.toFixed(0) + ' m', c.accuracy > 50 ? 'warn' : 'ok');
+      set('gpshdg', (typeof c.heading === 'number' && !isNaN(c.heading))
+        ? c.heading.toFixed(0) + '°'
+        : 'null (nur bei Bewegung)');
+      set('geoerr', '–');
+    }, function (err) {
+      set('geoerr', err.code + ': ' + err.message, 'bad');
+    }, {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 20000
+    });
+  }
+
+  // ---- Start (muss aus echter User-Geste heraus laufen) ---------------------
+
+  $('start').addEventListener('click', function () {
+    startGeo();
+
+    if (!hasRequestPermission) {
+      set('perm', 'n/a - direkt gelauscht');
+      listenOrientation();
+      return;
+    }
+
+    DeviceOrientationEvent.requestPermission().then(function (result) {
+      set('perm', result, result === 'granted' ? 'ok' : 'bad');
+      if (result === 'granted') {
+        listenOrientation();
+      } else {
+        verdict('fail', 'Permission abgelehnt ("' + result + '"). Unter Einstellungen > Safari > Erweitert > Website-Daten bzw. Bewegung & Ausrichtung zuruecksetzen und erneut versuchen.');
+      }
+    })['catch'](function (err) {
+      set('perm', 'Exception: ' + err.message, 'bad');
+      verdict('fail', 'requestPermission() hat geworfen: ' + err.message + ' - genau der Standalone-Bug, den wir suchen.');
+    });
+  });
+
+  $('reload').addEventListener('click', function () {
+    location.reload();
+  });
+})();
+</script>
+
+</body>
+</html>
