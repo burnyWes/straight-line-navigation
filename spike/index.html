@@ -118,6 +118,23 @@
 </div>
 
 <div class="panel">
+  <h2>Ton (Lautlos-Schalter)</h2>
+  <button id="cueIn">Earcon &bdquo;Eintritt&ldquo; (aufsteigend)</button>
+  <button id="cueOut" class="secondary">Earcon &bdquo;Austritt&ldquo; (absteigend)</button>
+  <div style="height:12px"></div>
+  <table>
+    <tr><td>AudioContext</td><td id="audioState">&ndash;</td></tr>
+    <tr><td>Ausgabe-Latenz</td><td id="audioLatency">&ndash;</td></tr>
+    <tr><td>Toene abgespielt</td><td id="audioCount">0</td></tr>
+  </table>
+  <p style="color:#8b949e;font-size:13px;margin:12px 0 0">
+    Vier Durchlaeufe: Lautsprecher laut, Lautsprecher lautlos,
+    Kopfhoerer laut, Kopfhoerer lautlos. Gesucht ist, ob der
+    Lautlos-Schalter den Ton abwuergt.
+  </p>
+</div>
+
+<div class="panel">
   <h2>Umgebung</h2>
   <table>
     <tr><td>Secure Context (HTTPS)</td><td id="secure">&ndash;</td></tr>
@@ -259,6 +276,63 @@
       timeout: 20000
     });
   }
+
+  // ---- Ton -------------------------------------------------------------------
+
+  var audioCtx = null;
+  var audioCount = 0;
+
+  function audioContext() {
+    if (!audioCtx) {
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) { return null; }
+      audioCtx = new Ctor();
+    }
+    // iOS startet den Context suspended; resume() braucht eine User-Geste.
+    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+    return audioCtx;
+  }
+
+  // Zweiklang: aufsteigend = Eintritt, absteigend = Austritt.
+  function earcon(freqs) {
+    var ctx = audioContext();
+    if (!ctx) {
+      set('audioState', 'Web Audio nicht verfuegbar', 'bad');
+      return;
+    }
+
+    var t = ctx.currentTime;
+    var noteLength = 0.12;
+
+    freqs.forEach(function (freq, i) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      var start = t + i * noteLength;
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      // Weiche Huellkurve, sonst knackt es an den Flanken.
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.25, start + 0.01);
+      gain.gain.linearRampToValueAtTime(0, start + noteLength);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + noteLength);
+    });
+
+    audioCount++;
+    set('audioCount', String(audioCount));
+    set('audioState', ctx.state, ctx.state === 'running' ? 'ok' : 'bad');
+    set('audioLatency', typeof ctx.outputLatency === 'number'
+      ? (ctx.outputLatency * 1000).toFixed(0) + ' ms'
+      : (ctx.baseLatency ? (ctx.baseLatency * 1000).toFixed(0) + ' ms' : 'unbekannt'));
+  }
+
+  $('cueIn').addEventListener('click', function () { earcon([660, 990]); });
+  $('cueOut').addEventListener('click', function () { earcon([990, 660]); });
 
   // ---- Haptik ---------------------------------------------------------------
 
