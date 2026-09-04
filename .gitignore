@@ -1,0 +1,65 @@
+### Java ###
+*.class
+*.log
+*.tmp.txt
+*.ctxt
+hs_err_pid*
+replay_pid*
+
+# Packaged / build output
+*.jar.bak
+*.war
+*.ear
+*.nar
+*.tar
+*.zip
+
+### Gradle ###
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+### IntelliJ IDEA ###
+.idea/*
+!.idea/codeStyles/
+*.iml
+*.ipr
+*.iws
+out/
+
+### Eclipse ###
+.classpath
+.project
+.settings/
+/bin
+
+### VS Code ###
+.vscode/
+
+### OS ###
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+# Linux
+*~
+.directory
