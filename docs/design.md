@@ -50,8 +50,8 @@ Diese Einschränkungen sind **akzeptiert**, nicht übersehen:
 |---|---|---|
 | Kein Hintergrundbetrieb | Bei gesperrtem Bildschirm friert die Seite ein — kein Kompass, keine Töne | Wake Lock hält den Bildschirm wach; „Handy in der Tasche" ist **kein** unterstützter Anwendungsfall (bewusst verworfen) |
 | Keine Web Share Target API | Kein „Teilen → diese App" aus Apple/Google Maps | Koordinaten werden über die Zwischenablage eingefügt |
-| `navigator.vibrate` fehlt | Kein haptisches Signal über die Standard-API | Offene Messfrage M1 (siehe §11) |
-| Web Audio ggf. vom Lautlos-Schalter stumm | Earcons eventuell unhörbar | Offene Messfrage M2; Signalkanal ist deshalb austauschbar gebaut |
+| **Keine Haptik, gemessen** | Kein Vibrationssignal bei Ein-/Austritt | Akzeptiert. Weder `navigator.vibrate` noch der `switch`-Umweg funktionieren (M1, gemessen 2026-09-04) |
+| **Lautlos-Schalter schaltet Web Audio stumm, gemessen** | Earcons bei Lautlos unhörbar | Akzeptiert — Nutzerentscheidung. VoiceOver-Ansagen bleiben hörbar und tragen das Signal |
 
 ---
 
@@ -316,13 +316,21 @@ Drei Fragen, die durch Messen am Gerät zu beantworten sind, nicht durch Nachden
 Testseite liegt unter `spike/` und ist erreichbar unter
 `https://burnywes.github.io/straight-line-navigation/spike/`.
 
-| # | Frage | Konsequenz |
-|---|---|---|
-| **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei **programmatischem** `click()` die Taptic Engine aus? | Wenn ja: Ein-/Austritt zusätzlich haptisch. Wenn nein: Audio und Ansage bleiben die einzigen Kanäle. |
-| **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? Vier Durchläufe: Lautsprecher/Kopfhörer × laut/lautlos. | Wenn ja: **Ansage ist Standard**, Earcon Zugabe. Wenn nein: umgekehrt. |
-| **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | Dauerhaft negativ oder >30° wäre ein Produktproblem, kein Implementierungsfehler — dann muss die App schlechte Genauigkeit sichtbar und hörbar machen. |
+| # | Frage | Ergebnis | Konsequenz |
+|---|---|---|---|
+| **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei programmatischem `click()` die Taptic Engine aus? | **Nein** (2026-09-04) | Haptik ist auf diesem Weg nicht erreichbar. Ein-/Austritt wird ausschließlich über Ton und Ansage signalisiert. |
+| **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? | **Ja** (2026-09-04) | Vom Nutzer als unproblematisch akzeptiert; das Verhalten bleibt so. Die VoiceOver-Ansage ist der Kanal, der auch bei Lautlos trägt — der Earcon ist die Zugabe für den entsperrten Fall. |
+| **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | **offen** | Dauerhaft negativ oder >30° wäre ein Produktproblem, kein Implementierungsfehler — dann muss die App schlechte Genauigkeit sichtbar und hörbar machen. |
 
-**Status M1–M3:** offen. Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt**.
+Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt** (2026-09-04).
+
+**Zur Haptik gibt es keinen weiteren Versuch.** Apple stellt die Taptic Engine dem Web
+nicht zur Verfügung: `navigator.vibrate` ist nicht implementiert, die Gamepad-Haptik
+setzt ein Gamepad voraus, Web Bluetooth fehlt in Safari, und der `switch`-Umweg wurde
+gemessen und trägt nicht. Der einzige verbleibende Kanal wären Web-Push-Benachrichtigungen
+— die brauchen einen Server, erzeugen sichtbare Banner und wären als Dauersignal
+unbrauchbar. Haptik gäbe es nur nativ (Weg B), mit erzwungener Neusignierung alle 7 Tage;
+das steht in keinem Verhältnis.
 
 ---
 
@@ -348,3 +356,5 @@ Testseite liegt unter `spike/` und ist erreichbar unter
 | 16 | Signalkanal als `CuePort` mit zwei Implementierungen | Entkoppelt die Architektur von Messfrage M2 |
 | 17 | Drei Tabs, Leiste oben, Start auf „Navigation" | VoiceOver läuft in DOM-Reihenfolge; oben ist ein Wisch statt vieler |
 | 18 | Vanilla TypeScript ohne UI-Framework | DOM-Knoten-Identität ist die kritischste Anforderung |
+| 19 | Keine Haptik — endgültig | M1 gemessen und negativ; kein weiterer Weg im Web vorhanden (§11) |
+| 20 | Stummschaltung bei Lautlos wird akzeptiert | M2 gemessen; Nutzerentscheidung, das Verhalten so zu belassen |
