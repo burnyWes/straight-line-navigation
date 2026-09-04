@@ -1,0 +1,350 @@
+# Straight-Line-Navigation — Entwurf und Entscheidungen
+
+Stand: 2026-09-04
+
+Dieses Dokument hält fest, **was** gebaut wird, **warum** so, und **was noch offen ist**.
+Es ist die Grundlage für die Implementierung; Entscheidungen werden hier geändert, nicht
+im Code umgangen.
+
+---
+
+## 1. Zweck
+
+Eine App, die zu selbst gespeicherten Orten **Luftlinie und Richtung** anzeigt — bewusst
+**ohne Karte und ohne Routing**. Sie beantwortet „wie weit und in welche Richtung", nicht
+„wie komme ich hin".
+
+**Einsatzszenarien**
+
+- Primär **urban**: Bahnhof, Treffpunkt, geparktes Auto, bekannte Anlaufpunkte.
+- Sekundär **Gelände**: weglose Peilung, zurück zum Ausgangspunkt.
+- Typische Distanzen 50 m bis 5 km, die Obergrenze ist aber **einstellbar** und darf
+  aufgehoben werden — auch Ziele in 50 km sollen anzeigbar sein.
+
+**Primärer Nutzer ist blind und bedient die App mit VoiceOver.** Das ist keine
+Zusatzanforderung, sondern die Leitplanke für jede Gestaltungsentscheidung: Wo visuelle
+und auditive Bedienbarkeit kollidieren, gewinnt die auditive.
+
+---
+
+## 2. Plattform: installierbare PWA
+
+**Entscheidung:** Web-App (PWA), die über Safari zum Home-Bildschirm hinzugefügt wird.
+Kein Xcode, kein Mac, **kein Apple-Developer-Account**.
+
+**Warum nicht nativ:** Ohne bezahlten Developer-Account ($99/Jahr) gibt es kein
+Ad-hoc-Provisioning. Der verbleibende native Weg wäre ein unsignierter Build über einen
+macOS-Runner in GitHub Actions plus Sideloading über AltStore/SideStore mit freier
+Apple-ID — mit **erzwungener Neusignierung alle 7 Tage**. Für eine privat genutzte App
+ein dauerhafter Betriebsaufwand ohne Gegenwert.
+
+**Verifiziert am 2026-09-04** durch einen Spike auf dem Zielgerät (`spike/index.html`):
+Kompass und GPS funktionieren in Safari **auch im Standalone-Modus vom Home-Bildschirm**.
+Damit ist das Hauptrisiko dieses Weges ausgeräumt.
+
+### 2.1 Bekannte Grenzen dieses Weges
+
+Diese Einschränkungen sind **akzeptiert**, nicht übersehen:
+
+| Grenze | Auswirkung | Umgang |
+|---|---|---|
+| Kein Hintergrundbetrieb | Bei gesperrtem Bildschirm friert die Seite ein — kein Kompass, keine Töne | Wake Lock hält den Bildschirm wach; „Handy in der Tasche" ist **kein** unterstützter Anwendungsfall (bewusst verworfen) |
+| Keine Web Share Target API | Kein „Teilen → diese App" aus Apple/Google Maps | Koordinaten werden über die Zwischenablage eingefügt |
+| `navigator.vibrate` fehlt | Kein haptisches Signal über die Standard-API | Offene Messfrage M1 (siehe §11) |
+| Web Audio ggf. vom Lautlos-Schalter stumm | Earcons eventuell unhörbar | Offene Messfrage M2; Signalkanal ist deshalb austauschbar gebaut |
+
+---
+
+## 3. Barrierefreiheit
+
+**Stufe: „blind benutzbar" (Audio-First)**, nicht nur WCAG-konform.
+
+- Alle Bedienelemente sind echte, fokussierbare Elemente mit Labels.
+- Sauberer Überschriften-Baum (`h1` je Bereich, `h2` je Abschnitt), damit der
+  VoiceOver-Rotor als zweiter Navigationsweg funktioniert.
+- Bereichswechsel setzt den Fokus auf die Überschrift des Zielbereichs.
+- Keine eigenen Touch-Gesten — bei aktivem VoiceOver werden sie abgefangen.
+- **Kein nachgebauter Bildschirmvorhang.** Das ist VoiceOver-Bordmittel
+  (Dreifachtipp mit drei Fingern) und wird nicht dupliziert.
+
+Der maßgebliche Test ist die Bedienung mit VoiceOver auf dem Gerät. Automatisierte
+Prüfungen finden fehlende Labels, aber nicht „der Fokus springt beim Drehen".
+
+---
+
+## 4. Fachliche Regeln
+
+### 4.1 Sichtkegel
+
+- **Halber Öffnungswinkel: 20° (Standard), in den Einstellungen änderbar.**
+- **Hysterese: Eintritt bei 20°, Austritt erst bei 25°.** Ohne sie flackert die Liste im
+  Takt des Handzitterns und die Ein-/Austritts-Signale feuern im Stakkato. Das ist eine
+  Funktionsanforderung, kein Feinschliff.
+- **Harter Filter:** Was nicht im Kegel liegt, erscheint nicht. Liegt nichts im Kegel,
+  bleibt die Liste leer (bewusst so entschieden).
+- Die Richtung stammt aus `webkitCompassHeading` — bereits Grad im Uhrzeigersinn gegen
+  **geografisch** Nord. Eine Deklinationskorrektur entfällt damit.
+
+### 4.2 Anzeige
+
+- **Sortierung: nächstes Ziel zuerst.** *(Angenommen aus dem Gespräch; falls doch
+  „weitestes zuerst" gewünscht ist, ist das eine Zeile.)*
+- Entfernung als **Großkreisdistanz** (Haversine).
+- **Gerundet in Stufen:** unter 1 km in 10-m-Schritten, darüber in 100-m-Schritten.
+  Metergenaue Labels ändern sich mehrmals pro Sekunde und lassen VoiceOver mitten im
+  Satz neu ansetzen.
+- **Maximale Entfernung** ist einstellbar und abschaltbar.
+
+### 4.3 Auto-Freeze
+
+Solange der Fokus **innerhalb** der Kegel-Liste steht, friert sie ein: keine
+Umsortierung, kein Entfernen von Einträgen. Verlässt der Fokus die Liste, läuft sie
+wieder live. Zusätzlich gibt es einen expliziten **Anhalten-Schalter**.
+
+Ein- und Auftauchen des Freeze wird angesagt („angehalten" / „aktualisiert"), sonst ist
+nicht unterscheidbar, ob Zahlen aktuell oder eingefroren sind.
+
+**Bewusst in Kauf genommen:** Während des Durchswipens sind die Daten leicht veraltet
+(bei Gehgeschwindigkeit einige Dutzend Meter). Eine stabile Liste mit kleinem Fehler ist
+brauchbar; eine exakte Liste, die den Fokus zerstört, nicht.
+
+**Technische Voraussetzung:** Jede Listenzeile ist ein `<button>`. Nur bei
+fokussierbaren Elementen erzeugt der VoiceOver-Cursor `focus`-Ereignisse, an denen das
+Freeze hängt.
+
+### 4.4 Ein- und Austritts-Signale
+
+Wechselt eine Location den Kegel-Zustand, wird signalisiert:
+
+- **Eintritt:** Name der Location.
+- **Austritt:** „raus".
+- Zusätzlich bzw. alternativ ein **Earcon** (aufsteigender Zweiklang bei Eintritt,
+  absteigend bei Austritt).
+
+In den Einstellungen wählbar: nur Ton, nur Ansage, beides, aus. **Es werden nie die
+Locations im Kegel automatisch vorgelesen** — nur der Zustandswechsel wird gemeldet.
+
+---
+
+## 5. Interaktionsmodell
+
+**Drei Tabs, Tab-Leiste oben** (nicht unten): VoiceOver läuft in DOM-Reihenfolge; oben
+ist die Leiste mit einem Wisch vom Seitenanfang erreichbar. Die iOS-Konvention „Tabs
+unten" ist Daumen-Ergonomie für Sehende und hier ein Umweg.
+
+| Tab | Inhalt |
+|---|---|
+| **Navigation** | „Navigation starten"-Button, Kegel-Liste, Anhalten-Schalter |
+| **Orte** | Alle gespeicherten Locations: anlegen, umbenennen, löschen |
+| **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Export/Import, Datum der letzten Sicherung |
+
+- Die App startet **immer** auf „Navigation".
+- Der Navigations-Tab beginnt mit einem bildschirmbreiten **„Navigation starten"**-Button
+  als erstem Element nach der Überschrift. Das ist keine Design-Entscheidung: iOS gibt
+  den Kompass erst nach `DeviceOrientationEvent.requestPermission()` aus einer echten
+  Berührung frei. Die App kann nicht von selbst loslaufen.
+- Während der Navigation hält `navigator.wakeLock` den Bildschirm wach.
+
+---
+
+## 6. Erfassung von Orten
+
+**Ein Name ist Pflicht.** Bei einer Audio-App ist „Unbenannt 3, 1,2 km" wertlos. Beim
+Speichern per GPS schlägt die App automatisch etwas vor (Datum/Uhrzeit), damit im Stehen
+nichts getippt werden muss; Umbenennen geht später in Ruhe.
+
+### 6.1 Aktuellen Standort speichern
+
+Ein Button. Die **Genauigkeit wird mitgespeichert und angesagt** („gespeichert,
+Genauigkeit 12 Meter"), damit erkennbar ist, ob ein zweiter Versuch sinnvoll ist —
+direkt nach dem Aufwachen liefert iOS gern ±65 m.
+
+### 6.2 Einfügen aus der Zwischenablage
+
+Ein toleranter Parser, der die üblichen Schreibweisen frisst:
+
+```
+52.516275, 13.377704            Dezimalgrad
+52°30'58.6"N 13°22'39.7"E       Grad/Minuten/Sekunden
+N 52 30.977 E 13 22.662         Grad/Dezimalminuten
+geo:52.516275,13.377704         geo-URI
+https://maps.app.goo.gl/…       Maps-Link
+```
+
+Das ist der Ersatz für eine eigene Adresssuche: Der Ort wird in einer Karten-App
+gesucht, die bereits barrierefrei ist, und die Koordinate herüberkopiert. Zwölf Ziffern
+mit VoiceOver zu tippen ist keine zumutbare Alternative — ein Vertipper an der dritten
+Nachkommastelle verschiebt um hundert Meter.
+
+Der Parser ist reine Domänenlogik (String rein, `Coordinate` oder Fehler raus) und
+vollständig ohne iPhone testbar.
+
+### 6.3 Bewusst nicht: Geocoding
+
+Adresssuche über einen Fremddienst wird **vorerst nicht** gebaut. Sie bräuchte Netz,
+einen externen Dienst und würde private Ortsangaben an Dritte senden — für einen
+Anwendungsfall, den §6.2 zu großen Teilen abdeckt. Nachrüstbar als `GeocodingPort`, ohne
+dass der Rest der App es merkt.
+
+---
+
+## 7. Datenhaltung und Sicherung
+
+**Speicher:** `localStorage` mit einem JSON-Dokument, hinter einem
+`LocationRepository`-Port. Bei dieser Datenmenge reicht das mit weitem Abstand, ist
+synchron und trivial testbar. IndexedDB wäre vorsorgliche Komplexität; der Wechsel bleibt
+ein Adapter-Tausch. Zusätzlich `navigator.storage.persist()` — kostet drei Zeilen und
+kann nur helfen.
+
+**Risiko:** Ohne Backend gibt es keine zweite Kopie. Das Löschen des Home-Bildschirm-Icons
+oder der Websitedaten nimmt alle Orte mit. *(Safaris 7-Tage-Löschung für Skript-Speicher
+greift bei installierten Home-Screen-Apps **nicht**; die Daten verfallen nicht durch
+Nichtbenutzung.)*
+
+**Sicherung — beide Wege:**
+
+1. **Export als Datei** (JSON, landet in der Dateien-App → iCloud Drive).
+2. **Export in die Zwischenablage** — schneller mit VoiceOver, direkt in eine Notiz oder
+   Mail einfügbar.
+
+Das **Datum der letzten Sicherung** steht in den Einstellungen. Kein Nörgel-Dialog.
+
+**Import ergänzt, er ersetzt nicht.** Dubletten werden über die Koordinate erkannt.
+„Ersetzen" wäre der Klick, der im falschen Moment alles kostet.
+
+---
+
+## 8. Architektur: DDD + Onion
+
+Abhängigkeiten zeigen ausschließlich nach innen. Domäne und Anwendungsschicht sind frei
+von DOM, Browser-APIs und Framework.
+
+```
+┌─────────────────────────────────────────────┐
+│  Adapter (außen)                            │
+│   GeolocationPositionProvider               │
+│   DeviceOrientationHeadingProvider          │
+│   LocalStorageLocationRepository            │
+│   WebAudioCue / LiveRegionCue               │
+│   DOM-Views (Navigation / Orte / Settings)  │
+│  ┌───────────────────────────────────────┐  │
+│  │  Anwendung                            │  │
+│  │   NavigationService                   │  │
+│  │   LocationService                     │  │
+│  │   BackupService                       │  │
+│  │  ┌─────────────────────────────────┐  │  │
+│  │  │  Domäne (Kern, rein)            │  │  │
+│  │  │   Coordinate, Bearing, Distance │  │  │
+│  │  │   Location                      │  │  │
+│  │  │   greatCircleDistance()         │  │  │
+│  │  │   initialBearing()              │  │  │
+│  │  │   ViewCone (Hysterese)           │  │  │
+│  │  │   CoordinateParser              │  │  │
+│  │  └─────────────────────────────────┘  │  │
+│  └───────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+```
+
+**Ports** (Interfaces in der Anwendungsschicht, Implementierung außen):
+`PositionProvider`, `HeadingProvider`, `LocationRepository`, `CuePort`, `ClockPort`.
+
+**Der konkrete Gewinn ist nicht akademisch:** Die gesamte Navigationslogik lässt sich am
+Windows-Rechner testen, ohne iPhone. Fake-Provider einspeisen — „ich stehe hier, schaue
+dorthin" — und prüfen, welche Locations herauskommen. Ohne diese Trennung müsste man für
+jede Änderung an der Kegel-Logik rausgehen und sich im Kreis drehen.
+
+`CuePort` ist der Grund, warum Messfrage M2 (§11) die Architektur nicht blockiert: Fällt
+Web Audio aus, wird die Ansage zum Standard und der Ton zur Zugabe — ohne Änderung an
+der Logik, die entscheidet, wer rein- und rausgefallen ist.
+
+---
+
+## 9. Technischer Stack
+
+| | |
+|---|---|
+| Sprache | TypeScript, **kein UI-Framework** |
+| Build | Vite, `base: '/straight-line-navigation/'` |
+| Tests | Vitest (Domäne und Anwendungsschicht) |
+| Hosting | GitHub Pages, Deployment über GitHub Actions |
+
+**Warum kein Framework:** VoiceOver-Fokus hängt an der **Identität des DOM-Knotens**.
+Ersetzt ein Reconciler beim Neu-Rendern einen Listeneintrag durch ein neues Element statt
+es zu aktualisieren, ist der Fokus weg — optisch unsichtbar, mit VoiceOver fatal. Bei
+drei Bildschirmen und einer dynamischen Liste greift der Hauptnutzen eines Frameworks
+ohnehin nicht; die View ist nur die äußerste Schale und bliebe austauschbar.
+
+**Java ist raus.** Die App braucht **kein Backend** — die Daten sind eigene Koordinaten,
+sie gehören aufs Gerät, und ein Server würde die App netzabhängig machen und damit genau
+die Eigenschaft zerstören, die sie haben soll.
+
+### 9.1 Repository
+
+- **`github`** → `github.com/burnyWes/straight-line-navigation` (public, Upstream von
+  `main`, hostet Pages)
+- **`origin`** → MaibornWolff-GitLab (bleibt bestehen, wird explizit bedient)
+
+**Weil das Repo öffentlich ist:**
+
+- **Niemals echte Koordinaten committen.** Keine Wohnadresse in Testdaten. Die Historie
+  bleibt über den Commit-Hash dauerhaft abrufbar, auch nach `git rm` oder Force-Push.
+- Keine Secrets im Repo.
+- In Workflows **niemals `pull_request_target`** — dieser Trigger gibt fremdem PR-Code
+  Schreibrechte und Secrets. Unser Deploy triggert auf `push` auf `main`, wohin nur der
+  Eigentümer pushen kann. Actions setzen explizit minimale `permissions:` und gepinnte
+  Versionen.
+
+---
+
+## 10. Bewusst nicht gebaut
+
+| Nicht-Ziel | Grund |
+|---|---|
+| Karte, Kartenkacheln | Widerspricht dem Konzept; offline ein eigenes Projekt |
+| Straßennavigation, Routing | Explizit unerwünscht |
+| Backend, Konten, Sync | Macht die App netzabhängig, ohne Nutzen |
+| Adresssuche/Geocoding | Siehe §6.3 — nachrüstbar |
+| Hintergrundbetrieb bei gesperrtem Bildschirm | Auf einer PWA nicht möglich; Anwendungsfall verworfen |
+| Nachgebauter Bildschirmvorhang | VoiceOver-Bordmittel |
+| Entfernung als Tonhöhe/Klickrate kodiert | Reizvolle Erweiterung, kein Fundament — erst nach Praxiserfahrung |
+
+---
+
+## 11. Offene Messfragen
+
+Drei Fragen, die durch Messen am Gerät zu beantworten sind, nicht durch Nachdenken. Die
+Testseite liegt unter `spike/` und ist erreichbar unter
+`https://burnywes.github.io/straight-line-navigation/spike/`.
+
+| # | Frage | Konsequenz |
+|---|---|---|
+| **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei **programmatischem** `click()` die Taptic Engine aus? | Wenn ja: Ein-/Austritt zusätzlich haptisch. Wenn nein: Audio und Ansage bleiben die einzigen Kanäle. |
+| **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? Vier Durchläufe: Lautsprecher/Kopfhörer × laut/lautlos. | Wenn ja: **Ansage ist Standard**, Earcon Zugabe. Wenn nein: umgekehrt. |
+| **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | Dauerhaft negativ oder >30° wäre ein Produktproblem, kein Implementierungsfehler — dann muss die App schlechte Genauigkeit sichtbar und hörbar machen. |
+
+**Status M1–M3:** offen. Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt**.
+
+---
+
+## 12. Entscheidungsprotokoll
+
+| # | Entscheidung | Begründung |
+|---|---|---|
+| 1 | Kein Apple-Developer-Account | Nutzervorgabe |
+| 2 | PWA statt nativ | Ohne Account kein tragfähiger nativer Weg; Kompass-Risiko durch Spike ausgeräumt |
+| 3 | GitHub Pages, öffentliches Repo | Dauerhafte HTTPS-URL kostenlos; Actions für Public-Repos unbegrenzt |
+| 4 | Szenarien A+C, Schwerpunkt urban | Nutzervorgabe |
+| 5 | Kegel ±20°, harter Filter, leere Anzeige zulässig | Nutzerentscheidung gegen den Vorschlag „priorisieren statt filtern" |
+| 6 | Zusätzliche Listenansicht zur Verwaltung | Nutzervorgabe |
+| 7 | Java raus, TypeScript, kein Backend | Kein Server nötig; Onion-Architektur bleibt vollständig erhalten |
+| 8 | Barrierefreiheit Stufe 2 (Audio-First) | Primärnutzer ist blind |
+| 9 | Nur Ein-/Austritts-Signal, kein automatisches Vorlesen | Nutzerentscheidung |
+| 10 | Manuelles Erswipen (Modell A) statt „Was ist da?"-Button | Nutzerentscheidung gegen den Vorschlag B |
+| 11 | Hysterese, Rundung, Auto-Freeze, Freeze-Ansage | Ohne diese vier ist Modell A mit VoiceOver nicht bedienbar |
+| 12 | Erfassung per GPS + Zwischenablage-Parser | Kein Share Target auf iOS; Tippen von Koordinaten mit VoiceOver unzumutbar |
+| 13 | Name ist Pflicht, Vorschlag beim Speichern | Namenlose Einträge sind in einer Audio-App wertlos |
+| 14 | `localStorage` hinter Port; Export als Datei **und** Zwischenablage; Import ergänzt | Einfachster tragfähiger Speicher; Datenverlust ist das reale Risiko |
+| 15 | Wake Lock ja, Tasche-Fall verworfen, kein Schwarz-Modus | PWA kann nicht im Hintergrund laufen; Bildschirmvorhang ist Bordmittel |
+| 16 | Signalkanal als `CuePort` mit zwei Implementierungen | Entkoppelt die Architektur von Messfrage M2 |
+| 17 | Drei Tabs, Leiste oben, Start auf „Navigation" | VoiceOver läuft in DOM-Reihenfolge; oben ist ein Wisch statt vieler |
+| 18 | Vanilla TypeScript ohne UI-Framework | DOM-Knoten-Identität ist die kritischste Anforderung |

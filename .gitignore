@@ -1,51 +1,34 @@
-### Java ###
-*.class
+### Node / TypeScript ###
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+
+# Logs
+logs/
 *.log
-*.tmp.txt
-*.ctxt
-hs_err_pid*
-replay_pid*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Packaged / build output
-*.jar.bak
-*.war
-*.ear
-*.nar
-*.tar
-*.zip
+# Test- und Build-Artefakte
+coverage/
+.vite/
+.vitest/
 
-### Gradle ###
-.gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# Environment
+.env
+.env.*
+!.env.example
 
-### Maven ###
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-
-### IntelliJ IDEA ###
+### Editoren ###
 .idea/*
 !.idea/codeStyles/
+.vscode/*
+!.vscode/extensions.json
 *.iml
-*.ipr
-*.iws
-out/
-
-### Eclipse ###
-.classpath
-.project
-.settings/
-/bin
-
-### VS Code ###
-.vscode/
 
 ### OS ###
 # Windows

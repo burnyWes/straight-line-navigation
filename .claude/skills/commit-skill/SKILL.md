@@ -70,21 +70,16 @@ fix: correct typo in start menu label
 
 ## Test gate
 
-Run the following before committing. It must succeed.
-
-The Gradle wrapper is on 9.6.0, which runs on the machine's default JDK 25 — no
-`JAVA_HOME` override is needed. (The Java **toolchain** still targets 21 and Gradle
-auto-provisions a JDK 21 for compilation/tests.)
+This is a frontend-only TypeScript project (Vite + Vitest, no backend — see
+`docs/design.md`). Run the following before committing. It must succeed.
 
 ```powershell
-# Backend tests (from repo root)
-.\gradlew.bat test
+npm run typecheck   # tsc --noEmit
+npm test            # vitest run
 ```
 
-There is currently no `frontend/` directory in this repo, so the frontend
-typecheck/build step does not apply. If one is added later (a `frontend/package.json`
-whose `npm run build` runs `tsc --noEmit` before `vite build`), run it too:
-`cd frontend; npm install; npm run build; cd ..`.
+Skip a step only when the corresponding script does not exist yet in
+`package.json` — never because it is inconvenient.
 
 **If either step fails:** stop immediately, show the relevant failing output to the
 user, and do **not** create a commit.
@@ -98,11 +93,9 @@ user, and do **not** create a commit.
    there is no prefix.
 3. **Auto-stage.** Run `git add -A` to stage all changes (always including
    `docs/notes.txt` if modified).
-4. **Run backend tests.** `.\gradlew.bat test` (Gradle 9.6.0 runs on the default JDK 25;
-   no `JAVA_HOME` override needed).
-5. **Run frontend build** *(only if a `frontend/` directory exists)*.
-   `cd frontend; npm install; npm run build; cd ..`.
-6. **Gate.** If any test run failed → stop, report the failure, do not commit.
+4. **Run the typecheck.** `npm run typecheck`.
+5. **Run the tests.** `npm test`.
+6. **Gate.** If any run failed → stop, report the failure, do not commit.
 7. **Compose the message** as `COE-xxx > type: subject` (or `type: subject` without a
    story) with the `(committed by agent)` footer.
 8. **Commit.** Create the commit. Confirm success with `git log -1 --stat`.
