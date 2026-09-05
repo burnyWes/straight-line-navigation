@@ -121,6 +121,9 @@ const locationsView = new LocationsView(announcer, {
         locationService.remove(id);
         locationsView.render(locationService.all());
         dirty = true;
+        // Die Ansage liegt in der Ansicht: Nur sie kennt die offenen Dialoge
+        // und weiss, wohin der Fokus danach gehoert.
+        locationsView.reportRemoved();
       },
       (message) => {
         locationsView.reportStorageError(message);
@@ -398,9 +401,11 @@ function handleSave(save: () => ReturnType<LocationService['saveCurrentPosition'
     () => {
       const result = save();
       if (result.ok) {
-        locationsView.reportSaved(result.location);
+        // Erst rendern, dann melden: reportSaved fokussiert den Eintrag, und
+        // das Rendern ersetzt genau diesen Knopf.
         locationsView.render(locationService.all());
         dirty = true;
+        locationsView.reportSaved(result.location);
       } else {
         locationsView.reportFailure(result.reason);
       }

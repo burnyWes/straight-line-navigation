@@ -62,6 +62,15 @@ x  GPS-Ausfall bei laufendem Kompass: Fix gilt 12 Sekunden, danach wird die
    werden nicht mehr vom naechsten Bild ueberschrieben.
 x  Sicherung einlesen ging nur ueber das Textfeld - Dateiauswahl ergaenzt, das
    Gegenstueck zu "Als Datei sichern" (design.md 7)
+x  Tab-Leiste bleibt beim Scrollen oben stehen (design.md 5, Entscheidung 29)
+x  Ortsliste zeigt nur den Namen; Tippen oeffnet einen Dialog zum Bearbeiten und
+   Loeschen, Loeschen fragt in einem zweiten Dialog nach (design.md 6.4,
+   Entscheidung 30)
+x  Liste der Orte alphabetisch sortiert - leistete LocationService.all() schon,
+   nur bestaetigt
+x  Anlegen hinter einem Plus-Symbol oben rechts, als Dialog; Knopf "Namen
+   vorschlagen" entfaellt, der Vorschlag steht beim Oeffnen im Feld
+   (design.md 6, Entscheidung 31)
 
 --------------------------------------------------------------------------------
 TODO
@@ -83,12 +92,9 @@ TODO
 m  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
 m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
-- Tabs oben fixieren
-- Orte-Seite
-  - oben rechts ein Plus-Icon
-      - Klick öffnet ein Dialogfeld, indem man einen neuen Ort hinzufügen kann.
-      - Name vorschlagen entfernen
-    - Liste der Orte alphabetisch sortiert
-      - Eintrag zeigt nur den Namen
-      - Klick öffnet einen Dialog zum Bearbeiten/Löschen
-      
+- Gruppenfunktion
+- Ausblenden von Orten
+- Bugs auf Navigation-Setie
+  - Finger auf Orten liegenlassen -> Ständige Wiederholung des Vorlesens mit VoiceOver
+  - Navigation funktioniert nur einmal. Danach hört man nur noch die Rein-/Raus-Sounds aber die Liste aktuallisiert sich
+   nicht mehr

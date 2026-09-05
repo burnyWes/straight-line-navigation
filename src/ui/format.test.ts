@@ -3,6 +3,7 @@ import {
   formatDirection,
   formatDistance,
   formatEntryLabel,
+  formatLocationDetails,
   formatSaveConfirmation,
 } from './format.js';
 
@@ -59,5 +60,32 @@ describe('formatSaveConfirmation', () => {
 
   it('laesst sie bei eingegebenen Koordinaten weg', () => {
     expect(formatSaveConfirmation('Bahnhof', null)).toBe('Bahnhof gespeichert.');
+  });
+});
+
+describe('formatLocationDetails', () => {
+  // Mittags in UTC, damit der Kalendertag in keiner Zeitzone kippt.
+  const CREATED_AT = '2026-09-04T12:00:00.000Z';
+
+  it('nennt Anlagedatum und Genauigkeit', () => {
+    expect(formatLocationDetails({ createdAt: CREATED_AT, accuracyMetres: 12 })).toBe(
+      'Angelegt am 4. September 2026, Genauigkeit 12 Meter.',
+    );
+  });
+
+  it('laesst die Genauigkeit bei eingegebenen Koordinaten weg', () => {
+    expect(formatLocationDetails({ createdAt: CREATED_AT, accuracyMetres: null })).toBe(
+      'Angelegt am 4. September 2026.',
+    );
+  });
+
+  it('erfindet bei unlesbarem Datum keine Angabe', () => {
+    // Kommt aus einer fremden oder beschaedigten Sicherung.
+    expect(formatLocationDetails({ createdAt: 'gestern', accuracyMetres: null })).toBe(
+      'Anlagedatum unbekannt.',
+    );
+    expect(formatLocationDetails({ createdAt: 'gestern', accuracyMetres: 12 })).toBe(
+      'Anlagedatum unbekannt, Genauigkeit 12 Meter.',
+    );
   });
 });

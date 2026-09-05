@@ -40,7 +40,11 @@
 
 body {
   margin: 0;
-  padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+  /*
+   * Oben kein Polster: Die angeheftete Tab-Leiste liegt am Viewport-Rand, also
+   * traegt die h1 den Abstand zur Statusleiste selbst (siehe .tablist).
+   */
+  padding: 0 calc(12px + env(safe-area-inset-right))
     calc(24px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
   background: var(--bg);
   color: var(--fg);
@@ -51,6 +55,8 @@ body {
 h1 {
   font-size: 20px;
   margin: 0 0 12px;
+  /* Uebernimmt das obere Polster vom Body - der Abstand bleibt, wo er war. */
+  padding-top: calc(12px + env(safe-area-inset-top));
 }
 
 h2 {
@@ -82,10 +88,24 @@ h3 {
   border: 0;
 }
 
+/*
+ * Bleibt beim Scrollen oben stehen: Der Bereichswechsel darf nicht davon
+ * abhaengen, wie weit die Ortsliste gescrollt ist (docs/design.md 5).
+ *
+ * Das obere Polster haengt hier und nicht am Body: Angeheftet liegt die Leiste
+ * am Viewport-Rand, der Streifen unter der Statusleiste gehoert dann ihr. Ohne
+ * eigenes Polster und deckenden Grund scrollte dort sichtbar Text hindurch.
+ */
 .tablist {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   gap: 6px;
-  margin-bottom: 14px;
+  padding: calc(6px + env(safe-area-inset-top)) 0 8px;
+  margin-bottom: 6px;
+  background: var(--bg);
+  border-bottom: 2px solid var(--line);
 }
 
 .tab {
@@ -288,4 +308,29 @@ textarea {
 
 button.entry {
   font-size: 18px;
+}
+
+/*
+ * Modaler Dialog (siehe ui/dialog.ts).
+ *
+ * Bewusst **keine** display-Angabe: Der Browser haelt einen geschlossenen
+ * Dialog ueber display: none. Eine eigene Regel machte ihn dauerhaft sichtbar -
+ * derselbe Fallstrick wie bei [hidden] weiter oben.
+ */
+dialog.sheet {
+  width: min(100%, 420px);
+  /* Passt auch, wenn die Bildschirmtastatur die Haelfte des Bildes nimmt. */
+  max-height: 85vh;
+  margin: auto;
+  padding: 16px;
+  overflow-y: auto;
+  color: var(--fg);
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+}
+
+/* Deckt den Hintergrund sichtbar ab - inert ist er ohnehin schon. */
+dialog.sheet::backdrop {
+  background: rgb(0 0 0 / 55%);
 }

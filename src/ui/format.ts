@@ -9,6 +9,8 @@
  * Einheitenkuerzel je nach Kontext unterschiedlich vorlesen.
  */
 
+import type { Location } from '../domain/location.js';
+
 const KILOMETRE_FORMAT = new Intl.NumberFormat('de-DE', {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
@@ -45,4 +47,36 @@ export function formatSaveConfirmation(name: string, accuracyMetres: number | nu
     return `${name} gespeichert.`;
   }
   return `${name} gespeichert, Genauigkeit ${Math.round(accuracyMetres)} Meter.`;
+}
+
+const CREATED_AT_FORMAT = new Intl.DateTimeFormat('de-DE', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+/**
+ * Infozeile im Bearbeiten-Dialog: "Angelegt am 4. September 2026, Genauigkeit 12 Meter."
+ *
+ * Sagt, wie verlaesslich der Punkt ist, ohne dass VoiceOver zwoelf Ziffern
+ * mitliest - die Koordinate selbst steht bewusst nicht darin.
+ *
+ * Ein unlesbares `createdAt` kommt aus einer fremden oder beschaedigten
+ * Sicherung. Dann wird das ehrlich gesagt, statt ein Datum zu erfinden.
+ */
+export function formatLocationDetails(
+  location: Pick<Location, 'createdAt' | 'accuracyMetres'>,
+): string {
+  const created = new Date(location.createdAt);
+  const parts = [
+    Number.isNaN(created.getTime())
+      ? 'Anlagedatum unbekannt'
+      : `Angelegt am ${CREATED_AT_FORMAT.format(created)}`,
+  ];
+  // Bei eingegebenen Koordinaten gibt es keine Messung - dann bleibt die
+  // Angabe weg, statt "Genauigkeit unbekannt" zu behaupten.
+  if (location.accuracyMetres !== null) {
+    parts.push(`Genauigkeit ${Math.round(location.accuracyMetres)} Meter`);
+  }
+  return `${parts.join(', ')}.`;
 }

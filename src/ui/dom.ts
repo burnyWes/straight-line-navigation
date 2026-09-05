@@ -68,3 +68,4 @@ export function icon(path: string): SVGSVGElement {
 export const ICON_PLAY = 'M8 5l12 7-12 7z';
 export const ICON_STOP = 'M6 6h12v12H6z';
 export const ICON_PAUSE = 'M7 5h4v14H7zm6 0h4v14h-4z';
+export const ICON_PLUS = 'M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z';

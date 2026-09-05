@@ -232,12 +232,12 @@ durchscheinenden Text. Deshalb wandert das obere Polster vom Body auf die `h1`, 
 die Leiste bringt ihr eigenes mit.
 
 **Tasks**:
-- [ ] `src/ui/styles.css`: oberes `body`-Polster auf `0` setzen, die drei uebrigen
+- [x] `src/ui/styles.css`: oberes `body`-Polster auf `0` setzen, die drei uebrigen
       Werte unveraendert lassen.
-- [ ] `src/ui/styles.css`: `h1` bekommt
+- [x] `src/ui/styles.css`: `h1` bekommt
       `padding-top: calc(12px + env(safe-area-inset-top))`, damit der Abstand oben
       bleibt, wo er war.
-- [ ] `src/ui/styles.css`: `.tablist` klebt und deckt ab.
+- [x] `src/ui/styles.css`: `.tablist` klebt und deckt ab.
       ```css
       .tablist {
         position: sticky;
@@ -254,20 +254,20 @@ die Leiste bringt ihr eigenes mit.
         border-bottom: 2px solid var(--line);
       }
       ```
-- [ ] `src/ui/styles.css`: Kommentar ueber `.tablist` ergaenzen - warum sie klebt und
+- [x] `src/ui/styles.css`: Kommentar ueber `.tablist` ergaenzen - warum sie klebt und
       warum das Polster hier haengt und nicht am Body.
-- [ ] `docs/design.md` 5: Die Aussage "Tab-Leiste oben" um den Satz ergaenzen, dass
+- [x] `docs/design.md` 5: Die Aussage "Tab-Leiste oben" um den Satz ergaenzen, dass
       sie beim Scrollen stehen bleibt.
-- [ ] `docs/design.md` 12: Entscheidung 29 aufnehmen - "Tab-Leiste bleibt beim
+- [x] `docs/design.md` 12: Entscheidung 29 aufnehmen - "Tab-Leiste bleibt beim
       Scrollen oben stehen". Begruendung: Der Bereichswechsel darf nicht davon
       abhaengen, wie weit die Ortsliste gescrollt ist.
-- [ ] `docs/notes.txt`: "Tabs oben fixieren" aus dem TODO nehmen und als `x` in den
+- [x] `docs/notes.txt`: "Tabs oben fixieren" aus dem TODO nehmen und als `x` in den
       DONE-Block einordnen.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` laeuft ohne Fehler.
-- [ ] `npm test` laeuft ohne Fehler.
-- [ ] `npm run build` laeuft ohne Fehler.
+- [x] `npm run typecheck` laeuft ohne Fehler.
+- [x] `npm test` laeuft ohne Fehler.
+- [x] `npm run build` laeuft ohne Fehler.
 
 **Manual Verification**:
 - [ ] Am iPhone, Bereich Orte mit mehr Eintraegen als auf einen Bildschirm passen:
@@ -291,7 +291,7 @@ Nach dieser Phase steht das alte Anlegeformular unveraendert oben auf der Seite;
 Liste darunter besteht bereits aus Namensknoepfen mit Dialog.
 
 **Tasks**:
-- [ ] `src/ui/dialog.ts` anlegen: `ModalDialog` mit Kopfkommentar (warum nativ:
+- [x] `src/ui/dialog.ts` anlegen: `ModalDialog` mit Kopfkommentar (warum nativ:
       inerter Hintergrund, Fokusfalle und Escape kommen vom Browser).
       ```ts
       export class ModalDialog {
@@ -317,13 +317,13 @@ Liste darunter besteht bereits aus Namensknoepfen mit Dialog.
       Die Fokusrueckgabe haengt am `close`-Ereignis, damit sie auch bei Escape
       greift. `closeKeepingFocus()` setzt `opener` vorher auf `null`. Die
       Ueberschrift ist ueber `aria-labelledby` mit dem Dialog verbunden.
-- [ ] `src/ui/styles.css`: `dialog.sheet` und `dialog.sheet::backdrop` ergaenzen -
+- [x] `src/ui/styles.css`: `dialog.sheet` und `dialog.sheet::backdrop` ergaenzen -
       heller Grund, kraeftiger Rand, `width: min(100%, 420px)`, `margin: auto`,
       `max-height` mit `overflow-y: auto`. **Keine `display`-Angabe**: Der Browser
       haelt einen geschlossenen Dialog ueber `display: none`; eine eigene Regel
       machte ihn dauerhaft sichtbar - derselbe Fallstrick wie bei `[hidden]`
       (Kommentar in `styles.css:31-39`).
-- [ ] `src/ui/format.ts`: `formatLocationDetails(location)` ergaenzen.
+- [x] `src/ui/format.ts`: `formatLocationDetails(location)` ergaenzen.
       ```ts
       /** Infozeile im Bearbeiten-Dialog: "Angelegt am 4. September 2026, Genauigkeit 12 Meter." */
       export function formatLocationDetails(
@@ -333,59 +333,59 @@ Liste darunter besteht bereits aus Namensknoepfen mit Dialog.
       Faelle: Datum mit Genauigkeit; Datum ohne Genauigkeit (eingegebene
       Koordinate); unlesbares `createdAt` aus einer fremden Sicherung - dann
       "Anlagedatum unbekannt" statt einer erfundenen Angabe.
-- [ ] `src/ui/format.test.ts`: Tests fuer alle drei Faelle.
-- [ ] `src/ui/locationsView.ts`: `buildRow()` liefert `li > button.entry` mit dem
+- [x] `src/ui/format.test.ts`: Tests fuer alle drei Faelle.
+- [x] `src/ui/locationsView.ts`: `buildRow()` liefert `li > button.entry` mit dem
       Namen als Text und ohne weitere Knoepfe. Klick oeffnet den Bearbeiten-Dialog.
-- [ ] `src/ui/locationsView.ts`: `startRename()`, den Ad-hoc-Bestaetigungsknopf und
+- [x] `src/ui/locationsView.ts`: `startRename()`, den Ad-hoc-Bestaetigungsknopf und
       das Feld `pendingDelete` entfernen.
-- [ ] `src/ui/locationsView.ts`: `render()` fuellt zusaetzlich eine
+- [x] `src/ui/locationsView.ts`: `render()` fuellt zusaetzlich eine
       `Map<string, HTMLButtonElement>`, damit `focusEntry(id)` einen Eintrag gezielt
       fokussieren kann.
-- [ ] `src/ui/locationsView.ts`: Bearbeiten-Dialog bauen - Ueberschrift mit dem
+- [x] `src/ui/locationsView.ts`: Bearbeiten-Dialog bauen - Ueberschrift mit dem
       Namen, Infozeile aus `formatLocationDetails`, Label und Feld
       `#ort-bearbeiten-name`, "Namen speichern" (primary), "Loeschen" (danger),
       "Abbrechen" (secondary), Meldungszeile mit `role="status"`. Beim Oeffnen Fokus
       auf das Namensfeld.
-- [ ] `src/ui/locationsView.ts`: Bestaetigungsdialog bauen - Ueberschrift
+- [x] `src/ui/locationsView.ts`: Bestaetigungsdialog bauen - Ueberschrift
       "<Name> loeschen?", Hinweiszeile "Der Ort wird endgueltig entfernt. Es gibt
       keine zweite Kopie.", "Loeschen" (danger), "Abbrechen" (secondary). Beim
       Oeffnen Fokus auf **Abbrechen**: Ohne Backend ist ein Fehlgriff endgueltig,
       also ist der sichere Weg der voreingestellte.
-- [ ] `src/ui/locationsView.ts`: Meldungen umleiten. Ein privates `report(text)`
+- [x] `src/ui/locationsView.ts`: Meldungen umleiten. Ein privates `report(text)`
       schreibt in die Meldungszeile des obersten offenen Dialogs, sonst in die des
       Panels, und sagt in beiden Faellen an. `reportFailure()` und
       `reportStorageError()` laufen darueber.
-- [ ] `src/ui/locationsView.ts`: `reportSaved(location)` schliesst offene Dialoge
+- [x] `src/ui/locationsView.ts`: `reportSaved(location)` schliesst offene Dialoge
       ohne Fokusrueckgabe, meldet im Panel und ruft `focusEntry(location.id)`. Das
       Leeren der Eingabefelder bleibt erhalten - in dieser Phase steht das
       Anlegeformular noch flach auf der Seite.
-- [ ] `src/ui/locationsView.ts`: `reportRemoved()` schliesst beide Dialoge ohne
+- [x] `src/ui/locationsView.ts`: `reportRemoved()` schliesst beide Dialoge ohne
       Fokusrueckgabe, meldet "<Name> geloescht." im Panel und setzt den Fokus auf das
       Panel. *(Phase 3 ersetzt dieses Ziel durch das Plus.)*
-- [ ] `src/main.ts`: In `handleSave()` die Reihenfolge umdrehen - erst
+- [x] `src/main.ts`: In `handleSave()` die Reihenfolge umdrehen - erst
       `locationsView.render(...)`, dann `reportSaved(...)`. Sonst fokussiert die
       Ansicht einen Knopf, den das folgende Rendern gleich wieder ersetzt.
-- [ ] `src/main.ts`: `onRemove` ruft nach `render(...)` zusaetzlich
+- [x] `src/main.ts`: `onRemove` ruft nach `render(...)` zusaetzlich
       `locationsView.reportRemoved()`; die Ansage dort entfaellt, sie liegt jetzt in
       der Ansicht.
-- [ ] `docs/design.md` 6: Abschnitt 6.4 "Verwalten: Liste und Dialoge" ergaenzen -
+- [x] `docs/design.md` 6: Abschnitt 6.4 "Verwalten: Liste und Dialoge" ergaenzen -
       Liste zeigt nur Namen, Bearbeiten und Loeschen liegen in modalen Dialogen,
       Loeschen mit eigener Rueckfrage, Meldung gehoert in den offenen Dialog.
-- [ ] `docs/design.md` 5: Zeile "Orte" in der Tab-Tabelle auf den neuen Inhalt
+- [x] `docs/design.md` 5: Zeile "Orte" in der Tab-Tabelle auf den neuen Inhalt
       bringen.
-- [ ] `docs/design.md` 12: Entscheidung 30 aufnehmen - "Orte verwalten in modalen
+- [x] `docs/design.md` 12: Entscheidung 30 aufnehmen - "Orte verwalten in modalen
       Dialogen, Loeschen mit eigener Rueckfrage".
-- [ ] `docs/notes.txt`: Die Unterpunkte "Liste der Orte alphabetisch sortiert",
+- [x] `docs/notes.txt`: Die Unterpunkte "Liste der Orte alphabetisch sortiert",
       "Eintrag zeigt nur den Namen" und "Klick oeffnet einen Dialog zum
       Bearbeiten/Loeschen" als erledigt in den DONE-Block ueberfuehren; beim
       Sortieren vermerken, dass `LocationService.all()` das schon leistete.
 
 **Automated Verification**:
-- [ ] `npm test` - die neuen Tests zu `formatLocationDetails` laufen: Datum mit
+- [x] `npm test` - die neuen Tests zu `formatLocationDetails` laufen: Datum mit
       Genauigkeit, Datum ohne Genauigkeit, unlesbares Datum.
-- [ ] `npm run typecheck` laeuft ohne Fehler.
-- [ ] `npm run build` laeuft ohne Fehler.
-- [ ] `grep -n "pendingDelete\|startRename" src/ui/locationsView.ts` liefert nichts
+- [x] `npm run typecheck` laeuft ohne Fehler.
+- [x] `npm run build` laeuft ohne Fehler.
+- [x] `grep -n "pendingDelete\|startRename" src/ui/locationsView.ts` liefert nichts
       mehr.
 
 **Manual Verification**:
@@ -430,42 +430,42 @@ vorher                              nachher
 ```
 
 **Tasks**:
-- [ ] `src/ui/dom.ts`: `ICON_PLUS` ergaenzen (Pfad auf demselben 24er-Raster wie die
+- [x] `src/ui/dom.ts`: `ICON_PLUS` ergaenzen (Pfad auf demselben 24er-Raster wie die
       uebrigen Symbole).
-- [ ] `src/ui/locationsView.ts`: Panel-Kopf auf `.panel-head` umstellen - `h2 Orte`
+- [x] `src/ui/locationsView.ts`: Panel-Kopf auf `.panel-head` umstellen - `h2 Orte`
       plus `button.icon-button.primary` mit `aria-label="Neuen Ort anlegen"` und
       gleichlautendem `title`, wie beim Start-Knopf im Navigationsbereich.
-- [ ] `src/ui/locationsView.ts`: Anlegen-Dialog bauen - Ueberschrift "Neuen Ort
+- [x] `src/ui/locationsView.ts`: Anlegen-Dialog bauen - Ueberschrift "Neuen Ort
       anlegen", Label und Feld `#ort-name`, "Aktuellen Standort speichern"
       (primary), Label und Feld `#ort-koordinate` mit dem bisherigen Platzhalter,
       "Koordinate speichern" (secondary), Meldungszeile, "Abbrechen" (secondary).
-- [ ] `src/ui/locationsView.ts`: Beim Oeffnen
+- [x] `src/ui/locationsView.ts`: Beim Oeffnen
       `nameInput.value = callbacks.suggestName()`, Koordinatenfeld leeren,
       Meldungszeile leeren, Fokus auf das Namensfeld.
-- [ ] `src/ui/locationsView.ts`: Knopf "Namen vorschlagen" und die beiden `h3`
+- [x] `src/ui/locationsView.ts`: Knopf "Namen vorschlagen" und die beiden `h3`
       entfernen; das Panel besteht danach aus Kopf, Meldungszeile, Leerzeile, Liste
       und den drei Dialogen.
-- [ ] `src/ui/locationsView.ts`: `reportRemoved()` setzt den Fokus jetzt auf das Plus
+- [x] `src/ui/locationsView.ts`: `reportRemoved()` setzt den Fokus jetzt auf das Plus
       statt auf das Panel.
-- [ ] `src/main.ts`: Pruefen, dass `suggestName` in den Callbacks bleibt und die
+- [x] `src/main.ts`: Pruefen, dass `suggestName` in den Callbacks bleibt und die
       Fehlerwege `no-coordinate-found` (kein Standort) und `position-stale`
       unveraendert im Dialog landen - beide melden ueber `reportFailure()`.
-- [ ] `docs/design.md` 6: Den Satz zum Namensvorschlag darauf umstellen, dass der
+- [x] `docs/design.md` 6: Den Satz zum Namensvorschlag darauf umstellen, dass der
       Dialog das Feld vorbelegt (bisher: ein eigener Knopf).
-- [ ] `docs/design.md` 6.1: Ergaenzen, dass der GPS-Knopf im Dialog sichtbar bleibt,
+- [x] `docs/design.md` 6.1: Ergaenzen, dass der GPS-Knopf im Dialog sichtbar bleibt,
       auch wenn kein Fix vorliegt, und dann den Grund nennt.
-- [ ] `docs/design.md` 12: Entscheidung 31 aufnehmen - "Anlegen hinter einem
+- [x] `docs/design.md` 12: Entscheidung 31 aufnehmen - "Anlegen hinter einem
       Plus-Symbol, Namensvorschlag vorbelegt statt auf Knopfdruck".
-- [ ] `docs/notes.txt`: Die verbliebenen Unterpunkte "oben rechts ein Plus-Icon",
+- [x] `docs/notes.txt`: Die verbliebenen Unterpunkte "oben rechts ein Plus-Icon",
       "Klick oeffnet ein Dialogfeld" und "Name vorschlagen entfernen" in den
       DONE-Block ueberfuehren; der Sammelpunkt "Orte-Seite" verschwindet damit aus
       dem TODO.
 
 **Automated Verification**:
-- [ ] `npm run typecheck` laeuft ohne Fehler.
-- [ ] `npm test` laeuft ohne Fehler.
-- [ ] `npm run build` laeuft ohne Fehler.
-- [ ] `grep -rn "Namen vorschlagen" src` liefert nichts mehr.
+- [x] `npm run typecheck` laeuft ohne Fehler.
+- [x] `npm test` laeuft ohne Fehler.
+- [x] `npm run build` laeuft ohne Fehler.
+- [x] `grep -rn "Namen vorschlagen" src` liefert nichts mehr.
 
 **Manual Verification**:
 - [ ] Am iPhone mit VoiceOver: Der Bereich Orte wird als Ueberschrift, Knopf "Neuen
@@ -492,6 +492,28 @@ Probleme, geaenderte Entscheidungen.
   Absicherung oder als Umweg empfunden wird. Falls sie stoert, waere die Alternative
   ein einstufiges Loeschen im Bearbeiten-Dialog - eine Aenderung an Entscheidung 30,
   nicht am Code allein.
+
+- **Gefunden beim Smoke-Test, noch offen:** "Aktuellen Standort speichern" ohne
+  laufende Navigation meldet im Dialog *"Darin war keine Koordinate zu finden."*
+  Das ist die Meldung fuer unlesbaren Text im Koordinatenfeld, nicht fuer den
+  fehlenden Fix. Ursache liegt in `main.ts`: `onSaveHere` ruft bei `fix === null`
+  `reportFailure('no-coordinate-found')` und schiebt den richtigen Satz nur ueber
+  den `Announcer` hinterher - der wird von der Ansage des `report()` aber gleich
+  wieder ueberschrieben. Vorher stand die falsche Meldung in der Statuszeile des
+  Panels und fiel kaum auf; jetzt ist sie die sichtbare Rueckmeldung im Dialog.
+  Der Plan schrieb "unveraendert", deshalb hier nur vermerkt statt geaendert.
+  Fix waere ein eigener Grund `no-position` mit dem Text "Kein Standort
+  verfuegbar. Zuerst die Navigation starten." - Entscheidung des Nutzers.
+
+- Am Rechner (Chrome, Vite-Dev-Server) durchgespielt und in Ordnung: Sortierung
+  mit Umlaut, Bearbeiten-Dialog mit Titel/Infozeile/vorbelegtem Feld, leerer Name
+  bleibt im Dialog, verschachtelter Loeschen-Dialog mit Fokus auf "Abbrechen",
+  Abbrechen zurueck auf "Loeschen", Loeschen schliesst beide und setzt den Fokus
+  auf das Plus, Anlegen-Dialog mit Namensvorschlag, Speichern setzt den Fokus auf
+  den neuen Eintrag an alphabetisch richtiger Stelle, Escape schliesst und gibt
+  den Fokus zurueck, Tab-Leiste klebt bei `top: 0` mit deckendem Grund. Die
+  Pruefpunkte unter "Manual Verification" bleiben offen - sie gelten dem iPhone
+  mit VoiceOver.
 
 ## References
 

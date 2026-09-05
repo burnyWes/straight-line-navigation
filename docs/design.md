@@ -262,12 +262,14 @@ geführt hat.)*
 
 **Drei Tabs, Tab-Leiste oben** (nicht unten): VoiceOver läuft in DOM-Reihenfolge; oben
 ist die Leiste mit einem Wisch vom Seitenanfang erreichbar. Die iOS-Konvention „Tabs
-unten" ist Daumen-Ergonomie für Sehende und hier ein Umweg.
+unten" ist Daumen-Ergonomie für Sehende und hier ein Umweg. **Die Leiste bleibt beim
+Scrollen am oberen Rand stehen** (`position: sticky`): Der Bereichswechsel darf nicht
+davon abhängen, wie weit die Ortsliste gescrollt ist. Die Überschrift scrollt weg.
 
 | Tab | Inhalt |
 |---|---|
 | **Navigation** | Start/Stopp als Symbol im Kopf, Kegel-Liste, schwebender Anhalten-Schalter |
-| **Orte** | Alle gespeicherten Locations: anlegen, umbenennen, löschen |
+| **Orte** | Liste aller gespeicherten Locations, nur Namen; Anlegen über ein Plus im Kopf, Bearbeiten und Löschen über Dialoge |
 | **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Export/Import, Datum der letzten Sicherung |
 
 - Die App startet **immer** auf „Navigation".
@@ -287,15 +289,26 @@ unten" ist Daumen-Ergonomie für Sehende und hier ein Umweg.
 
 ## 6. Erfassung von Orten
 
-**Ein Name ist Pflicht.** Bei einer Audio-App ist „Unbenannt 3, 1,2 km" wertlos. Beim
-Speichern per GPS schlägt die App automatisch etwas vor (Datum/Uhrzeit), damit im Stehen
-nichts getippt werden muss; Umbenennen geht später in Ruhe.
+**Ein Name ist Pflicht.** Bei einer Audio-App ist „Unbenannt 3, 1,2 km" wertlos. Der
+Anlegen-Dialog **belegt das Namensfeld beim Öffnen mit einem Vorschlag** (Datum/Uhrzeit),
+damit im Stehen nichts getippt werden muss; überschreiben geht sofort, umbenennen später
+in Ruhe. *(Ursprünglich ein eigener Knopf „Namen vorschlagen" — ein Knopf für etwas, das
+ohnehin immer gewollt ist, ist mit VoiceOver ein Wisch zu viel.)*
+
+Angelegt wird über ein **Plus-Symbol rechts neben der Überschrift** — dasselbe Muster wie
+Start und Stopp im Bereich Navigation (§5). Es öffnet einen modalen Dialog mit beiden
+Speicherwegen untereinander: kürzester Wischweg, keine zweite Ebene.
 
 ### 6.1 Aktuellen Standort speichern
 
 Ein Button. Die **Genauigkeit wird mitgespeichert und angesagt** („gespeichert,
 Genauigkeit 12 Meter"), damit erkennbar ist, ob ein zweiter Versuch sinnvoll ist —
 direkt nach dem Aufwachen liefert iOS gern ±65 m.
+
+Der Knopf **bleibt im Dialog sichtbar, auch wenn kein Fix vorliegt**, und nennt dann den
+Grund („Kein Standort verfügbar. Zuerst die Navigation starten.") statt zu verschwinden.
+Ein fehlender Knopf ist mit VoiceOver schwerer zu deuten als einer, der sich erklärt. Der
+Dialog bleibt dabei offen — der eingegebene Name geht nicht verloren.
 
 ### 6.2 Einfügen aus der Zwischenablage
 
@@ -323,6 +336,31 @@ Adresssuche über einen Fremddienst wird **vorerst nicht** gebaut. Sie bräuchte
 einen externen Dienst und würde private Ortsangaben an Dritte senden — für einen
 Anwendungsfall, den §6.2 zu großen Teilen abdeckt. Nachrüstbar als `GeocodingPort`, ohne
 dass der Rest der App es merkt.
+
+### 6.4 Verwalten: Liste und Dialoge
+
+Die Ortsliste zeigt **nur den Namen** — ein Eintrag ist ein Button und wird von VoiceOver
+als „Bahnhof, Button" angesagt, ohne Zusatz. Alles Weitere liegt dahinter:
+
+- **Ein Tipp auf den Eintrag** öffnet einen modalen Dialog mit Anlagedatum und
+  Genauigkeit, dem Namensfeld, „Namen speichern", „Löschen" und „Abbrechen". Die
+  Koordinate steht bewusst **nicht** darin — sie sagt nichts, was im Gehen hilft, und
+  VoiceOver läse zwölf Ziffern mit. Datum und Genauigkeit sagen stattdessen, wie
+  verlässlich der Punkt ist.
+- **„Löschen" fragt in einem zweiten Dialog nach.** Ohne Backend gibt es keine zweite
+  Kopie (§7); ein Fehlgriff im Gehen ist endgültig. Der Fokus steht dort auf
+  „Abbrechen" — der sichere Weg ist der voreingestellte. „Abbrechen" führt zurück in
+  den Bearbeiten-Dialog, ohne etwas zu ändern.
+- **Modale Dialoge, nativ** (`<dialog>` mit `showModal()`): Der Browser setzt den
+  Hintergrund inert, hält den Fokus im Dialog und behandelt Escape. Ohne Tastatur trägt
+  „Abbrechen" denselben Weg.
+- **Solange ein Dialog offen ist, gehört die Meldung in den Dialog.** Die Meldungszeile
+  des Panels läge hinter dem modalen Hintergrund — weder zu sehen noch zu erswipen. Erst
+  beim Schließen wandert die Bestätigung ins Panel.
+- **Nach dem Schließen steht der Fokus dort, wo weitergearbeitet wird:** nach Anlegen und
+  Umbenennen auf dem betroffenen Eintrag in der Liste, nach dem Löschen auf dem Plus.
+
+Die Liste ist alphabetisch sortiert (deutsch, Umlaute einsortiert).
 
 ---
 
@@ -508,3 +546,6 @@ das steht in keinem Verhältnis.
 | 26 | Start/Stopp als Symbol im Kopf, Anhalten schwebend unten rechts | Nutzerentscheidung; die Liste soll früh im Wischweg beginnen, der Daumen den Pausenknopf ohne Suchen treffen |
 | 27 | Bereichswechsel hält die Liste an, beendet den Lauf aber nicht | Nutzerentscheidung; die Liste soll beim Zurückkommen nicht umsortiert sein, „Hier speichern" braucht weiter einen frischen Fix |
 | 28 | Fix gilt 12 s, danach wird die Liste gehalten und der Zustand angesagt | Ein veralteter Standort klingt genauso souverän wie ein gültiger; das Halten macht die Grenze hörbar (§4.6) |
+| 29 | Tab-Leiste bleibt beim Scrollen oben stehen | Der Bereichswechsel darf nicht davon abhängen, wie weit die Ortsliste gescrollt ist |
+| 30 | Orte verwalten in modalen Dialogen, Löschen mit eigener Rückfrage | Die Liste bleibt auf den Namen reduziert; ohne Backend ist ein Fehlgriff endgültig (§7) |
+| 31 | Anlegen hinter einem Plus-Symbol, Namensvorschlag vorbelegt statt auf Knopfdruck | Das Formular stand vor der Liste und war bei jedem Erswipen im Weg; der Vorschlag ist ohnehin immer gewollt |
