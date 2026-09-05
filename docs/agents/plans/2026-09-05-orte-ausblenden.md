@@ -453,9 +453,9 @@ in `docs/notes.txt`. Sie zu aendern beruehrt nichts ausser `ui/dom.ts`.
 
 **Am Geraet bestaetigt (2026-09-05):** Alle manuellen Pruefpunkte beider Phasen sind
 durchlaufen und in Ordnung — Wischweg, Umschalten mit stehendem Fokus, Hinweiszeile,
-Filterung im Kegel, Toene im laufenden Betrieb, Neustart und Sicherung. Offen bleibt
-allein, ob die Gluehbirne auf 26 Pixeln auch sehend als Gluehbirne lesbar ist; das
-braucht jemanden, der mitschaut, und steht weiter als Frage in `docs/notes.txt`.
+Filterung im Kegel, Toene im laufenden Betrieb, Neustart und Sicherung. Auch die
+handgeschriebenen Symbolpfade tragen: Die Gluehbirne ist auf 26 Pixeln gut sichtbar,
+leuchtend und dunkel klar unterscheidbar — nachgebessert werden muss nichts.
 
 **Manuelle Pruefung Phase 1:** Der Import einer von Hand um `"hidden": true` ergaenzten
 Sicherung ist durch die Pruefungen in Phase 2 mit abgedeckt — sobald der Knopf da ist,

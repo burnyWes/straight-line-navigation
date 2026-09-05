@@ -103,8 +103,8 @@ x  Orte ausblenden: Ein Ort bleibt gespeichert, nimmt aber nicht mehr an der
    lesen sich als sichtbar (design.md 6.5, Entscheidung 33)
 x  Praxistest: verdoppelt der zweite Knopf je Zeile den Wischweg spuerbar? Nein -
    am Geraet geprueft, im Gebrauch faellt es nicht auf (design.md 6.5)
--  Praxistest: ist die Gluehbirne auf 26 Pixeln als Gluehbirne lesbar - und der
-   Unterschied leuchtend/dunkel erkennbar, wenn jemand mitschaut?
+x  Praxistest: ist die Gluehbirne auf 26 Pixeln als Gluehbirne lesbar? Ja - gut
+   sichtbar, leuchtend und dunkel klar unterscheidbar
 -  Praxistest: bleibt die Liste jetzt dauerhaft ansprechbar - Finger liegen
    lassen, Lauf beenden und neu starten, Fokus in der Liste stehen lassen?
 x  Praxistest auf dem Geraet: fuehlen sich +-20 Grad im Gehen richtig an?
