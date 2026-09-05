@@ -25,6 +25,11 @@ TODO-List
 
 DONE
 --------------------------------------------------------------------------------
+n  Karte, Kartenkacheln
+n  Strassennavigation, Routing
+n  Backend, Konten, Sync
+n  Hintergrundbetrieb bei gesperrtem Bildschirm (auf einer PWA nicht moeglich)
+n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel)
 x  Spike: Kompass + GPS in Safari, auch im Standalone-Modus  -> funktioniert
 x  Spike: Haptik (M1)                                        -> geht nicht, endgueltig
 x  Spike: Ton bei Lautlos (M2)                               -> stumm, akzeptiert
@@ -75,13 +80,15 @@ TODO
    die Meldung im staedtischen Raum zu oft oder zu spaet? (design.md 4.6)
 -  Praxistest: laesst sich die Sicherungsdatei auf dem iPhone aus der
    Dateien-App waehlen und wieder einlesen?
-
 m  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
 m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
-
-n  Karte, Kartenkacheln
-n  Strassennavigation, Routing
-n  Backend, Konten, Sync
-n  Hintergrundbetrieb bei gesperrtem Bildschirm (auf einer PWA nicht moeglich)
-n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel) 
+- Tabs oben fixieren
+- Orte-Seite
+  - oben rechts ein Plus-Icon
+      - Klick öffnet ein Dialogfeld, indem man einen neuen Ort hinzufügen kann.
+      - Name vorschlagen entfernen
+    - Liste der Orte alphabetisch sortiert
+      - Eintrag zeigt nur den Namen
+      - Klick öffnet einen Dialog zum Bearbeiten/Löschen
+      
