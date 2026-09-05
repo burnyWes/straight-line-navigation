@@ -16,7 +16,7 @@ import type { CoordinateParseFailure } from '../domain/coordinateParser.js';
 import { formatLocationDetails, formatSaveConfirmation } from './format.js';
 
 /** Gruende, aus denen ein Ort nicht angelegt werden kann. */
-type SaveFailure = CoordinateParseFailure | 'name-required' | 'position-stale';
+type SaveFailure = CoordinateParseFailure | 'name-required' | 'no-position' | 'position-stale';
 
 const PARSE_ERROR: Record<SaveFailure, string> = {
   empty: 'Bitte eine Koordinate eingeben.',
@@ -25,6 +25,9 @@ const PARSE_ERROR: Record<SaveFailure, string> = {
   'no-coordinate-found': 'Darin war keine Koordinate zu finden.',
   'out-of-range': 'Diese Koordinate liegt ausserhalb des gueltigen Bereichs.',
   'name-required': 'Bitte einen Namen eingeben.',
+  // Eigener Grund statt 'no-coordinate-found': Der Satz dort spricht vom
+  // Koordinatenfeld und passt nicht, wenn nur die Navigation nicht laeuft.
+  'no-position': 'Kein Standort verfuegbar. Zuerst die Navigation starten.',
   'position-stale':
     'Der Standort ist veraltet. Kurz warten, bis das Geraet wieder misst, dann erneut speichern.',
 };

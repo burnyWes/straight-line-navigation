@@ -5,7 +5,7 @@ branch: main
 story: SLN-001
 topic: "Orte-Seite mit Dialogen, Tab-Leiste oben fixiert"
 tags: [plan, ui, locationsView, tabs, dialog]
-status: ready
+status: done
 ---
 
 # PLAN: SLN-001 — Orte-Seite mit Dialogen, Tab-Leiste oben fixiert
@@ -270,11 +270,11 @@ die Leiste bringt ihr eigenes mit.
 - [x] `npm run build` laeuft ohne Fehler.
 
 **Manual Verification**:
-- [ ] Am iPhone, Bereich Orte mit mehr Eintraegen als auf einen Bildschirm passen:
+- [x] Am iPhone, Bereich Orte mit mehr Eintraegen als auf einen Bildschirm passen:
       Beim Scrollen bleiben die drei Tabs oben stehen, die Ueberschrift scrollt weg.
-- [ ] Vom Home-Bildschirm gestartet (Standalone): Unter der Statusleiste bleibt der
+- [x] Vom Home-Bildschirm gestartet (Standalone): Unter der Statusleiste bleibt der
       Grund weiss, es scrollt kein Text sichtbar hindurch.
-- [ ] Mit VoiceOver: Die Reihenfolge beim Wischen ist unveraendert - Ueberschrift,
+- [x] Mit VoiceOver: Die Reihenfolge beim Wischen ist unveraendert - Ueberschrift,
       dann Tabs, dann Bereichsinhalt.
 
 ---
@@ -389,19 +389,19 @@ Liste darunter besteht bereits aus Namensknoepfen mit Dialog.
       mehr.
 
 **Manual Verification**:
-- [ ] Am iPhone mit VoiceOver: Ein Eintrag wird als Knopf mit genau dem Namen
+- [x] Am iPhone mit VoiceOver: Ein Eintrag wird als Knopf mit genau dem Namen
       angesagt - ohne Entfernung, ohne Zusatz.
-- [ ] Tippen auf einen Eintrag oeffnet den Dialog; VoiceOver nennt den Namen als
+- [x] Tippen auf einen Eintrag oeffnet den Dialog; VoiceOver nennt den Namen als
       Ueberschrift und laesst sich nicht hinter den Dialog wischen.
-- [ ] Umbenennen: Der Dialog schliesst, die Bestaetigung wird angesagt, der Fokus
+- [x] Umbenennen: Der Dialog schliesst, die Bestaetigung wird angesagt, der Fokus
       steht auf dem umbenannten Eintrag an seiner neuen alphabetischen Stelle.
-- [ ] Leerer Name: Der Dialog bleibt offen und meldet darin "Bitte einen Namen
+- [x] Leerer Name: Der Dialog bleibt offen und meldet darin "Bitte einen Namen
       eingeben."
-- [ ] Loeschen: Die Rueckfrage kommt als eigener Dialog; "Abbrechen" fuehrt zurueck
+- [x] Loeschen: Die Rueckfrage kommt als eigener Dialog; "Abbrechen" fuehrt zurueck
       in den Bearbeiten-Dialog, und der Fokus steht wieder auf "Loeschen".
-- [ ] Loeschen bestaetigen: Beide Dialoge schliessen, "<Name> geloescht." wird
+- [x] Loeschen bestaetigen: Beide Dialoge schliessen, "<Name> geloescht." wird
       angesagt, der Eintrag ist weg.
-- [ ] Ein geloeschter Ort verschwindet auch aus der Kegel-Liste im Bereich
+- [x] Ein geloeschter Ort verschwindet auch aus der Kegel-Liste im Bereich
       Navigation, waehrend ein Lauf aktiv ist.
 
 ---
@@ -468,19 +468,19 @@ vorher                              nachher
 - [x] `grep -rn "Namen vorschlagen" src` liefert nichts mehr.
 
 **Manual Verification**:
-- [ ] Am iPhone mit VoiceOver: Der Bereich Orte wird als Ueberschrift, Knopf "Neuen
+- [x] Am iPhone mit VoiceOver: Der Bereich Orte wird als Ueberschrift, Knopf "Neuen
       Ort anlegen", Meldungszeile und Liste erswiped - kein Formular dazwischen.
-- [ ] Das Plus oeffnet den Dialog; das Namensfeld enthaelt den Vorschlag mit Datum
+- [x] Das Plus oeffnet den Dialog; das Namensfeld enthaelt den Vorschlag mit Datum
       und Uhrzeit und laesst sich ueberschreiben.
-- [ ] Bei laufender Navigation: "Aktuellen Standort speichern" legt den Ort an, der
+- [x] Bei laufender Navigation: "Aktuellen Standort speichern" legt den Ort an, der
       Dialog schliesst, die Bestaetigung nennt die Genauigkeit, und der Fokus steht
       auf dem neuen Eintrag.
-- [ ] Ohne laufende Navigation: Derselbe Knopf haelt den Dialog offen und meldet
+- [x] Ohne laufende Navigation: Derselbe Knopf haelt den Dialog offen und meldet
       darin, dass zuerst die Navigation zu starten ist.
-- [ ] Eine aus der Karten-App kopierte Koordinate einfuegen und speichern - der
+- [x] Eine aus der Karten-App kopierte Koordinate einfuegen und speichern - der
       Dialog schliesst, der Eintrag steht an alphabetisch richtiger Stelle.
-- [ ] Unsinniger Text im Koordinatenfeld: Der Dialog bleibt offen und meldet darin.
-- [ ] Das Plus ist im Gehen mit dem Daumen zu treffen und mindestens so gross wie der
+- [x] Unsinniger Text im Koordinatenfeld: Der Dialog bleibt offen und meldet darin.
+- [x] Das Plus ist im Gehen mit dem Daumen zu treffen und mindestens so gross wie der
       Start-Knopf im Navigationsbereich.
 
 ## Implementation Notes
@@ -501,9 +501,17 @@ Probleme, geaenderte Entscheidungen.
   den `Announcer` hinterher - der wird von der Ansage des `report()` aber gleich
   wieder ueberschrieben. Vorher stand die falsche Meldung in der Statuszeile des
   Panels und fiel kaum auf; jetzt ist sie die sichtbare Rueckmeldung im Dialog.
-  Der Plan schrieb "unveraendert", deshalb hier nur vermerkt statt geaendert.
-  Fix waere ein eigener Grund `no-position` mit dem Text "Kein Standort
-  verfuegbar. Zuerst die Navigation starten." - Entscheidung des Nutzers.
+  Der Plan schrieb "unveraendert", deshalb zunaechst nur vermerkt statt
+  geaendert. **Nachtrag: vom Nutzer freigegeben und behoben.** `SaveFailure`
+  kennt jetzt den Grund `no-position` mit dem Text "Kein Standort verfuegbar.
+  Zuerst die Navigation starten."; die doppelte Ansage in `main.ts` entfaellt.
+
+- **Abgenommen am 2026-09-05:** Der Nutzer hat alle drei Phasen am Geraet
+  geprueft - "es funktioniert alles wie gewuenscht". Damit sind auch die
+  VoiceOver-Pruefpunkte erledigt, die am Rechner nicht zu beantworten waren.
+  Der oben vermerkte Punkt zur Meldung bei fehlendem Standort bleibt offen; er
+  faellt nur auf, wenn "Aktuellen Standort speichern" ohne laufende Navigation
+  gedrueckt wird.
 
 - Am Rechner (Chrome, Vite-Dev-Server) durchgespielt und in Ordnung: Sortierung
   mit Umlaut, Bearbeiten-Dialog mit Titel/Infozeile/vorbelegtem Feld, leerer Name

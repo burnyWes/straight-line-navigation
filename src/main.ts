@@ -97,8 +97,7 @@ const locationsView = new LocationsView(announcer, {
     // Tippens, nicht der, der beim Schreiben zufaellig aktuell ist.
     const fix = latestFix;
     if (fix === null) {
-      locationsView.reportFailure('no-coordinate-found');
-      announcer.announce('Kein Standort verfuegbar. Zuerst die Navigation starten.');
+      locationsView.reportFailure('no-position');
       return;
     }
     // Ein veralteter Fix ist hier schlimmer als gar keiner: Der Ort landet

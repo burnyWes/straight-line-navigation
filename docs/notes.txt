@@ -71,6 +71,9 @@ x  Liste der Orte alphabetisch sortiert - leistete LocationService.all() schon,
 x  Anlegen hinter einem Plus-Symbol oben rechts, als Dialog; Knopf "Namen
    vorschlagen" entfaellt, der Vorschlag steht beim Oeffnen im Feld
    (design.md 6, Entscheidung 31)
+b  "Aktuellen Standort speichern" ohne laufende Navigation meldete "Darin war
+   keine Koordinate zu finden." - eigener Grund 'no-position' ergaenzt, der den
+   richtigen Satz nennt (gefunden beim Smoke-Test der Dialoge)
 
 --------------------------------------------------------------------------------
 TODO
