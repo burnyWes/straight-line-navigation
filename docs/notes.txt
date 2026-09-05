@@ -142,21 +142,23 @@ x  Sicherung enthaelt die Gruppen: serializeBackup ist aus locationSerialization
    Gruppen und schreibt die Mitgliedskennungen ueber eine Abbildung aus
    LocationService.merge() auf die lokalen Orte um. Die Datei heisst jetzt
    sicherung-<Datum>.json statt orte-<Datum>.json (design.md 7)
+x  Praxistest: vier Tabs statt drei - die Leiste ist am Geraet weiterhin gut zu
+   treffen, die zusaetzliche Station stoert nicht
+x  Praxistest: Gruppe aus drei Orten zusammenstellen - das Auswahlrad nennt nur
+   Nichtmitglieder, und der Fokus rueckt beim Entfernen auf den Muelleimer des
+   nachgerueckten Ortes
+x  Praxistest: Birne an einer Gruppe - der Knopf liest sich mit neuem Namen vor,
+   ohne zweite Ansage, und die Zahlen stimmen beim Rueckwaertswischen
+x  Praxistest: bei laufender Navigation eine Gruppe ausblenden, in der ein Ort
+   im Kegel liegt - der absteigende Zweiklang klingt, die Liste wird kuerzer
+x  Praxistest: Sicherung mit Gruppen auf dem Geraet aus der Dateien-App
+   eingelesen - Orte, Gruppen und Mitgliedschaften kommen vollstaendig zurueck
+x  Praxistest: eine Sicherung von vor dieser Fassung eingelesen - keine
+   Fehlermeldung wegen fehlender Gruppen
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
 - Optionsmenü überarbeiten
--  Praxistest: vier Tabs statt drei - ist die Leiste am Geraet noch gut zu
-   treffen, und stoert die zusaetzliche Station im Wischweg?
--  Praxistest: Gruppe aus drei Orten zusammenstellen - nennt das Auswahlrad
-   nur Nichtmitglieder, und rueckt der Fokus beim Entfernen richtig nach?
--  Praxistest: Birne an einer Gruppe - liest sich der Knopf mit neuem Namen
-   vor, ohne zweite Ansage, und stimmen die Zahlen beim Rueckwaertswischen?
--  Praxistest: bei laufender Navigation eine Gruppe ausblenden, in der ein Ort
-   im Kegel liegt - klingt der absteigende Zweiklang?
--  Praxistest: Sicherung mit Gruppen auf dem Geraet aus der Dateien-App
-   einlesen - kommen Orte, Gruppen und Mitgliedschaften vollstaendig zurueck?
--  Praxistest: eine Sicherung von vor dieser Fassung einlesen - keine
-   Fehlermeldung wegen fehlender Gruppen?
+- Bug: Wenn man in ein Textfeld klickt öffnet sich oft nur kurz die Tastatur und schließt sich dann gleich wieder.
