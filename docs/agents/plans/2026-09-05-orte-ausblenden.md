@@ -5,7 +5,7 @@ branch: main
 story: SLN-002
 topic: "Orte ausblenden, ohne sie zu loeschen"
 tags: [plan, ui, locationsView, locationService, location, serialization]
-status: ready
+status: done
 ---
 
 # PLAN: SLN-002 — Orte ausblenden, ohne sie zu loeschen
@@ -304,10 +304,10 @@ Oberflaeche — nachweisbar, indem eine Sicherung mit `"hidden": true` eingelese
 - [x] `npm run build` — laeuft durch.
 
 **Manual Verification**:
-- [ ] Eine Sicherung von Hand um `"hidden": true` an einem Ort ergaenzen, ueber
+- [x] Eine Sicherung von Hand um `"hidden": true` an einem Ort ergaenzen, ueber
       Einstellungen einlesen, Navigation starten: Der Ort erscheint nicht in der Liste,
       auch nicht, wenn man sich zu ihm dreht. Auf der Orte-Seite steht er weiterhin.
-- [ ] Eine **bestehende** Sicherung ohne das Feld einlesen: alle Orte sichtbar, keine
+- [x] Eine **bestehende** Sicherung ohne das Feld einlesen: alle Orte sichtbar, keine
       Meldung ueber beschaedigte Eintraege.
 
 ### Phase 2: Der Knopf
@@ -422,21 +422,21 @@ Die Gluehbirne in der Zeile, die Hinweiszeile darueber, und die Dokumentation.
 - [x] `npm run build` — laeuft durch.
 
 **Manual Verification**:
-- [ ] Mit VoiceOver ueber die Orte-Liste wischen: Je Ort kommen zwei Stationen, erst
+- [x] Mit VoiceOver ueber die Orte-Liste wischen: Je Ort kommen zwei Stationen, erst
       `"Bahnhof, Button"`, dann `"Bahnhof ausblenden, Button"`.
-- [ ] Den Gluehbirnen-Knopf antippen: VoiceOver sagt `"Bahnhof einblenden"`, der Fokus
+- [x] Den Gluehbirnen-Knopf antippen: VoiceOver sagt `"Bahnhof einblenden"`, der Fokus
       bleibt auf dem Knopf, die uebrige Liste ruehrt sich nicht, und es kommt **keine**
       zweite Ansage.
-- [ ] Erneut antippen: zurueck auf `"Bahnhof ausblenden"`.
-- [ ] Vom Seitenanfang wischen: Die Zeile `"2 von 7 Orten sind ausgeblendet."` ist zu
+- [x] Erneut antippen: zurueck auf `"Bahnhof ausblenden"`.
+- [x] Vom Seitenanfang wischen: Die Zeile `"2 von 7 Orten sind ausgeblendet."` ist zu
       hoeren, sobald mindestens ein Ort ausgeblendet ist — und bei keinem gar nicht.
-- [ ] Navigation starten und in die Blickrichtung eines ausgeblendeten Ortes drehen: Der
+- [x] Navigation starten und in die Blickrichtung eines ausgeblendeten Ortes drehen: Der
       Ort erscheint nicht in der Liste, es klingt kein Eintritts-Ton.
-- [ ] Waehrend eines Laufs: einen Ort ausblenden, der gerade im Kegel liegt — der
+- [x] Waehrend eines Laufs: einen Ort ausblenden, der gerade im Kegel liegt — der
       absteigende Zweiklang klingt, beim Einblenden der aufsteigende.
-- [ ] App vom Home-Bildschirm neu starten: Der ausgeblendete Ort ist noch ausgeblendet.
-- [ ] Sicherung erstellen, in eine Notiz einfuegen, wieder einlesen: Der Zustand kommt mit.
-- [ ] Reihenfolge pruefen: Ein ausgeblendeter Ort bleibt an seiner alphabetischen Stelle
+- [x] App vom Home-Bildschirm neu starten: Der ausgeblendete Ort ist noch ausgeblendet.
+- [x] Sicherung erstellen, in eine Notiz einfuegen, wieder einlesen: Der Zustand kommt mit.
+- [x] Reihenfolge pruefen: Ein ausgeblendeter Ort bleibt an seiner alphabetischen Stelle
       und wandert nicht ans Listenende.
 
 ## Implementation Notes
@@ -450,6 +450,12 @@ Umsetzung gewesen, weil Name und Symbol dann an zwei Stellen auseinanderlaufen k
 **Noch offen:** Die beiden Symbolpfade sind von Hand geschrieben und am Rechner nie
 gesehen worden. Ob die Birne auf 26 Pixeln als Birne lesbar ist, steht als Praxistestfrage
 in `docs/notes.txt`. Sie zu aendern beruehrt nichts ausser `ui/dom.ts`.
+
+**Am Geraet bestaetigt (2026-09-05):** Alle manuellen Pruefpunkte beider Phasen sind
+durchlaufen und in Ordnung — Wischweg, Umschalten mit stehendem Fokus, Hinweiszeile,
+Filterung im Kegel, Toene im laufenden Betrieb, Neustart und Sicherung. Offen bleibt
+allein, ob die Gluehbirne auf 26 Pixeln auch sehend als Gluehbirne lesbar ist; das
+braucht jemanden, der mitschaut, und steht weiter als Frage in `docs/notes.txt`.
 
 **Manuelle Pruefung Phase 1:** Der Import einer von Hand um `"hidden": true` ergaenzten
 Sicherung ist durch die Pruefungen in Phase 2 mit abgedeckt — sobald der Knopf da ist,

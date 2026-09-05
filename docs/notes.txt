@@ -101,8 +101,8 @@ x  Orte ausblenden: Ein Ort bleibt gespeichert, nimmt aber nicht mehr an der
    (Gluehbirne, leuchtend/dunkel); eine stille Zeile nennt, wie viele
    ausgeblendet sind. Feld hidden, Format bleibt version 1, alte Sicherungen
    lesen sich als sichtbar (design.md 6.5, Entscheidung 33)
--  Praxistest: verdoppelt der zweite Knopf je Zeile den Wischweg spuerbar, oder
-   faellt es im Gebrauch nicht auf? (design.md 6.5)
+x  Praxistest: verdoppelt der zweite Knopf je Zeile den Wischweg spuerbar? Nein -
+   am Geraet geprueft, im Gebrauch faellt es nicht auf (design.md 6.5)
 -  Praxistest: ist die Gluehbirne auf 26 Pixeln als Gluehbirne lesbar - und der
    Unterschied leuchtend/dunkel erkennbar, wenn jemand mitschaut?
 -  Praxistest: bleibt die Liste jetzt dauerhaft ansprechbar - Finger liegen
