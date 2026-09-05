@@ -25,6 +25,8 @@ TODO-List
 
 DONE
 --------------------------------------------------------------------------------
+n  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
+n  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
 n  Karte, Kartenkacheln
 n  Strassennavigation, Routing
 n  Backend, Konten, Sync
@@ -94,17 +96,17 @@ x  Auto-Freeze bei Fokus entfernt: Die Liste hielt beim Durchwischen an jedem
 x  Statuszeile und Kompassguete an den unteren Rand des Navigationsbereichs,
    unter die Liste: VoiceOver wischt in DOM-Reihenfolge, und die Orte sollen
    frueh im Wischweg liegen (design.md 4.6)
-x  Die Statusleiste ist jetzt am unteren Bildrand angeheftet und bleibt beim
-   Scrollen stehen - Gegenstueck zur Tab-Leiste oben. Ihre Hoehe misst ein
-   ResizeObserver und meldet sie als --foot-height zurueck; danach richten sich
-   das Polster unter dem letzten Eintrag und der schwebende Knopf, der nun
-   dicht ueber der Leiste sitzt statt am Bildrand (design.md 4.6)
+x  Orte ausblenden: Ein Ort bleibt gespeichert, nimmt aber nicht mehr an der
+   Navigation teil. Geschaltet ueber einen zweiten Knopf rechts an der Zeile
+   (Gluehbirne, leuchtend/dunkel); eine stille Zeile nennt, wie viele
+   ausgeblendet sind. Feld hidden, Format bleibt version 1, alte Sicherungen
+   lesen sich als sichtbar (design.md 6.5, Entscheidung 33)
+-  Praxistest: verdoppelt der zweite Knopf je Zeile den Wischweg spuerbar, oder
+   faellt es im Gebrauch nicht auf? (design.md 6.5)
+-  Praxistest: ist die Gluehbirne auf 26 Pixeln als Gluehbirne lesbar - und der
+   Unterschied leuchtend/dunkel erkennbar, wenn jemand mitschaut?
 -  Praxistest: bleibt die Liste jetzt dauerhaft ansprechbar - Finger liegen
    lassen, Lauf beenden und neu starten, Fokus in der Liste stehen lassen?
-
---------------------------------------------------------------------------------
-TODO
---------------------------------------------------------------------------------
 x  Praxistest auf dem Geraet: fuehlen sich +-20 Grad im Gehen richtig an?
 x  Praxistest: nerven die Ansagen "angehalten" / "aktualisiert" beim Swipen?
    Ja - deshalb faellt das Auto-Freeze bei Fokus weg (siehe oben)
@@ -119,18 +121,15 @@ x  Praxistest: sind Status und Kompassguete am Seitenende noch auffindbar, oder
    fehlen sie oben?
 x  Auf dem Geraet pruefen: laesst sich die App vom Home-Bildschirm starten und
    startet sie im Flugmodus? (am Rechner geprueft, auf dem Geraet noch nicht)
--  Praxistest: trifft der Daumen den schwebenden Anhalten-Knopf im Gehen, und
-   verdeckt er nichts Wichtiges? Er sitzt jetzt ein Stueck hoeher, dicht ueber
-   der angehefteten Statusleiste
--  Praxistest: verdeckt die angeheftete Statusleiste auf dem Geraet etwas vom
-   letzten Listeneintrag? (am Rechner nur nachgerechnet - der Testtab lief im
-   Hintergrund, dort liefert Chrome keine ResizeObserver-Meldungen)
--  Praxistest: sind 12 Sekunden bis "Standort veraltet" richtig gewaehlt - kommt
+x  Praxistest: trifft der Daumen den schwebenden Anhalten-Knopf im Gehen, und
+   verdeckt er nichts Wichtiges?
+x  Praxistest: sind 12 Sekunden bis "Standort veraltet" richtig gewaehlt - kommt
    die Meldung im staedtischen Raum zu oft oder zu spaet? (design.md 4.6)
--  Praxistest: laesst sich die Sicherungsdatei auf dem iPhone aus der
+x  Praxistest: laesst sich die Sicherungsdatei auf dem iPhone aus der
    Dateien-App waehlen und wieder einlesen?
-m  Entfernung als Klick-Rate oder Tonhoehe (design.md 10) - erst nach Praxis
-m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
+
+--------------------------------------------------------------------------------
+TODO
+--------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
 - Gruppenfunktion
-- Ausblenden von Orten

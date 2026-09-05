@@ -19,6 +19,7 @@ export function testLocation(
   name: string,
   point: Coordinate,
   accuracyMetres: number | null = null,
+  hidden = false,
 ): Location {
   counter += 1;
   return createLocation({
@@ -27,6 +28,7 @@ export function testLocation(
     coordinate: point,
     accuracyMetres,
     createdAt: '2026-01-01T00:00:00.000Z',
+    hidden,
   });
 }
 

@@ -2,7 +2,15 @@
  * Navigationsbereich: Kegel-Liste, Anhalten-Knopf, Gueteanzeige.
  */
 
-import { el, setText, icon, ICON_PLAY, ICON_STOP, ICON_PAUSE } from './dom.js';
+import {
+  el,
+  setText,
+  icon,
+  setButtonLabel,
+  ICON_PLAY,
+  ICON_STOP,
+  ICON_PAUSE,
+} from './dom.js';
 import { formatDistance, formatEntryLabel } from './format.js';
 import type { Announcer } from './announcer.js';
 import type { NavigationEntry, NavigationSnapshot } from '../application/navigationService.js';
@@ -460,11 +468,4 @@ function headerButton(label: string, path: string, variant: string): HTMLButtonE
     },
     [icon(path)],
   ) as HTMLButtonElement;
-}
-
-/** Name und Symbol gehoeren zusammen - sonst zeigt der Knopf etwas anderes, als er heisst. */
-function setButtonLabel(button: HTMLButtonElement, label: string, path: string): void {
-  button.setAttribute('aria-label', label);
-  button.setAttribute('title', label);
-  button.replaceChildren(icon(path));
 }

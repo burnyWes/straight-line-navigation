@@ -127,6 +127,8 @@ Prüfungen finden fehlende Labels, aber nicht „der Fokus springt beim Drehen".
   Funktionsanforderung, kein Feinschliff.
 - **Harter Filter:** Was nicht im Kegel liegt, erscheint nicht. Liegt nichts im Kegel,
   bleibt die Liste leer (bewusst so entschieden).
+- **Ausgeblendete Orte erreichen den Kegel gar nicht erst** (§6.5). Sie werden vor der
+  Messung aussortiert und lösen deshalb auch keine Ein- und Austritts-Signale aus.
 - Die Richtung stammt aus `webkitCompassHeading` — bereits Grad im Uhrzeigersinn gegen
   **geografisch** Nord. Eine Deklinationskorrektur entfällt damit.
 
@@ -371,8 +373,9 @@ dass der Rest der App es merkt.
 
 ### 6.4 Verwalten: Liste und Dialoge
 
-Die Ortsliste zeigt **nur den Namen** — ein Eintrag ist ein Button und wird von VoiceOver
-als „Bahnhof, Button" angesagt, ohne Zusatz. Alles Weitere liegt dahinter:
+Die Ortsliste zeigt **nur den Namen** — der Eintrag selbst ist ein Button und wird von
+VoiceOver als „Bahnhof, Button" angesagt, ohne Zusatz. Rechts daneben steht ein zweiter,
+unbeschrifteter Knopf zum Ausblenden (§6.5); alles Weitere liegt hinter dem Eintrag:
 
 - **Ein Tipp auf den Eintrag** öffnet einen modalen Dialog mit Anlagedatum und
   Genauigkeit, dem Namensfeld, „Namen speichern", „Löschen" und „Abbrechen". Die
@@ -393,6 +396,51 @@ als „Bahnhof, Button" angesagt, ohne Zusatz. Alles Weitere liegt dahinter:
   Umbenennen auf dem betroffenen Eintrag in der Liste, nach dem Löschen auf dem Plus.
 
 Die Liste ist alphabetisch sortiert (deutsch, Umlaute einsortiert).
+
+### 6.5 Ausblenden
+
+Ein Ort kann **ausgeblendet** werden: Er bleibt gespeichert, nimmt aber nicht mehr an der
+Navigation teil. Der Zweck ist nicht Aufräumen, sondern **Ruhe im Kegel**. Wer dreißig
+Orte gespeichert hat, heute aber nur drei davon braucht, bekommt sonst bei jeder Drehung
+Ein- und Austritts-Töne für Ziele, die gerade nicht interessieren. Die einzige Alternative
+wäre Löschen — und das ist ohne Backend endgültig (§7).
+
+**Geschaltet wird in der Liste, nicht im Dialog:** rechts an jeder Zeile ein Knopf mit
+Glühbirnen-Symbol, leuchtend für sichtbar, dunkel für ausgeblendet. Der Preis ist bekannt
+und bewusst gezahlt: Die Orte-Seite hat damit **zwei VoiceOver-Stationen je Ort** statt
+einer. Ausblenden ist eine Reihenhandlung („heute nur die drei im Kiez"); über den
+Bearbeiten-Dialog wären das pro Ort zwei Tipps und eine Ebene tiefer. Der Knopf steht im
+DOM **hinter** dem Namen — wer tippt statt weiterzuwischen, hört ihn nie.
+
+**Der Knopf sagt, was der Tipp bewirkt**, nicht in welchem Zustand er ist: „Bahnhof
+ausblenden" bzw. „Bahnhof einblenden", dazu wechselt das Symbol. Kein `aria-pressed`:
+„ausgewählt" müsste gedeutet werden — ausgewählt wofür? Dasselbe Muster fährt der
+Anhalten-Knopf im Bereich Navigation. Dass sich damit der Name des gerade fokussierten
+Elements ändert, ist hier **kein** Verstoß gegen §4.3: Dort geht es um eine Liste, die
+sich von allein im Sekundentakt ändert. Hier ist die Umbenennung die Folge des eigenen
+Tippens — das erneute Vorlesen *ist* die Bestätigung. Genau deshalb gibt es **keine**
+zusätzliche Ansage; sie wäre dieselbe Information ein zweites Mal.
+
+**Umgeschaltet wird eine Zeile, nicht die Liste.** Der Fokus steht beim Tippen auf dem
+Knopf, und ein neu gebauter Knopf nähme ihn mit (§9).
+
+**Eine stille Zeile nennt den Umfang:** „2 von 7 Orten sind ausgeblendet." Sie steht nur
+da, wenn überhaupt etwas ausgeblendet ist, und ist **keine** Live-Region — sonst spräche
+sie bei jedem Umschalten mit. Sie existiert, weil ein stillschweigend gefiltertes Ziel in
+einer Audio-App nicht bemerkbar ist; dieselbe Sorge lässt die Maximalentfernung
+standardmäßig unbegrenzt (§4.2). In die Statuszeile der Navigation gehört das **nicht**:
+Die hat eine feste Rangfolge und meldet nur, was gerade passiert (§4.6).
+
+**Während eines Laufs klingt Ausblenden wie Löschen.** Lag der Ort gerade im Kegel, folgt
+der absteigende Zweiklang, beim Einblenden der aufsteigende. Das ist kein falsches Signal
+im Sinne von §4.6: Es behauptet nichts über die Welt, sondern meldet eine Änderung, die
+der Nutzer selbst ausgelöst hat — und für gelöschte Ziele gilt dasselbe schon heute.
+
+**Gespeichert wird der Zustand mit dem Ort** (Feld `hidden`) und er ist Teil jeder
+Sicherung. Eine Sicherung ohne das Feld — jede von vor dieser Fassung — wird als
+„sichtbar" gelesen; ein Ort, der nach dem Einlesen stumm fehlte, wäre der schlechteste
+Ausgang (§7). Das Format bleibt deshalb bei `version: 1`: Die Änderung ist rein additiv,
+und kein Leser verhält sich je nach Nummer anders.
 
 ---
 
@@ -589,3 +637,4 @@ das steht in keinem Verhältnis.
 | 30 | Orte verwalten in modalen Dialogen, Löschen mit eigener Rückfrage | Die Liste bleibt auf den Namen reduziert; ohne Backend ist ein Fehlgriff endgültig (§7) |
 | 31 | Anlegen hinter einem Plus-Symbol, Namensvorschlag vorbelegt statt auf Knopfdruck | Das Formular stand vor der Liste und war bei jedem Erswipen im Weg; der Vorschlag ist ohnehin immer gewollt |
 | 32 | Freeze ist an drei Stellen lösbar, und der Render bewegt nur, was falsch steht | Ein hängender Freeze und eine im Sekundentakt neu eingehängte Zeile machen die Liste unbrauchbar, ohne dass etwas widerspricht (§4.3, §9) |
+| 33 | Orte ausblendbar über einen zweiten Knopf je Zeile; stille Hinweiszeile statt Statusmeldung | Löschen war bisher die einzige Art, Ruhe im Kegel zu bekommen — und ohne Backend endgültig. Der doppelte Wischweg ist der bewusst gezahlte Preis dafür, dass Ausblenden eine Reihenhandlung bleibt (§6.5) |

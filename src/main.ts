@@ -114,6 +114,26 @@ const locationsView = new LocationsView(announcer, {
   onRename: (id, name) => {
     handleSave(() => locationService.rename(id, name));
   },
+  onToggleHidden: (id, hidden) => {
+    guardStorage(
+      () => {
+        const updated = locationService.setHidden(id, hidden);
+        if (updated === null) {
+          return;
+        }
+        // Nur die eine Zeile nachziehen: Der Fokus steht auf dem Knopf, und
+        // ein neu gebauter naehme ihn mit.
+        locationsView.applyHidden(updated);
+        // Der Kegel rechnet im naechsten Bild mit der kuerzeren Liste. Liegt
+        // der Ort gerade darin, klingt der Austritts-Ton - wie beim Loeschen.
+        dirty = true;
+      },
+      (message) => {
+        // Der Knopf bleibt im alten Zustand: applyHidden wurde nicht erreicht.
+        locationsView.reportStorageError(message);
+      },
+    );
+  },
   onRemove: (id) => {
     guardStorage(
       () => {
@@ -359,7 +379,9 @@ function renderNavigation(): void {
     return;
   }
 
-  const snapshot = navigationService.update(fix.coordinate, heading, locationService.all());
+  // visible(), nicht all(): Ausgeblendete Orte erreichen den Kegel gar nicht
+  // erst (docs/design.md 6.5).
+  const snapshot = navigationService.update(fix.coordinate, heading, locationService.visible());
 
   const cue = cuePort();
   for (const location of snapshot.entered) {

@@ -33,6 +33,10 @@ export function serializeLocations(locations: readonly Location[]): string {
       lon: location.coordinate.longitudeDeg,
       accuracyMetres: location.accuracyMetres,
       createdAt: location.createdAt,
+      // Immer geschrieben, auch false: In einer Sicherung, die jemand aufmacht
+      // und liest, ist ein ausgeschriebener Zustand mehr wert als sechzehn
+      // gesparte Zeichen.
+      hidden: location.hidden,
     })),
   };
   return JSON.stringify(document);
@@ -104,6 +108,7 @@ function toLocation(entry: unknown): Location | null {
   const lon = record['lon'];
   const createdAt = record['createdAt'];
   const accuracy = record['accuracyMetres'];
+  const hidden = record['hidden'];
 
   if (
     typeof id !== 'string' ||
@@ -121,6 +126,10 @@ function toLocation(entry: unknown): Location | null {
       coordinate: coordinate(lat, lon),
       accuracyMetres: typeof accuracy === 'number' ? accuracy : null,
       createdAt: typeof createdAt === 'string' ? createdAt : new Date(0).toISOString(),
+      // Fehlt das Feld, ist der Ort sichtbar. Jede Sicherung von vor dieser
+      // Fassung kennt es nicht - und ein Ort, der nach dem Einlesen stumm
+      // fehlt, waere schlimmer als einer zu viel.
+      hidden: typeof hidden === 'boolean' ? hidden : false,
     });
   } catch {
     // Ungueltige Koordinate oder leerer Name: Eintrag ueberspringen, Rest retten.

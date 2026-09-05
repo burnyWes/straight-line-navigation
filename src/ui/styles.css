@@ -330,6 +330,33 @@ textarea {
   padding-top: 4px;
 }
 
+/*
+ * Name links, Gluehbirne rechts. Die display-Angabe steht bewusst auf der
+ * Zeile und nicht auf den Knoepfen - sonst uebersteuerte sie die Vorgabe des
+ * Browsers fuer [hidden] (siehe Kommentar ganz oben).
+ */
+.entry-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Ohne das nimmt der Namensknopf die volle Breite und drueckt die Birne raus. */
+.entry-row button.entry {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+/*
+ * Ausgeblendet auch sehend erkennbar: dunklere Birne ohne Strahlen. Die Farbe
+ * traegt die Information nicht allein - die Silhouette unterscheidet sich
+ * ebenfalls (docs/design.md 3).
+ */
+.icon-button.bulb-off {
+  color: var(--dim);
+}
+
 .entry-name {
   display: block;
   padding: 10px 2px 2px;

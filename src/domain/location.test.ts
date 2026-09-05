@@ -32,4 +32,14 @@ describe('createLocation', () => {
   it('setzt die Genauigkeit auf null, wenn sie fehlt', () => {
     expect(createLocation({ ...base, name: 'Bahnhof' }).accuracyMetres).toBeNull();
   });
+
+  it('ist ohne Angabe sichtbar', () => {
+    // Eine bestehende Sicherung kennt das Feld nicht - sie darf keine Orte
+    // stumm verschwinden lassen.
+    expect(createLocation({ ...base, name: 'Bahnhof' }).hidden).toBe(false);
+  });
+
+  it('uebernimmt ein gesetztes Ausblenden', () => {
+    expect(createLocation({ ...base, name: 'Bahnhof', hidden: true }).hidden).toBe(true);
+  });
 });

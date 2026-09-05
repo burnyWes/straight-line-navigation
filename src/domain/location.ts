@@ -12,6 +12,14 @@ export interface Location {
   readonly accuracyMetres: number | null;
   /** ISO-8601, UTC. */
   readonly createdAt: string;
+  /**
+   * Ausgeblendet: bleibt gespeichert, nimmt aber nicht an der Navigation teil.
+   *
+   * Das Gegenstueck zum Loeschen fuer den Fall "heute brauche ich nur drei
+   * meiner dreissig Orte": Ohne diesen Schalter bliebe nur das Loeschen, und
+   * das ist ohne Backend endgueltig (docs/design.md 6.5, 7).
+   */
+  readonly hidden: boolean;
 }
 
 export class InvalidLocationError extends Error {
@@ -35,6 +43,7 @@ export function createLocation(input: {
   coordinate: Coordinate;
   accuracyMetres?: number | null;
   createdAt: string;
+  hidden?: boolean;
 }): Location {
   const name = input.name.trim();
   if (name.length === 0) {
@@ -49,5 +58,9 @@ export function createLocation(input: {
     coordinate: input.coordinate,
     accuracyMetres: input.accuracyMetres ?? null,
     createdAt: input.createdAt,
+    // Ohne Angabe sichtbar: Eine bestehende Sicherung kennt das Feld nicht, und
+    // ein Ort, der nach dem Einlesen stumm fehlte, waere der schlechteste
+    // Ausgang (docs/design.md 7).
+    hidden: input.hidden ?? false,
   };
 }

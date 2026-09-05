@@ -8,7 +8,15 @@
  * Hintergrund weder zu sehen noch zu erswipen.
  */
 
-import { el, setText, icon, ICON_PLUS } from './dom.js';
+import {
+  el,
+  setText,
+  icon,
+  setButtonLabel,
+  ICON_PLUS,
+  ICON_BULB_ON,
+  ICON_BULB_OFF,
+} from './dom.js';
 import { ModalDialog } from './dialog.js';
 import type { Announcer } from './announcer.js';
 import type { Location } from '../domain/location.js';
@@ -37,7 +45,22 @@ export interface LocationsViewCallbacks {
   onSaveText(name: string, text: string): void;
   onRename(id: string, name: string): void;
   onRemove(id: string): void;
+  onToggleHidden(id: string, hidden: boolean): void;
   suggestName(): string;
+}
+
+/**
+ * Eine Zeile der Liste.
+ *
+ * Beide Knoepfe werden festgehalten, nicht nur der Namensknopf: Das Umschalten
+ * aendert genau eine Zeile, statt die Liste neu zu bauen. Ein neu gebauter
+ * Knopf naehme den Fokus mit, und der steht beim Umschalten genau darauf
+ * (docs/design.md 9).
+ */
+interface Row {
+  readonly entry: HTMLButtonElement;
+  readonly toggle: HTMLButtonElement;
+  location: Location;
 }
 
 export class LocationsView {
@@ -48,8 +71,9 @@ export class LocationsView {
   private readonly feedback: HTMLElement;
   private readonly list: HTMLUListElement;
   private readonly emptyLine: HTMLElement;
-  /** Knopf je Ort, damit der Fokus nach dem Rendern gezielt landen kann. */
-  private readonly entryButtons = new Map<string, HTMLButtonElement>();
+  private readonly hiddenHint: HTMLElement;
+  /** Zeile je Ort, damit der Fokus nach dem Rendern gezielt landen kann. */
+  private readonly rows = new Map<string, Row>();
 
   private readonly addButton: HTMLButtonElement;
   private readonly createDialog: ModalDialog;
@@ -149,6 +173,14 @@ export class LocationsView {
     this.list = el('ul', { class: 'entries', 'aria-label': 'Gespeicherte Orte' }) as HTMLUListElement;
     this.emptyLine = el('p', { class: 'status', text: 'Noch keine Orte gespeichert.' });
 
+    // Bewusst **ohne** role="status": Sonst spraeche die Zeile bei jedem
+    // Umschalten mit, und der Knopf sagt seinen neuen Namen ohnehin schon.
+    // Sie existiert, weil ein stillschweigend gefiltertes Ziel in einer
+    // Audio-App nicht bemerkbar ist - dieselbe Sorge, die die Maximalentfernung
+    // standardmaessig unbegrenzt laesst (docs/design.md 6.5).
+    this.hiddenHint = el('p', { class: 'hint' });
+    this.hiddenHint.hidden = true;
+
     // --- Bearbeiten-Dialog ---------------------------------------------------
 
     this.editDetails = el('p', { class: 'hint' });
@@ -245,6 +277,7 @@ export class LocationsView {
       el('div', { class: 'panel-head' }, [el('h2', { text: 'Orte' }), this.addButton]),
       this.feedback,
       this.emptyLine,
+      this.hiddenHint,
       this.list,
       this.createDialog.element,
       this.editDialog.element,
@@ -290,28 +323,92 @@ export class LocationsView {
 
   render(locations: readonly Location[]): void {
     this.list.textContent = '';
-    this.entryButtons.clear();
+    this.rows.clear();
     this.emptyLine.hidden = locations.length > 0;
 
     for (const location of locations) {
       this.list.append(this.buildRow(location));
     }
+    this.renderHiddenHint();
+  }
+
+  /**
+   * Zieht genau eine Zeile nach, nachdem ihr Ausblenden umgeschaltet wurde.
+   *
+   * Kein render(), keine Ansage: Der Fokus steht auf dem Gluehbirnen-Knopf, und
+   * der traegt seinen neuen Namen selbst vor. Ein zweiter Ruf ueber den
+   * Announcer waere dieselbe Information ein zweites Mal (docs/design.md 6.5).
+   */
+  applyHidden(location: Location): void {
+    const row = this.rows.get(location.id);
+    if (row === undefined) {
+      return;
+    }
+    row.location = location;
+    this.dressToggle(row);
+    this.renderHiddenHint();
   }
 
   private buildRow(location: Location): HTMLLIElement {
     // Nur der Name, kein Zusatz: VoiceOver soll den Eintrag als Knopf mit genau
     // diesem Namen ansagen. Alles Weitere steht im Dialog dahinter.
-    const button = el('button', {
+    const entry = el('button', {
       type: 'button',
       class: 'entry',
       text: location.name,
     }) as HTMLButtonElement;
-    button.addEventListener('click', () => {
-      this.openEdit(location, button);
+    entry.addEventListener('click', () => {
+      this.openEdit(location, entry);
     });
 
-    this.entryButtons.set(location.id, button);
-    return el('li', {}, [button]) as HTMLLIElement;
+    const toggle = el('button', { type: 'button', class: 'icon-button' }) as HTMLButtonElement;
+    toggle.addEventListener('click', () => {
+      // Der Zustand kommt aus der Zeile, nicht aus dieser Schliessung: Nach dem
+      // ersten Umschalten haelt die Zeile den neuen Stand, die Schliessung den
+      // alten - der Knopf klemmte sonst nach dem zweiten Tippen fest.
+      const current = this.rows.get(location.id);
+      if (current !== undefined) {
+        this.callbacks.onToggleHidden(location.id, !current.location.hidden);
+      }
+    });
+
+    const row: Row = { entry, toggle, location };
+    this.dressToggle(row);
+    this.rows.set(location.id, row);
+
+    // Name links, Gluehbirne rechts - im DOM in dieser Reihenfolge, damit der
+    // Wischweg erst den Ort nennt und dann, was mit ihm zu tun ist.
+    return el('li', {}, [el('div', { class: 'entry-row' }, [entry, toggle])]) as HTMLLIElement;
+  }
+
+  /**
+   * Der Knopf sagt, was der Tipp bewirkt - nicht, in welchem Zustand er ist.
+   *
+   * "Ausgewaehlt" ueber aria-pressed muesste gedeutet werden; "einblenden"
+   * nennt Zustand und naechsten Schritt in einem Wort. Dasselbe Muster faehrt
+   * der Anhalten-Knopf im Bereich Navigation.
+   */
+  private dressToggle(row: Row): void {
+    const hidden = row.location.hidden;
+    setButtonLabel(
+      row.toggle,
+      `${row.location.name} ${hidden ? 'einblenden' : 'ausblenden'}`,
+      hidden ? ICON_BULB_OFF : ICON_BULB_ON,
+    );
+    row.toggle.classList.toggle('bulb-off', hidden);
+  }
+
+  /** Sagt, dass etwas fehlt - sonst waere die kuerzere Kegel-Liste nicht erklaerbar. */
+  private renderHiddenHint(): void {
+    const total = this.rows.size;
+    const hidden = [...this.rows.values()].filter((row) => row.location.hidden).length;
+
+    setText(
+      this.hiddenHint,
+      hidden === 0 ? '' : `${hidden} von ${total} Orten sind ausgeblendet.`,
+    );
+    // Bei null Ausgeblendeten gar nicht erst im Wischweg liegen.
+    this.hiddenHint.hidden = hidden === 0;
   }
 
   /**
@@ -378,7 +475,7 @@ export class LocationsView {
   }
 
   private focusEntry(id: string): void {
-    this.entryButtons.get(id)?.focus();
+    this.rows.get(id)?.entry.focus();
   }
 
   private currentName(): string {

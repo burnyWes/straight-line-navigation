@@ -65,7 +65,34 @@ export function icon(path: string): SVGSVGElement {
   return svg;
 }
 
+/** Name und Symbol gehoeren zusammen - sonst zeigt der Knopf etwas anderes, als er heisst. */
+export function setButtonLabel(button: HTMLButtonElement, label: string, path: string): void {
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+  button.replaceChildren(icon(path));
+}
+
 export const ICON_PLAY = 'M8 5l12 7-12 7z';
 export const ICON_STOP = 'M6 6h12v12H6z';
 export const ICON_PAUSE = 'M7 5h4v14H7zm6 0h4v14h-4z';
 export const ICON_PLUS = 'M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z';
+
+/**
+ * Gluehbirne ohne Strahlen: der Ort ist ausgeblendet.
+ *
+ * Von Hand geschrieben wie die uebrigen Symbole - drei Pfade rechtfertigen
+ * keine Bildbibliothek (docs/design.md Entscheidung 25).
+ */
+export const ICON_BULB_OFF =
+  'M12 3.5a5.5 5.5 0 0 0-3 10.1V16h6v-2.4a5.5 5.5 0 0 0-3-10.1zM9 17h6v1.8H9zm1.2 2.6h3.6v1.6h-3.6z';
+
+/**
+ * Dieselbe Birne mit Strahlen: der Ort wird navigiert.
+ *
+ * Bewusst aus ICON_BULB_OFF zusammengesetzt: Die Silhouette muss in beiden
+ * Zustaenden dieselbe sein, sonst liest sich der Wechsel als anderes Symbol
+ * statt als anderer Zustand.
+ */
+export const ICON_BULB_ON =
+  `${ICON_BULB_OFF} M11.1 0h1.8v3h-1.8zM1.5 10.6h3.2v1.7H1.5zm17.8 0h3.2v1.7h-3.2z` +
+  'M3.6 3.9l1.2-1.2 2.3 2.3-1.2 1.2zm13.4 1.1l2.3-2.3 1.2 1.2-2.3 2.3z';

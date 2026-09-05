@@ -133,6 +133,65 @@ describe('LocationService', () => {
     });
   });
 
+  describe('Ausblenden', () => {
+    it('legt neue Orte sichtbar an', () => {
+      const gps = service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4));
+      const text = service.saveFromText('Dom', '50.94, 6.96');
+      expect(gps.ok && gps.location.hidden).toBe(false);
+      expect(text.ok && text.location.hidden).toBe(false);
+    });
+
+    it('blendet aus und wieder ein', () => {
+      const created = service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4));
+      if (!created.ok) return;
+
+      expect(service.setHidden(created.location.id, true)?.hidden).toBe(true);
+      expect(repository.all()[0]?.hidden).toBe(true);
+
+      expect(service.setHidden(created.location.id, false)?.hidden).toBe(false);
+      expect(repository.all()[0]?.hidden).toBe(false);
+    });
+
+    it('laesst den Rest des Ortes unberuehrt', () => {
+      const created = service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4, 9));
+      if (!created.ok) return;
+
+      const hiddenNow = service.setHidden(created.location.id, true);
+      expect(hiddenNow).toMatchObject({
+        id: created.location.id,
+        name: 'Bahnhof',
+        accuracyMetres: 9,
+        createdAt: created.location.createdAt,
+      });
+    });
+
+    it('meldet eine unbekannte Kennung, statt etwas zu schreiben', () => {
+      service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4));
+      expect(service.setHidden('gibt-es-nicht', true)).toBeNull();
+      expect(repository.all()[0]?.hidden).toBe(false);
+    });
+
+    it('laesst ausgeblendete Orte aus der Navigation heraus', () => {
+      service.saveCurrentPosition('Zuhause', fix(52.5, 13.4));
+      const arbeit = service.saveCurrentPosition('Arbeit', fix(52.6, 13.5));
+      if (!arbeit.ok) return;
+      service.setHidden(arbeit.location.id, true);
+
+      // Verwalten zeigt alles, navigiert wird nur der Rest.
+      expect(service.all().map((l) => l.name)).toEqual(['Arbeit', 'Zuhause']);
+      expect(service.visible().map((l) => l.name)).toEqual(['Zuhause']);
+    });
+
+    it('behaelt beim Import den eingelesenen Zustand', () => {
+      service.merge([
+        testLocation('Dom', coordinate(50.94, 6.96), null, true),
+        testLocation('Tor', coordinate(52.51, 13.37)),
+      ]);
+      expect(service.all().map((l) => l.hidden)).toEqual([true, false]);
+      expect(service.visible().map((l) => l.name)).toEqual(['Tor']);
+    });
+  });
+
   it('sortiert die Verwaltungsliste alphabetisch', () => {
     service.saveCurrentPosition('Zuhause', fix(52.5, 13.4));
     service.saveCurrentPosition('Arbeit', fix(52.6, 13.5));

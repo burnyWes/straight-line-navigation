@@ -79,6 +79,28 @@ describe('locationSerialization', () => {
     expect(result.skipped).toBe(4);
   });
 
+  it('nimmt das Ausblenden mit durch den Speicher', () => {
+    const locations = [
+      testLocation('Bahnhof', coordinate(52.5, 13.4)),
+      testLocation('Baecker', coordinate(50.94, 6.96), null, true),
+    ];
+    const result = deserializeLocations(serializeLocations(locations));
+
+    expect(result.locations.map((l) => l.hidden)).toEqual([false, true]);
+  });
+
+  it('liest einen Eintrag ohne das Feld als sichtbar', () => {
+    // Jede Sicherung von vor dieser Fassung kennt das Feld nicht. Ein Ort, der
+    // danach stumm fehlte, waere der schlechteste Ausgang.
+    const raw = JSON.stringify({
+      version: 1,
+      locations: [
+        { id: 'a', name: 'Alt', lat: 52.5, lon: 13.4, createdAt: '2026-01-01T00:00:00.000Z' },
+      ],
+    });
+    expect(deserializeLocations(raw).locations[0]?.hidden).toBe(false);
+  });
+
   it('liest auch ein blankes Array', () => {
     const raw = JSON.stringify([
       { id: 'a', name: 'Gut', lat: 52.5, lon: 13.4, createdAt: '2026-01-01T00:00:00.000Z' },

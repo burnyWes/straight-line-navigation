@@ -38,6 +38,18 @@ export class LocationService {
   }
 
   /**
+   * Was navigiert wird.
+   *
+   * Ausgeblendete Orte bleiben gespeichert, erreichen den Kegel aber gar nicht
+   * erst (docs/design.md 6.5). Die Regel liegt bewusst hier und nicht im
+   * NavigationService: Der beantwortet Geometrie - welche dieser Orte liegen
+   * wo -, waehrend "wer darf ueberhaupt mitspielen" zur Verwaltung gehoert.
+   */
+  visible(): readonly Location[] {
+    return this.all().filter((location) => !location.hidden);
+  }
+
+  /**
    * Vorschlag, damit im Stehen nichts getippt werden muss.
    *
    * Ein Name ist Pflicht, aber er muss nicht sofort gut sein - umbenennen geht
@@ -76,6 +88,24 @@ export class LocationService {
     const renamed = createLocation({ ...existing, name });
     this.repository.save(renamed);
     return { ok: true, location: renamed };
+  }
+
+  /**
+   * Blendet einen Ort aus oder wieder ein.
+   *
+   * Gibt den neuen Stand zurueck, damit die Ansicht genau eine Zeile
+   * nachziehen kann, statt die Liste neu zu bauen - der Fokus steht beim
+   * Umschalten auf dem Knopf, und ein neu gebauter Knopf nimmt ihn mit
+   * (docs/design.md 9).
+   */
+  setHidden(id: string, hidden: boolean): Location | null {
+    const existing = this.repository.all().find((location) => location.id === id);
+    if (existing === undefined) {
+      return null;
+    }
+    const next = createLocation({ ...existing, hidden });
+    this.repository.save(next);
+    return next;
   }
 
   remove(id: string): void {
