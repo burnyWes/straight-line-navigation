@@ -134,3 +134,4 @@ TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
 - Gruppenfunktion
+- Optionsmenü überarbeiten
