@@ -164,11 +164,26 @@ nicht unterscheidbar, ob Zahlen aktuell oder eingefroren sind.
 (bei Gehgeschwindigkeit einige Dutzend Meter). Eine stabile Liste mit kleinem Fehler ist
 brauchbar; eine exakte Liste, die den Fokus zerstört, nicht.
 
-**Präzisierung aus der Umsetzung:** Im eingefrorenen Zustand aktualisieren sich die
-Entfernungen aller Zeilen **außer der gerade fokussierten**. Ändert sich der zugängliche
-Name eines fokussierten Elements, setzt VoiceOver mitten im Satz neu an — genau der
-Effekt, den das Einfrieren verhindern soll. Die Zeile unter dem Finger behält ihre
-Beschriftung, bis der Fokus sie verlässt.
+**Präzisierung aus der Umsetzung:** Die Entfernungen aller Zeilen aktualisieren sich
+laufend, **außer bei der gerade fokussierten**. Ändert sich der zugängliche Name eines
+fokussierten Elements, setzt VoiceOver mitten im Satz neu an — genau der Effekt, den das
+Einfrieren verhindern soll. Die Zeile unter dem Finger behält ihre Beschriftung, bis der
+Fokus sie verlässt. Diese Regel hängt **nicht** am Freeze-Zustand: Sonst wird genau in dem
+Bild neu vorgelesen, in dem der Fokus schon steht, das Einfrieren aber noch nicht
+durchgereicht ist.
+
+**Ein Freeze, der hängen bleibt, ist schlimmer als gar keiner.** Die Liste steht still,
+die Ein- und Austritts-Signale klingen weiter — und nichts widerspricht. Drei Sicherungen
+halten ihn lösbar:
+
+- **Der Freeze-Zustand gehört dem Lauf.** Start und Ende setzen ihn zurück. Sonst friert
+  eine Flagge aus dem vorigen Lauf die noch leere Liste des nächsten ein, und der Lauf
+  zeigt nie wieder etwas an.
+- **Vor jedem Bild wird geprüft, ob der Fokus überhaupt noch in der Liste steht.** Wird
+  das fokussierte Element entfernt — eine Zeile fällt aus dem Kegel, ein Ort wird
+  gelöscht —, fällt der Fokus ohne `focusout` auf den Rumpf zurück.
+- **„Fortsetzen" löst auch das Auto-Freeze.** Der Knopf ist der letzte Ausweg und muss
+  wirken, auch wenn der Fokus noch in der Liste hängt.
 
 **Technische Voraussetzung:** Jede Listenzeile ist ein `<button>`. Nur bei
 fokussierbaren Elementen erzeugt der VoiceOver-Cursor `focus`-Ereignisse, an denen das
@@ -455,6 +470,13 @@ es zu aktualisieren, ist der Fokus weg — optisch unsichtbar, mit VoiceOver fat
 drei Bildschirmen und einer dynamischen Liste greift der Hauptnutzen eines Frameworks
 ohnehin nicht; die View ist nur die äußerste Schale und bliebe austauschbar.
 
+**Identität allein genügt nicht — ein Knoten, der bleibt, darf auch nicht bewegt
+werden.** `appendChild` verschiebt einen vorhandenen Knoten, nimmt ihn dafür aber aus dem
+Dokument und setzt ihn wieder ein. Für VoiceOver ist das eine neue Zeile: Der Eintrag
+unter dem liegenden Finger wurde im Sekundentakt erneut vorgelesen. Der Render hängt
+deshalb nicht mehr jede Zeile neu an, sondern bewegt nur, was an falscher Stelle steht;
+stimmt die Reihenfolge, bleibt das DOM unberührt.
+
 **Java ist raus.** Die App braucht **kein Backend** — die Daten sind eigene Koordinaten,
 sie gehören aufs Gerät, und ein Server würde die App netzabhängig machen und damit genau
 die Eigenschaft zerstören, die sie haben soll.
@@ -549,3 +571,4 @@ das steht in keinem Verhältnis.
 | 29 | Tab-Leiste bleibt beim Scrollen oben stehen | Der Bereichswechsel darf nicht davon abhängen, wie weit die Ortsliste gescrollt ist |
 | 30 | Orte verwalten in modalen Dialogen, Löschen mit eigener Rückfrage | Die Liste bleibt auf den Namen reduziert; ohne Backend ist ein Fehlgriff endgültig (§7) |
 | 31 | Anlegen hinter einem Plus-Symbol, Namensvorschlag vorbelegt statt auf Knopfdruck | Das Formular stand vor der Liste und war bei jedem Erswipen im Weg; der Vorschlag ist ohnehin immer gewollt |
+| 32 | Freeze ist an drei Stellen lösbar, und der Render bewegt nur, was falsch steht | Ein hängender Freeze und eine im Sekundentakt neu eingehängte Zeile machen die Liste unbrauchbar, ohne dass etwas widerspricht (§4.3, §9) |

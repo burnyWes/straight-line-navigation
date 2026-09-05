@@ -74,6 +74,17 @@ x  Anlegen hinter einem Plus-Symbol oben rechts, als Dialog; Knopf "Namen
 b  "Aktuellen Standort speichern" ohne laufende Navigation meldete "Darin war
    keine Koordinate zu finden." - eigener Grund 'no-position' ergaenzt, der den
    richtigen Satz nennt (gefunden beim Smoke-Test der Dialoge)
+b  Finger auf einem Eintrag liegen lassen -> VoiceOver las die Zeile im
+   Sekundentakt erneut vor. Der Render hing jede Zeile in jedem Bild neu an;
+   appendChild nimmt den Knoten dabei aus dem Dokument und setzt ihn wieder
+   ein. Jetzt wird nur bewegt, was an falscher Stelle steht, und die Zeile
+   unter dem Fokus wird nie neu beschriftet (design.md 4.3, 9)
+b  Navigation lief nur einmal - danach nur noch Rein-/Raus-Toene, die Liste
+   stand. Der Freeze-Zustand der Ansicht ueberlebte das Beenden: eine Flagge
+   aus dem vorigen Lauf fror die noch leere Liste des naechsten ein, und ein
+   verlorener Fokus loeste das Auto-Freeze nie wieder. Freeze gehoert jetzt zum
+   Lauf, wird vor jedem Bild gegen den echten Fokus geprueft, und
+   "Fortsetzen" loest auch das Auto-Freeze (design.md 4.3, Entscheidung 32)
 
 --------------------------------------------------------------------------------
 TODO
@@ -97,7 +108,5 @@ m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
 - Gruppenfunktion
 - Ausblenden von Orten
-- Bugs auf Navigation-Setie
-  - Finger auf Orten liegenlassen -> Ständige Wiederholung des Vorlesens mit VoiceOver
-  - Navigation funktioniert nur einmal. Danach hört man nur noch die Rein-/Raus-Sounds aber die Liste aktuallisiert sich
-   nicht mehr
+-  Praxistest: bleibt die Liste jetzt dauerhaft ansprechbar - Finger liegen
+   lassen, Lauf beenden und neu starten, Fokus in der Liste stehen lassen?

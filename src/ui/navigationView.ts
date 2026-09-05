@@ -127,12 +127,14 @@ export class NavigationView {
 
     this.freezeButton.addEventListener('click', () => {
       this.manualFreeze = !this.manualFreeze;
-      this.freezeButton.setAttribute('aria-pressed', String(this.manualFreeze));
-      setButtonLabel(
-        this.freezeButton,
-        this.manualFreeze ? 'Liste fortsetzen' : 'Liste anhalten',
-        this.manualFreeze ? ICON_PLAY : ICON_PAUSE,
-      );
+      // Ein ausdrueckliches "Fortsetzen" loest auch das Auto-Freeze. Sonst
+      // bliebe der Knopf wirkungslos, solange der Fokus in der Liste haengt -
+      // und genau dann braucht ihn der Nutzer: Die Liste stuende still, die
+      // Signale klaengen weiter, und nichts koennte sie wieder loesen.
+      if (!this.manualFreeze) {
+        this.focusFreeze = false;
+      }
+      this.showFreezeState(this.manualFreeze);
       this.announcer.announce(this.manualFreeze ? 'angehalten' : 'aktualisiert');
       this.syncFreeze();
     });
@@ -180,6 +182,7 @@ export class NavigationView {
   markRunning(): void {
     this.running = true;
     this.clearProblems();
+    this.resetFreeze();
     this.startButton.hidden = true;
     this.stopButton.hidden = false;
     this.freezeButton.hidden = false;
@@ -190,6 +193,7 @@ export class NavigationView {
   markStopped(): void {
     this.running = false;
     this.clearProblems();
+    this.resetFreeze();
     this.startButton.hidden = false;
     this.stopButton.hidden = true;
     this.freezeButton.hidden = true;
@@ -273,6 +277,8 @@ export class NavigationView {
     if (!this.running) {
       return;
     }
+
+    this.releaseLostFocusFreeze();
     setText(this.statusLine, statusText(snapshot, this.positionProblem ?? this.headingProblem));
 
     // Der Wechsel auf "veraltet" ist die eigentliche Nachricht: Ab hier stimmen
@@ -289,19 +295,61 @@ export class NavigationView {
     this.dropRemoved(new Set(wanted));
 
     snapshot.entries.forEach((entry) => {
-      this.upsert(entry, snapshot.frozen);
+      this.upsert(entry);
     });
 
-    // In gewuenschter Reihenfolge anhaengen. appendChild verschiebt einen
-    // bestehenden Knoten, statt ihn zu ersetzen - der Fokus bleibt erhalten.
-    for (const id of wanted) {
-      const row = this.rows.get(id);
-      if (row !== undefined) {
-        this.list.append(row.item);
-      }
-    }
+    this.reorder(wanted);
 
     this.emptyLine.hidden = snapshot.entries.length > 0;
+  }
+
+  /**
+   * Bringt die Zeilen in die gewuenschte Reihenfolge und ruehrt dabei nur an,
+   * was tatsaechlich falsch steht.
+   *
+   * Frueher hing der Render jede Zeile in jedem Bild neu an. `append`
+   * verschiebt einen vorhandenen Knoten zwar, statt ihn zu ersetzen - es nimmt
+   * ihn dafuer aber aus dem Dokument und setzt ihn wieder ein. Fuer VoiceOver
+   * ist das eine neue Zeile: Wer den Finger auf einem Eintrag liegen liess,
+   * bekam ihn im Sekundentakt erneut vorgelesen. Stimmt die Reihenfolge schon,
+   * aendert sich am DOM jetzt gar nichts mehr.
+   */
+  private reorder(wanted: readonly string[]): void {
+    let next: ChildNode | null = this.list.firstChild;
+    for (const id of wanted) {
+      const row = this.rows.get(id);
+      if (row === undefined) {
+        continue;
+      }
+      if (row.item === next) {
+        next = row.item.nextSibling;
+        continue;
+      }
+      this.list.insertBefore(row.item, next);
+    }
+  }
+
+  /**
+   * Loest das Auto-Freeze, wenn der Fokus die Liste verlassen hat, ohne dass
+   * ein Ereignis kam.
+   *
+   * Wird das fokussierte Element aus dem DOM genommen - eine Zeile faellt aus
+   * dem Kegel, ein Ort wird geloescht -, faellt der Fokus auf den Rumpf
+   * zurueck, ohne dass `focusout` feuert. Ohne diese Pruefung bliebe die Liste
+   * danach fuer immer eingefroren: Die Ein- und Austritts-Signale klingen
+   * weiter, die Liste steht.
+   */
+  private releaseLostFocusFreeze(): void {
+    if (!this.focusFreeze) {
+      return;
+    }
+    const active = document.activeElement;
+    if (active !== null && this.list.contains(active)) {
+      return;
+    }
+    this.focusFreeze = false;
+    this.announcer.announce('aktualisiert');
+    this.syncFreeze();
   }
 
   private dropRemoved(wanted: ReadonlySet<string>): void {
@@ -313,7 +361,7 @@ export class NavigationView {
     }
   }
 
-  private upsert(entry: NavigationEntry, frozen: boolean): void {
+  private upsert(entry: NavigationEntry): void {
     const id = entry.location.id;
     let row = this.rows.get(id);
 
@@ -334,7 +382,13 @@ export class NavigationView {
     // Den Eintrag unter dem Finger nicht neu beschriften: Aendert sich der
     // Name eines fokussierten Elements, liest VoiceOver ihn mitten im Satz neu
     // vor. Die uebrigen Zeilen duerfen sich still aktualisieren.
-    if (frozen && document.activeElement === row.button) {
+    //
+    // Bewusst ohne Bedingung auf das Einfrieren: Steht der Fokus in der Liste,
+    // gilt die Zusage aus design.md 4.3 - die Zeile behaelt ihre Beschriftung,
+    // bis der Fokus sie verlaesst. Hing das am Freeze-Zustand, las VoiceOver in
+    // genau dem Bild neu vor, in dem das Einfrieren noch nicht durchgereicht
+    // war.
+    if (document.activeElement === row.button) {
       return;
     }
 
@@ -344,6 +398,35 @@ export class NavigationView {
       `${entry.location.name}, ${formatDistance(entry.displayDistanceMetres)}`,
     );
     row.label = label;
+  }
+
+  /**
+   * Setzt Anhalten und Auto-Freeze zurueck - jeder Lauf beginnt laufend.
+   *
+   * Frueher ueberlebten die Flaggen das Beenden. Wer die Liste angehalten oder
+   * nur den Fokus darin stehen hatte, startete den naechsten Lauf mit einem
+   * eingefrorenen Zustand, den der Dienst nach seinem reset() gar nicht mehr
+   * kannte: Der naechste Griff zum Knopf fror die noch leere Liste ein, und sie
+   * blieb leer. Zu hoeren waren nur noch die Ein- und Austritts-Signale.
+   */
+  private resetFreeze(): void {
+    this.manualFreeze = false;
+    this.focusFreeze = false;
+    this.showFreezeState(false);
+    this.syncFreeze();
+  }
+
+  /** Haelt Beschriftung und Zustand des Anhalten-Knopfes am gemeldeten Zustand. */
+  private showFreezeState(frozen: boolean): void {
+    if (this.freezeButton.getAttribute('aria-pressed') === String(frozen)) {
+      return;
+    }
+    this.freezeButton.setAttribute('aria-pressed', String(frozen));
+    setButtonLabel(
+      this.freezeButton,
+      frozen ? 'Liste fortsetzen' : 'Liste anhalten',
+      frozen ? ICON_PLAY : ICON_PAUSE,
+    );
   }
 
   private clearProblems(): void {
