@@ -270,10 +270,20 @@ keiner: Der Ort landet dauerhaft in der Liste und sieht danach aus wie jeder and
 
 **Die Statuszeile gehört dem Render.** Sie zeigt in dieser Reihenfolge: gemeldete
 Störung, veralteter Standort, angehaltene Liste, laufende Navigation. **Sie steht
-zusammen mit der Kompassgüte am unteren Rand des Bereichs, unter der Liste**
-*(Nutzerentscheidung)*: VoiceOver wischt in DOM-Reihenfolge, und wer navigiert, will die
-Orte hören und nicht bei jedem Anlauf zwei Zeilen Zustand davor. Was wirklich neu ist,
-wird ohnehin angesagt; die Zeilen sind zum Nachschlagen da. *(Vorher
+zusammen mit der Kompassgüte am unteren Bildrand und bleibt beim Scrollen dort
+stehen** (`position: fixed`) — Gegenstück zur angehefteten Tab-Leiste oben
+*(Nutzerentscheidung)*. Im DOM steht sie **hinter** der Liste: VoiceOver wischt in
+DOM-Reihenfolge, und wer navigiert, will die Orte hören und nicht bei jedem Anlauf zwei
+Zeilen Zustand davor. Was wirklich neu ist, wird ohnehin angesagt; die Zeilen sind zum
+Nachschlagen da.
+
+**Ihre Höhe wandert per `--foot-height` zurück ins Layout.** Angeheftet liegt die Leiste
+außerhalb des Flusses und schiebt nichts mehr weg; der letzte Listeneintrag und der
+schwebende Anhalten-Knopf darüber brauchen aber genau so viel Platz, wie sie einnimmt.
+Ein fester Wert reicht nicht — eine gemeldete Störung läuft über mehrere Zeilen, und die
+Schriftgröße folgt der Systemeinstellung. Ein `ResizeObserver` misst nach; der
+Rücksprungwert im Stylesheet gilt nur bis zur ersten Messung und ist bewusst reichlich:
+Zu viel Platz kostet Leere unter dem letzten Eintrag, zu wenig verdeckt ihn. *(Vorher
 schrieb der Render unbedingt „Navigation läuft." und wischte damit jede
 Fehlermeldung im nächsten Bild wieder weg — der Fehler, der zu diesem Abschnitt
 geführt hat.)*

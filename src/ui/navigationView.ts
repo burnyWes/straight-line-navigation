@@ -59,7 +59,10 @@ export class NavigationView {
   private readonly statusLine: HTMLElement;
   private readonly qualityLine: HTMLElement;
   private readonly emptyLine: HTMLElement;
+  private readonly foot: HTMLElement;
   private readonly list: HTMLUListElement;
+  /** Festgehalten, damit ihn die Speicherbereinigung nicht einsammelt. */
+  private footObserver: ResizeObserver | null = null;
   private readonly rows = new Map<string, Row>();
 
   private manualFreeze = false;
@@ -109,9 +112,10 @@ export class NavigationView {
       hidden: true,
     });
 
-    // Symbol ohne Text, schwebend unten rechts - im Gehen mit dem Daumen
-    // erreichbar. Im DOM steht der Knopf trotzdem **vor** der Liste: VoiceOver
-    // wischt in DOM-Reihenfolge, dahinter laege er hinter allen Eintraegen.
+    // Symbol ohne Text, schwebend rechts unten dicht ueber der Statusleiste -
+    // im Gehen mit dem Daumen erreichbar. Im DOM steht der Knopf trotzdem
+    // **vor** der Liste: VoiceOver wischt in DOM-Reihenfolge, dahinter laege er
+    // hinter allen Eintraegen.
     this.freezeButton = el(
       'button',
       {
@@ -138,10 +142,15 @@ export class NavigationView {
     // die es half. Wer eine stehende Liste will, drueckt den Knopf unten rechts.
     this.list = el('ul', { class: 'entries', 'aria-label': 'Orte in Sichtrichtung' }) as HTMLUListElement;
 
-    // Status und Kompassguete stehen **unter** der Liste, nicht ueber ihr:
-    // VoiceOver wischt in DOM-Reihenfolge, und wer navigiert, will die Orte
-    // hoeren, nicht jedes Mal zwei Zeilen Zustand davor. Gesagt wird ohnehin
-    // nur der Wechsel; die Zeilen sind zum Nachschlagen da (docs/design.md 4.3).
+    // Status und Kompassguete stehen am unteren Bildrand und bleiben dort
+    // stehen, egal wie weit die Liste gescrollt ist - Gegenstueck zur
+    // angehefteten Tab-Leiste oben. Im DOM stehen sie trotzdem **hinter** der
+    // Liste: VoiceOver wischt in DOM-Reihenfolge, und wer navigiert, will die
+    // Orte hoeren, nicht jedes Mal zwei Zeilen Zustand davor. Gesagt wird
+    // ohnehin nur der Wechsel; die Zeilen sind zum Nachschlagen da
+    // (docs/design.md 4.6).
+    this.foot = el('div', { class: 'panel-foot' }, [this.statusLine, this.qualityLine]);
+
     this.panel = el('section', { class: 'panel panel-navigation' }, [
       el('div', { class: 'panel-head' }, [
         el('h2', { text: 'Navigation' }),
@@ -151,11 +160,42 @@ export class NavigationView {
       this.freezeButton,
       this.emptyLine,
       this.list,
-      el('div', { class: 'panel-foot' }, [this.statusLine, this.qualityLine]),
+      this.foot,
     ]);
 
     this.freezeButton.hidden = true;
     this.list.hidden = true;
+
+    this.trackFootHeight();
+  }
+
+  /**
+   * Meldet die Hoehe der angehefteten Statusleiste als `--foot-height` zurueck
+   * ins Layout.
+   *
+   * Angeheftet liegt die Leiste ausserhalb des Flusses und schiebt nichts mehr
+   * weg. Der letzte Listeneintrag und der schwebende Knopf brauchen darunter
+   * aber genau so viel Platz, wie sie einnimmt - sonst liegt sie auf ihnen.
+   * Ein fester Wert reichte nicht: Eine gemeldete Stoerung laeuft ueber mehrere
+   * Zeilen, und die Schriftgroesse folgt der Systemeinstellung.
+   */
+  private trackFootHeight(): void {
+    if (typeof ResizeObserver === 'undefined') {
+      // Ohne Beobachter bleibt es beim Ruecksprungwert aus dem Stylesheet.
+      return;
+    }
+    // Der Beobachter wird festgehalten, nicht nur erzeugt: Ohne Verweis haengt
+    // seine Lebensdauer am Wohlwollen der Speicherbereinigung.
+    this.footObserver = new ResizeObserver(() => {
+      // Waehrend die App im Hintergrund liegt, liefert der Browser keine
+      // Bilder und damit auch keine Meldung. Eine Hoehe von 0 stammt aus einem
+      // verborgenen Bereich und wuerde die Leiste nur falsch einplanen.
+      const height = this.foot.offsetHeight;
+      if (height > 0) {
+        this.panel.style.setProperty('--foot-height', `${height}px`);
+      }
+    });
+    this.footObserver.observe(this.foot);
   }
 
   markRunning(): void {

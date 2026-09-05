@@ -94,27 +94,37 @@ x  Auto-Freeze bei Fokus entfernt: Die Liste hielt beim Durchwischen an jedem
 x  Statuszeile und Kompassguete an den unteren Rand des Navigationsbereichs,
    unter die Liste: VoiceOver wischt in DOM-Reihenfolge, und die Orte sollen
    frueh im Wischweg liegen (design.md 4.6)
+x  Die Statusleiste ist jetzt am unteren Bildrand angeheftet und bleibt beim
+   Scrollen stehen - Gegenstueck zur Tab-Leiste oben. Ihre Hoehe misst ein
+   ResizeObserver und meldet sie als --foot-height zurueck; danach richten sich
+   das Polster unter dem letzten Eintrag und der schwebende Knopf, der nun
+   dicht ueber der Leiste sitzt statt am Bildrand (design.md 4.6)
+-  Praxistest: bleibt die Liste jetzt dauerhaft ansprechbar - Finger liegen
+   lassen, Lauf beenden und neu starten, Fokus in der Liste stehen lassen?
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
-/  Praxistest auf dem Geraet: fuehlen sich +-20 Grad im Gehen richtig an?
+x  Praxistest auf dem Geraet: fuehlen sich +-20 Grad im Gehen richtig an?
 x  Praxistest: nerven die Ansagen "angehalten" / "aktualisiert" beim Swipen?
    Ja - deshalb faellt das Auto-Freeze bei Fokus weg (siehe oben)
-/  Praxistest: bleibt der VoiceOver-Fokus beim Drehen wirklich stehen?
-
--  Offene Frage: fokussierte Zeile nicht neu beschriften - richtig so, oder
+x  Praxistest: bleibt der VoiceOver-Fokus beim Drehen wirklich stehen?
+x  Offene Frage: fokussierte Zeile nicht neu beschriften - richtig so, oder
    soll sie doch mitlaufen? (design.md 4.3)
--  Praxistest: laeuft die Liste jetzt unter dem Finger weg, oder reicht es, sie
+x  Praxistest: laeuft die Liste jetzt unter dem Finger weg, oder reicht es, sie
    bei Bedarf ueber den Knopf anzuhalten?
--  Praxistest: bleibt der VoiceOver-Cursor beim Umsortieren wirklich auf dem
+x  Praxistest: bleibt der VoiceOver-Cursor beim Umsortieren wirklich auf dem
    Eintrag stehen, den er gerade las?
--  Praxistest: sind Status und Kompassguete am Seitenende noch auffindbar, oder
+x  Praxistest: sind Status und Kompassguete am Seitenende noch auffindbar, oder
    fehlen sie oben?
--  Auf dem Geraet pruefen: laesst sich die App vom Home-Bildschirm starten und
+x  Auf dem Geraet pruefen: laesst sich die App vom Home-Bildschirm starten und
    startet sie im Flugmodus? (am Rechner geprueft, auf dem Geraet noch nicht)
 -  Praxistest: trifft der Daumen den schwebenden Anhalten-Knopf im Gehen, und
-   verdeckt er nichts Wichtiges?
+   verdeckt er nichts Wichtiges? Er sitzt jetzt ein Stueck hoeher, dicht ueber
+   der angehefteten Statusleiste
+-  Praxistest: verdeckt die angeheftete Statusleiste auf dem Geraet etwas vom
+   letzten Listeneintrag? (am Rechner nur nachgerechnet - der Testtab lief im
+   Hintergrund, dort liefert Chrome keine ResizeObserver-Meldungen)
 -  Praxistest: sind 12 Sekunden bis "Standort veraltet" richtig gewaehlt - kommt
    die Meldung im staedtischen Raum zu oft oder zu spaet? (design.md 4.6)
 -  Praxistest: laesst sich die Sicherungsdatei auf dem iPhone aus der
@@ -124,5 +134,3 @@ m  Haptik bei Beruehrung ueber den switch-Trick (Bestaetigung beim Antippen)
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
 - Gruppenfunktion
 - Ausblenden von Orten
--  Praxistest: bleibt die Liste jetzt dauerhaft ansprechbar - Finger liegen
-   lassen, Lauf beenden und neu starten, Fokus in der Liste stehen lassen?

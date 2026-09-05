@@ -207,13 +207,14 @@ button[aria-pressed='true']:focus-visible {
 }
 
 /*
- * Schwebt unten rechts ueber dem Inhalt, damit der Daumen ihn ohne Suchen
- * trifft. Im DOM steht er weiterhin vor der Liste (siehe navigationView.ts).
+ * Schwebt rechts unten ueber dem Inhalt, damit der Daumen ihn ohne Suchen
+ * trifft - dicht ueber der Statusleiste, nicht auf ihr. Im DOM steht er
+ * weiterhin vor der Liste (siehe navigationView.ts).
  */
 .freeze {
   position: fixed;
   right: calc(16px + env(safe-area-inset-right));
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  bottom: calc(var(--foot-height, 104px) + 16px);
   z-index: 20;
   width: 64px;
   height: 64px;
@@ -221,20 +222,33 @@ button[aria-pressed='true']:focus-visible {
   box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
 }
 
-/* Platz, damit der schwebende Knopf nicht auf der Statusleiste unten liegt. */
+/*
+ * Platz unter dem letzten Eintrag fuer die angeheftete Statusleiste und den
+ * schwebenden Knopf darueber - beide liegen ausserhalb des Flusses und schieben
+ * nichts mehr weg. Die Hoehe der Leiste traegt die Ansicht nach
+ * (navigationView.ts). Der Ruecksprungwert gilt nur bis zur ersten Messung und
+ * ist bewusst reichlich - drei Zeilen Stoerungsmeldung passen hinein. Zu viel
+ * Platz kostet nur Leere unter dem letzten Eintrag, zu wenig verdeckt ihn.
+ */
 .panel-navigation {
-  padding-bottom: 88px;
+  padding-bottom: calc(var(--foot-height, 104px) + 88px);
 }
 
 /*
- * Status und Kompassguete am unteren Rand, abgesetzt vom Rest.
- *
- * Rechts bleibt der Streifen fuer den schwebenden Anhalten-Knopf frei: Sonst
- * laege er beim Blaettern ans Seitenende auf dem Text.
+ * Status und Kompassguete bleiben am unteren Bildrand stehen, egal wie weit die
+ * Liste gescrollt ist - Gegenstueck zur angehefteten Tab-Leiste oben
+ * (docs/design.md 4.6). Deckender Grund und Rand oben: Sonst scrollte der
+ * Inhalt sichtbar durch den Text hindurch.
  */
 .panel-foot {
-  margin-top: 20px;
-  padding: 10px 80px 0 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  padding: 8px calc(12px + env(safe-area-inset-right))
+    calc(8px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  background: var(--bg);
   border-top: 2px solid var(--line);
 }
 
