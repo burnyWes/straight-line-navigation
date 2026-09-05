@@ -80,3 +80,68 @@ export function formatLocationDetails(
   }
   return `${parts.join(', ')}.`;
 }
+
+/**
+ * Beschriftung einer Gruppenzeile: "Kiez, 4 Orte, 1 ausgeblendet".
+ *
+ * Die Zahlen stehen im Knopfnamen und nicht in einer eigenen Zeile: Die
+ * Gruppenzeile hat mit der Gluehbirne ohnehin schon zwei Stationen
+ * (docs/design.md 6.6), und ein Rueckwaertswisch auf den Knopf ist der Weg
+ * zur Zahl, nachdem umgeschaltet wurde.
+ *
+ * Der Zusatz erscheint nur, wenn ueberhaupt etwas ausgeblendet ist - "0
+ * ausgeblendet" waere bei jeder Gruppe ein Wort mehr fuer keine Information.
+ */
+export function formatGroupEntryLabel(name: string, total: number, hidden: number): string {
+  const orte = `${total} ${total === 1 ? 'Ort' : 'Orte'}`;
+  if (hidden === 0) {
+    return `${name}, ${orte}`;
+  }
+  return `${name}, ${orte}, ${hidden} ausgeblendet`;
+}
+
+/**
+ * Zusatz fuer die Hinweiszeile im Ort-Dialog: "In den Gruppen Kiez und Arbeit."
+ *
+ * Genannt, nicht geaendert: Die Mitgliedschaft wird auf der Gruppen-Seite
+ * gepflegt (docs/design.md 6.6). Ohne Gruppe bleibt der Satz leer, statt
+ * "In keiner Gruppe." zu sagen - das waere bei den meisten Orten ein Satz ohne
+ * Anlass.
+ */
+export function formatGroupMembership(names: readonly string[]): string {
+  if (names.length === 0) {
+    return '';
+  }
+  if (names.length === 1) {
+    return `In der Gruppe ${names[0]}.`;
+  }
+  // "Arbeit, Kiez und Zuhause": das letzte mit "und", davor Kommas. VoiceOver
+  // spricht die Aufzaehlung dann wie ein Mensch.
+  const last = names[names.length - 1];
+  return `In den Gruppen ${names.slice(0, -1).join(', ')} und ${last}.`;
+}
+
+/**
+ * Text der Rueckfrage vor dem Loeschen einer Gruppe.
+ *
+ * Nennt, dass die Orte erhalten bleiben - das ist der Unterschied zum Loeschen
+ * eines Ortes, und ohne den Satz muesste man ihn raten. Der zweite Satz kommt
+ * nur, wenn ueberhaupt etwas ausgeblendet ist: Sonst waere er eine Warnung vor
+ * einem Zustand, den es nicht gibt (docs/design.md 6.6).
+ */
+export function formatDeleteGroupWarning(total: number, hidden: number): string {
+  const bleiben =
+    total === 0
+      ? 'Die Gruppe wird entfernt. Sie ist leer.'
+      : total === 1
+        ? 'Die Gruppe wird entfernt, der Ort darin bleibt gespeichert.'
+        : `Die Gruppe wird entfernt, die ${total} Orte darin bleiben gespeichert.`;
+  if (hidden === 0) {
+    return bleiben;
+  }
+  const dunkel =
+    hidden === 1
+      ? 'Einer davon ist ausgeblendet und bleibt es'
+      : `${hidden} davon sind ausgeblendet und bleiben es`;
+  return `${bleiben} ${dunkel} - einblenden geht einzeln auf der Orte-Seite.`;
+}

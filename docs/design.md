@@ -294,7 +294,7 @@ geführt hat.)*
 
 ## 5. Interaktionsmodell
 
-**Drei Tabs, Tab-Leiste oben** (nicht unten): VoiceOver läuft in DOM-Reihenfolge; oben
+**Vier Tabs, Tab-Leiste oben** (nicht unten): VoiceOver läuft in DOM-Reihenfolge; oben
 ist die Leiste mit einem Wisch vom Seitenanfang erreichbar. Die iOS-Konvention „Tabs
 unten" ist Daumen-Ergonomie für Sehende und hier ein Umweg. **Die Leiste bleibt beim
 Scrollen am oberen Rand stehen** (`position: sticky`): Der Bereichswechsel darf nicht
@@ -304,9 +304,14 @@ davon abhängen, wie weit die Ortsliste gescrollt ist. Die Überschrift scrollt 
 |---|---|
 | **Navigation** | Start/Stopp als Symbol im Kopf, Kegel-Liste, schwebender Anhalten-Schalter |
 | **Orte** | Liste aller gespeicherten Locations, nur Namen; Anlegen über ein Plus im Kopf, Bearbeiten und Löschen über Dialoge |
+| **Gruppen** | Liste der Gruppen; Anlegen über ein Plus im Kopf, Mitglieder und Löschen über Dialoge (§6.6) |
 | **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Export/Import, Datum der letzten Sicherung |
 
-- Die App startet **immer** auf „Navigation".
+- Die App startet **immer** auf „Navigation". *(Der vierte Tab kam mit den Gruppen
+  dazu — statt zweier Knöpfe unter der Leiste im Orte-Panel: Ein Umschaltmechanismus
+  statt zwei, und die Knöpfe lägen sonst bei **jedem** Besuch der Orte-Seite vor der
+  Liste. Der vierte Tab kostet eine Station, aber nur einmal, und liegt dort, wo der
+  Bereichswechsel ohnehin stattfindet.)*
 - **Starten und Beenden stehen als Symbol rechts neben der Überschrift** — ein
   Dreieck, während der Navigation ein Quadrat, beide ohne sichtbaren Text und mit
   `aria-label` benannt. Sie werden einmal pro Weg gedrückt; die Liste dagegen wird
@@ -431,6 +436,11 @@ einer Audio-App nicht bemerkbar ist; dieselbe Sorge lässt die Maximalentfernung
 standardmäßig unbegrenzt (§4.2). In die Statuszeile der Navigation gehört das **nicht**:
 Die hat eine feste Rangfolge und meldet nur, was gerade passiert (§4.6).
 
+**Für „heute nur die drei im Kiez" gibt es den Weg über eine Gruppe** (§6.6): Dieselbe
+Glühbirne sitzt dort an der Gruppenzeile und schaltet alle ihre Orte auf einen Schlag.
+Sie schreibt dabei genau dieses Feld `hidden` — die Gruppe besitzt keinen eigenen
+Sichtbarkeitszustand.
+
 **Während eines Laufs klingt Ausblenden wie Löschen.** Lag der Ort gerade im Kegel, folgt
 der absteigende Zweiklang, beim Einblenden der aufsteigende. Das ist kein falsches Signal
 im Sinne von §4.6: Es behauptet nichts über die Welt, sondern meldet eine Änderung, die
@@ -441,6 +451,125 @@ Sicherung. Eine Sicherung ohne das Feld — jede von vor dieser Fassung — wird
 „sichtbar" gelesen; ein Ort, der nach dem Einlesen stumm fehlte, wäre der schlechteste
 Ausgang (§7). Das Format bleibt deshalb bei `version: 1`: Die Änderung ist rein additiv,
 und kein Leser verhält sich je nach Nummer anders.
+
+### 6.6 Gruppen
+
+Orte lassen sich zu benannten **Gruppen** zusammenfassen. Der Zweck ist derselbe wie
+beim Ausblenden einzelner Orte (§6.5): **Ruhe im Kegel**. Ausblenden ist heute schon
+eine Reihenhandlung („heute nur die drei im Kiez") — eine Gruppe macht aus der Reihe
+einen einzigen Tipp und hält die Auswahl fest, statt sie jeden Morgen neu
+zusammenzusuchen.
+
+**Ein eigener Tab, keine zwei Knöpfe im Orte-Panel** (§5). Die Seite ist gebaut wie die
+Orte-Seite: Überschrift und Plus im Kopf, darunter Meldungszeile und Liste; Anlegen
+hinter dem Plus, Bearbeiten und Löschen hinter dem Listeneintrag, alles in modalen
+Dialogen (§6.4). Die Liste ist alphabetisch sortiert (deutsch, Umlaute einsortiert),
+wie die der Orte.
+
+**Die Gruppe hält die Mitglieder, nicht der Ort seine Gruppen.** Ein Ort weiß nichts von
+Gruppen; `location.ts` und das Ortsformat bleiben unverändert. Die Mitgliedschaft ist die
+Invariante der Gruppe, also gehört sie ins Gruppen-Aggregat. Aufgelöst wird **immer**
+gegen die existierenden Orte: Eine verwaiste Kennung — gelöschter Ort, halb geschriebener
+Speicher — fällt dabei still weg, statt weiter unten als fehlender Ort zu krachen.
+
+**Eigener Speicherschlüssel, eigenes Repository** (`straight-line-navigation.groups`).
+Zwei Aggregate, zwei Repositories; der Ortsspeicher bleibt Zeile für Zeile so, wie er
+ist. Halb geschriebene Stände sind damit möglich — Ort gelöscht, Gruppe noch nicht
+aufgeräumt, weil der zweite Schreibzugriff scheiterte. Durch die Filter-Regel eben sind
+sie unschädlich: Die Gruppe zeigt dann einen Ort weniger, statt zu brechen.
+
+**Kein Namensvorschlag beim Anlegen.** Der Vorschlag bei Orten existiert, weil im Stehen
+nichts getippt werden soll (§6); eine Gruppe wird im Sitzen angelegt und trägt einen
+selbst gewählten Namen. „Gruppe 5. September" wäre so wertlos wie „Unbenannt 3".
+
+**Gruppennamen sind eindeutig**, verglichen ohne Rücksicht auf Groß- und
+Kleinschreibung. „kiez" und „Kiez" sind mit VoiceOver nicht auseinanderzuhalten; zwei
+Einträge mit demselben gesprochenen Namen wären unbedienbar. Ein zweiter „Kiez" wird
+abgelehnt mit „Eine Gruppe mit diesem Namen gibt es schon." — beim Anlegen wie beim
+Umbenennen. Beim Umbenennen zählt die eigene Gruppe nicht als Kollision, sonst ließe sich
+die Groß-Schreibung nie korrigieren.
+
+**Nach dem Schließen steht der Fokus dort, wo weitergearbeitet wird:** nach Anlegen und
+Umbenennen auf der Gruppe in der Liste, nach dem Löschen auf dem Plus — dieselbe Regel
+wie bei den Orten. Das Löschen fragt in einem zweiten Dialog nach, und der Fokus steht
+dort auf „Abbrechen".
+
+**Mitglieder: Rad zum Hinzufügen, Liste zum Entfernen.** Hinzufügen wählt aus vielen
+aus — dafür ist ein Auswahlrad da; es listet **nur** Orte, die noch nicht Mitglied sind,
+alphabetisch. Entfernen zielt auf einen bestimmten Eintrag, und dafür braucht es ihn in
+einer Liste: darunter steht der Bestand, je Mitglied eine Zeile mit Namen links und
+Mülleimer-Knopf rechts, benannt „Bahnhof aus Kiez entfernen" — Ort **und** Gruppe, weil
+der Dialogtitel beim Wischen längst vorbei ist.
+
+**Die Auswahl wirkt sofort**, ohne zweiten „Hinzufügen"-Knopf. Auf iOS wird ein
+`<select>` als Rad gezeigt und mit „Fertig" bestätigt — die Auswahl ist dort ohnehin
+schon ein bewusster Abschluss; ein zweiter Knopf wäre eine Station und ein Tipp mehr je
+Ort. Danach springt das Rad auf „Ort wählen" zurück, und der hinzugefügte Ort verschwindet
+aus seiner Liste. Gibt es nichts auszuwählen, entfällt das Rad — ein Rad ohne Auswahl ist
+ein toter Knopf — und an seiner Stelle steht der Grund: „Alle gespeicherten Orte sind
+schon in dieser Gruppe." bzw. „Noch keine Orte gespeichert."
+
+**Nach dem Entfernen rückt der Fokus auf den Mülleimer des nachgerückten Ortes**, nicht
+zurück aufs Rad: Aufräumen ist eine Reihenhandlung — dasselbe Argument, mit dem §6.5 die
+Glühbirne in die Zeile statt in den Dialog gelegt hat. War es das letzte Mitglied, bleibt
+das Auswahlrad. **Eine Statuszeile im Dialog meldet** „Bahnhof hinzugefügt." bzw. „Bahnhof
+entfernt."; sie ist hier `role="status"`, weil der Fokus wandert und kein Knopf sich
+selbst neu vorliest — anders als bei der Glühbirne, wo genau das die Bestätigung ist.
+
+**Der Eintragsknopf nennt den Umfang:** „Kiez, 4 Orte", bei ausgeblendeten Mitgliedern
+„Kiez, 4 Orte, 1 ausgeblendet". Die Zahlen stehen im Knopfnamen und nicht in einer
+eigenen Zeile: Die Gruppenzeile hat mit der Glühbirne ohnehin schon zwei Stationen, und
+ein Rückwärtswisch auf den Knopf ist der Weg zur Zahl. Der Zusatz erscheint nur, wenn
+mindestens einer ausgeblendet ist.
+
+**Ein Ort darf in mehreren Gruppen stehen**; wird er gelöscht, verschwindet er aus allen.
+Aufgeräumt wird **nach** dem Löschen: Schlägt das Aufräumen fehl, bleibt eine verwaiste
+Kennung zurück — und die ist durch das Filtern beim Auflösen unschädlich.
+
+**Die Glühbirne an der Gruppe ist ein Reihenschalter, kein Zustand.** Rechts an jeder
+**nicht leeren** Gruppenzeile steht eine Birne, gleiches Bild und gleiche Beschriftungsregel
+wie bei einem Ort (§6.5): „Kiez ausblenden" bzw. „Kiez einblenden". Ein Tipp schreibt
+`hidden` auf **alle** Mitglieder. Die Gruppe hat **keinen** eigenen Sichtbarkeitszustand —
+es bleibt genau eine Wahrheit über die Sichtbarkeit eines Ortes. Ein eigener
+Gruppenzustand ließe die Orte-Seite „Bahnhof ausblenden" (also: sichtbar) ansagen für
+einen Ort, der nicht navigiert wird — genau das stille Filtern, gegen das §6.5
+argumentiert. `LocationService.visible()` und der `NavigationService` bleiben davon
+unberührt; die Navigation weiß von Gruppen nichts, und ein Ort in zwei Gruppen erzeugt
+keinen Konflikt. Der Preis ist bewusst gezahlt: Einblenden über die Gruppe hebt auch eine
+einzeln gesetzte Ausblendung auf.
+
+**Die Birne ist zweistufig, obwohl es drei Fälle gäbe.** Sie leuchtet, sobald
+**mindestens ein** Mitglied sichtbar ist — dann blendet ein Tipp aus; erst wenn alle dunkel
+sind, ist sie dunkel und blendet ein. „Teilweise" als dritter Zustand wäre eine Angabe, die
+man deuten müsste, ohne dass sich daraus ein nächster Schritt ergibt. Die Zahl steht
+ohnehin im Eintragsknopf derselben Zeile.
+
+**Leere Gruppen haben keine Birne** — kein toter Knopf im Wischweg. **Und es gibt keine
+zusätzliche Ansage**, aus demselben Grund wie beim einzelnen Ort: Der Knopf liest seinen
+neuen Namen selbst vor. Nachgezogen wird sofort, Birne **und** Eintragsknopf, weil dessen
+Zahlen sich mitändern — ein Rückwärtswisch muss die Wahrheit finden, nicht den Stand von
+vorhin. Und zwar in **allen** Zeilen, nicht nur der geschalteten: Ein Ort darf in mehreren
+Gruppen stehen, sein `hidden` ändert die Zahlen also überall dort mit. Der Fokus bleibt
+dabei stehen, weil nur der Inhalt bestehender Knoten neu geschrieben wird und kein Knoten
+ersetzt (§9). Läuft gerade ein Weg, klingen Ein- und Austritts-Töne wie beim einzelnen
+Ort.
+
+**Schlägt das Schreiben mittendrin fehl**, ist ein Teil der Orte schon geschaltet. Die
+Meldung sagt deshalb nur, dass das Speichern fehlschlug, und beide Ansichten werden danach
+vollständig neu gezeichnet: Sie zeigen den **tatsächlichen** Stand, nicht den
+beabsichtigten.
+
+**Der Ort-Dialog nennt die Gruppen, er ändert sie nicht.** Die vorhandene Hinweiszeile
+wird um einen Satz ergänzt: „Angelegt am 3. September 2026, Genauigkeit 12 Meter. In den
+Gruppen Kiez und Arbeit." Steht der Ort in keiner Gruppe, bleibt der Zusatz weg — „In
+keiner Gruppe." wäre bei den meisten Orten ein Satz ohne Anlass. Geändert wird die
+Mitgliedschaft dort **nicht**: Sonst gäbe es zwei Wege zu derselben Sache, und der im
+Ort-Dialog wäre der umständlichere von beiden.
+
+**Löschen einer Gruppe rührt die Orte nicht an** — auch nicht ihre Sichtbarkeit.
+Ausgeblendete Mitglieder bleiben ausgeblendet und sind einzeln auf der Orte-Seite wieder
+einblendbar. Ein Löschen, das nebenbei dreißig Orte in den Kegel zurückholte, wäre genau
+die Überraschung, gegen die §6.5 argumentiert. Die Rückfrage sagt das ausdrücklich.
 
 ---
 
@@ -471,6 +600,26 @@ geöffnet und kopiert werden kann, ist mit VoiceOver keine Sicherung.
 
 **Import ergänzt, er ersetzt nicht.** Dubletten werden über die Koordinate erkannt.
 „Ersetzen" wäre der Klick, der im falschen Moment alles kostet.
+
+**Jede Sicherung enthält die Gruppen** (§6.6) — sonst wäre sie keine vollständige zweite
+Kopie mehr. Das Format bleibt bei `version: 1`: Die Änderung ist rein additiv, und kein
+Leser verhält sich je nach Nummer anders. Eine Sicherung **ohne** `groups` — jede von vor
+dieser Fassung — liest sich als „keine Gruppen", nicht als Fehler.
+
+**Import vereinigt gleichnamige Gruppen** und ergänzt fehlende; verglichen wird ohne
+Rücksicht auf Groß- und Kleinschreibung. Der Name ist die Identität über Geräte hinweg,
+weil Kennungen es nicht sind. Genau deshalb werden **die Mitgliedskennungen beim
+Zusammenführen umgeschrieben**: Eine Dublette behält die lokale Kennung, und ohne diese
+Abbildung („eingelesene Kennung → lokale Kennung", aus dem Zusammenführen der Orte) zeigte
+eine eingelesene Gruppe danach auf einen Ort, den es lokal nicht gibt. Eine Kennung ohne
+Abbildung fällt weg. Zusammengeführt wird **erst** die Ortsliste, dann die Gruppen.
+
+Die Meldung nennt beides und lässt weg, was null ist: „3 Orte ergänzt, 1 waren schon
+vorhanden, 1 Gruppe ergänzt, 1 Gruppe erweitert." Beschädigte Einträge werden getrennt
+gezählt und immer genannt — sie sind verloren.
+
+Die Sicherungsdatei heißt seitdem `sicherung-<Datum>.json` und nicht mehr `orte-…`: In der
+Dateien-App ist der Name das einzige, woran sie zu erkennen ist.
 
 ---
 
@@ -638,3 +787,4 @@ das steht in keinem Verhältnis.
 | 31 | Anlegen hinter einem Plus-Symbol, Namensvorschlag vorbelegt statt auf Knopfdruck | Das Formular stand vor der Liste und war bei jedem Erswipen im Weg; der Vorschlag ist ohnehin immer gewollt |
 | 32 | Freeze ist an drei Stellen lösbar, und der Render bewegt nur, was falsch steht | Ein hängender Freeze und eine im Sekundentakt neu eingehängte Zeile machen die Liste unbrauchbar, ohne dass etwas widerspricht (§4.3, §9) |
 | 33 | Orte ausblendbar über einen zweiten Knopf je Zeile; stille Hinweiszeile statt Statusmeldung | Löschen war bisher die einzige Art, Ruhe im Kegel zu bekommen — und ohne Backend endgültig. Der doppelte Wischweg ist der bewusst gezahlte Preis dafür, dass Ausblenden eine Reihenhandlung bleibt (§6.5) |
+| 34 | Gruppen als vierter Tab; die Gruppe hält die Mitglieder, eigener Speicherschlüssel, Name als Identität | Ein Umschaltmechanismus statt zwei; der Ort bleibt unverändert und seine Tests unberührt; über Geräte hinweg unterscheiden sich Kennungen, Namen nicht (§6.6) |

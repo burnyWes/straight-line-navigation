@@ -155,7 +155,9 @@ export class SettingsView {
       el('h3', { text: 'Sicherung' }),
       el('p', {
         class: 'hint',
-        text: 'Die Orte liegen nur auf diesem Geraet. Es gibt keine zweite Kopie.',
+        // Nennt beides, seit die Sicherung beides enthaelt: Wer hier nur
+        // "Orte" liest, haelt seine Gruppen faelschlich fuer ungesichert.
+        text: 'Orte und Gruppen liegen nur auf diesem Geraet. Es gibt keine zweite Kopie.',
       }),
       this.backupLine,
       exportFile,

@@ -96,3 +96,16 @@ export const ICON_BULB_OFF =
 export const ICON_BULB_ON =
   `${ICON_BULB_OFF} M11.1 0h1.8v3h-1.8zM1.5 10.6h3.2v1.7H1.5zm17.8 0h3.2v1.7h-3.2z` +
   'M3.6 3.9l1.2-1.2 2.3 2.3-1.2 1.2zm13.4 1.1l2.3-2.3 1.2 1.2-2.3 2.3z';
+
+/**
+ * Muelleimer: Mitglied aus der Gruppe entfernen.
+ *
+ * Von Hand geschrieben wie die uebrigen Symbole (docs/design.md Entscheidung
+ * 25): Deckel mit Griff, Korpus, zwei Rillen. Die Rillen sind nicht Zierde -
+ * ohne sie ist der Korpus auf 26 Pixeln ein Trapez wie jedes andere.
+ */
+export const ICON_TRASH =
+  'M10 2h4l1 2h4v2H5V4h4zM6.5 7h11l-1 13.2a1.8 1.8 0 0 1-1.8 1.8H9.3a1.8 1.8 0 0 1-1.8-1.8z' +
+  // Die Rillen laufen gegen den Uhrzeigersinn, der Korpus mit ihm: Nur so
+  // stanzt die Nonzero-Regel sie aus, statt sie mit ihm zu verschmelzen.
+  'M10 9.5v9h1.5v-9zM12.5 9.5v9h1.5v-9z';

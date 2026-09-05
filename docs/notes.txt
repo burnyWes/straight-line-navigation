@@ -128,10 +128,35 @@ x  Praxistest: sind 12 Sekunden bis "Standort veraltet" richtig gewaehlt - kommt
    die Meldung im staedtischen Raum zu oft oder zu spaet? (design.md 4.6)
 x  Praxistest: laesst sich die Sicherungsdatei auf dem iPhone aus der
    Dateien-App waehlen und wieder einlesen?
+x  Gruppenfunktion: Orte lassen sich zu benannten Gruppen zusammenfassen. Ein
+   vierter Tab "Gruppen" zwischen Orte und Einstellungen listet sie; Anlegen
+   hinter dem Plus, Mitglieder ueber ein Auswahlrad (hinzufuegen) und einen
+   Muelleimer je Zeile (entfernen). Rechts an jeder nicht leeren Gruppenzeile
+   eine Gluehbirne: Sie ist ein Reihenschalter und schreibt hidden auf alle
+   Mitglieder - die Gruppe hat keinen eigenen Sichtbarkeitszustand. Eigener
+   Speicherschluessel (design.md 6.6, Entscheidung 34)
+x  Sicherung enthaelt die Gruppen: serializeBackup ist aus locationSerialization
+   in ein eigenes backupSerialization umgezogen und fasst beide Aggregate in
+   einem Dokument zusammen. Format bleibt version 1, eine Sicherung ohne
+   Gruppen liest sich als "keine Gruppen". Import vereinigt gleichnamige
+   Gruppen und schreibt die Mitgliedskennungen ueber eine Abbildung aus
+   LocationService.merge() auf die lokalen Orte um. Die Datei heisst jetzt
+   sicherung-<Datum>.json statt orte-<Datum>.json (design.md 7)
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
-- Gruppenfunktion
 - Optionsmenü überarbeiten
+-  Praxistest: vier Tabs statt drei - ist die Leiste am Geraet noch gut zu
+   treffen, und stoert die zusaetzliche Station im Wischweg?
+-  Praxistest: Gruppe aus drei Orten zusammenstellen - nennt das Auswahlrad
+   nur Nichtmitglieder, und rueckt der Fokus beim Entfernen richtig nach?
+-  Praxistest: Birne an einer Gruppe - liest sich der Knopf mit neuem Namen
+   vor, ohne zweite Ansage, und stimmen die Zahlen beim Rueckwaertswischen?
+-  Praxistest: bei laufender Navigation eine Gruppe ausblenden, in der ein Ort
+   im Kegel liegt - klingt der absteigende Zweiklang?
+-  Praxistest: Sicherung mit Gruppen auf dem Geraet aus der Dateien-App
+   einlesen - kommen Orte, Gruppen und Mitgliedschaften vollstaendig zurueck?
+-  Praxistest: eine Sicherung von vor dieser Fassung einlesen - keine
+   Fehlermeldung wegen fehlender Gruppen?

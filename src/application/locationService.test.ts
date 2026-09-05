@@ -203,7 +203,8 @@ describe('LocationService', () => {
       service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4));
       const result = service.merge([testLocation('Dom', coordinate(50.94, 6.96))]);
 
-      expect(result).toEqual({ added: 1, duplicates: 0 });
+      expect(result.added).toBe(1);
+      expect(result.duplicates).toBe(0);
       expect(repository.all()).toHaveLength(2);
     });
 
@@ -213,8 +214,35 @@ describe('LocationService', () => {
       service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4));
       const result = service.merge([testLocation('Bahnhof (Kopie)', coordinate(52.5, 13.4))]);
 
-      expect(result).toEqual({ added: 0, duplicates: 1 });
+      expect(result.added).toBe(0);
+      expect(result.duplicates).toBe(1);
       expect(repository.all()).toHaveLength(1);
+    });
+
+    it('bildet neue Orte auf ihre eigene Kennung ab', () => {
+      // Die Abbildung traegt die Mitgliedschaften einer eingelesenen Gruppe
+      // auf die lokalen Orte um (docs/design.md 7).
+      const dom = testLocation('Dom', coordinate(50.94, 6.96));
+      const result = service.merge([dom]);
+
+      expect(result.idMapping.get(dom.id)).toBe(dom.id);
+    });
+
+    it('bildet eine Dublette auf die lokale Kennung ab', () => {
+      // Auch wenn sie ueber die Koordinate erkannt wurde und die eingelesene
+      // Fassung eine ganz andere Kennung traegt.
+      const created = service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4));
+      if (!created.ok) return;
+      const kopie = testLocation('Bahnhof (Kopie)', coordinate(52.5, 13.4));
+
+      const result = service.merge([kopie]);
+
+      expect(result.idMapping.get(kopie.id)).toBe(created.location.id);
+    });
+
+    it('bildet nur ab, was eingelesen wurde', () => {
+      service.saveCurrentPosition('Bahnhof', fix(52.5, 13.4));
+      expect(service.merge([]).idMapping.size).toBe(0);
     });
 
     it('loescht nichts Bestehendes', () => {

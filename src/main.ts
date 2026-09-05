@@ -7,13 +7,15 @@
 import './ui/styles.css';
 
 import { NavigationService } from './application/navigationService.js';
-import { LocationService } from './application/locationService.js';
+import { LocationService, type MergeResult } from './application/locationService.js';
+import { GroupService, type GroupMergeResult } from './application/groupService.js';
 import { toNavigationSettings, type AppSettings } from './application/settings.js';
 import { isPositionStale } from './application/positionFreshness.js';
 import { systemClock, type CuePort, type PositionFix, type Unsubscribe } from './application/ports.js';
 import { HeadingQualityMonitor } from './domain/headingQuality.js';
 
 import { StoredLocationRepository } from './adapters/storedLocationRepository.js';
+import { StoredGroupRepository } from './adapters/storedGroupRepository.js';
 import { loadSettings, saveSettings } from './adapters/storedSettings.js';
 import { GeolocationPositionProvider } from './adapters/geolocationPositionProvider.js';
 import {
@@ -22,7 +24,7 @@ import {
 } from './adapters/deviceOrientationHeadingProvider.js';
 import { WebAudioCue, silentCue } from './adapters/cues.js';
 import { ScreenWakeLock } from './adapters/wakeLock.js';
-import { deserializeLocations, serializeBackup } from './adapters/locationSerialization.js';
+import { deserializeBackup, serializeBackup } from './adapters/backupSerialization.js';
 import { newId } from './adapters/ids.js';
 import { registerServiceWorker } from './adapters/serviceWorker.js';
 
@@ -30,6 +32,7 @@ import { Announcer } from './ui/announcer.js';
 import { Tabs } from './ui/tabs.js';
 import { NavigationView } from './ui/navigationView.js';
 import { LocationsView } from './ui/locationsView.js';
+import { GroupsView } from './ui/groupsView.js';
 import { SettingsView } from './ui/settingsView.js';
 import { el } from './ui/dom.js';
 
@@ -42,9 +45,13 @@ if (root === null) {
 
 const store = window.localStorage;
 const repository = new StoredLocationRepository(store);
+// Eigener Schluessel, eigenes Repository: zwei Aggregate, zwei Speicher
+// (docs/design.md 6.6).
+const groupRepository = new StoredGroupRepository(store);
 let settings: AppSettings = loadSettings(store);
 
 const locationService = new LocationService(repository, systemClock, newId);
+const groupService = new GroupService(groupRepository, newId);
 const navigationService = new NavigationService(toNavigationSettings(settings));
 const qualityMonitor = new HeadingQualityMonitor(settings.coneHalfAngleDeg);
 const wakeLock = new ScreenWakeLock();
@@ -92,6 +99,11 @@ const navigationView = new NavigationView(announcer, {
 
 const locationsView = new LocationsView(announcer, {
   suggestName: () => locationService.suggestName(),
+  groupNamesOf: (id) =>
+    groupService
+      .all()
+      .filter((group) => group.memberIds.includes(id))
+      .map((group) => group.name),
   onSaveHere: (name) => {
     // Den Fix festhalten: Gespeichert wird der Standort zum Zeitpunkt des
     // Tippens, nicht der, der beim Schreiben zufaellig aktuell ist.
@@ -124,6 +136,9 @@ const locationsView = new LocationsView(announcer, {
         // Nur die eine Zeile nachziehen: Der Fokus steht auf dem Knopf, und
         // ein neu gebauter naehme ihn mit.
         locationsView.applyHidden(updated);
+        // Die Gruppenzeilen nennen, wie viele ihrer Orte ausgeblendet sind -
+        // die Zahl haengt an genau dieser Aenderung.
+        renderGroups();
         // Der Kegel rechnet im naechsten Bild mit der kuerzeren Liste. Liegt
         // der Ort gerade darin, klingt der Austritts-Ton - wie beim Loeschen.
         dirty = true;
@@ -137,8 +152,13 @@ const locationsView = new LocationsView(announcer, {
   onRemove: (id) => {
     guardStorage(
       () => {
+        // Erst den Ort loeschen, dann aufraeumen: Schlaegt das Aufraeumen fehl,
+        // bleibt eine verwaiste Kennung zurueck - und die ist durch das Filtern
+        // in membersOf() unschaedlich (docs/design.md 6.6).
         locationService.remove(id);
+        groupService.removeLocationEverywhere(id);
         locationsView.render(locationService.all());
+        renderGroups();
         dirty = true;
         // Die Ansage liegt in der Ansicht: Nur sie kennt die offenen Dialoge
         // und weiss, wohin der Fokus danach gehoert.
@@ -149,6 +169,126 @@ const locationsView = new LocationsView(announcer, {
       },
     );
   },
+});
+
+const groupsView = new GroupsView(announcer, {
+  onCreate: (name) => {
+    guardStorage(
+      () => {
+        const result = groupService.create(name);
+        if (result.ok) {
+          // Erst rendern, dann melden: reportCreated fokussiert den Eintrag,
+          // und das Rendern baut genau diesen Knopf.
+          renderGroups();
+          groupsView.reportCreated(result.group);
+        } else {
+          groupsView.reportFailure(result.reason);
+        }
+      },
+      (message) => {
+        groupsView.reportStorageError(message);
+      },
+    );
+  },
+  onRename: (id, name) => {
+    guardStorage(
+      () => {
+        const result = groupService.rename(id, name);
+        if (result.ok) {
+          renderGroups();
+          groupsView.reportRenamed(result.group);
+        } else {
+          groupsView.reportFailure(result.reason);
+        }
+      },
+      (message) => {
+        groupsView.reportStorageError(message);
+      },
+    );
+  },
+  onRemove: (id) => {
+    guardStorage(
+      () => {
+        // Die Orte bleiben - auch ihre Sichtbarkeit. Ein Loeschen, das nebenbei
+        // dreissig Orte in den Kegel zurueckholte, waere die Ueberraschung,
+        // gegen die docs/design.md 6.5 argumentiert.
+        groupService.remove(id);
+        renderGroups();
+        // Die Ansage liegt in der Ansicht: Nur sie kennt die offenen Dialoge
+        // und weiss, wohin der Fokus danach gehoert.
+        groupsView.reportRemoved();
+      },
+      (message) => {
+        groupsView.reportStorageError(message);
+      },
+    );
+  },
+  onAddMember: (groupId, locationId) => {
+    guardStorage(
+      () => {
+        const updated = groupService.addMember(groupId, locationId);
+        const location = locationService.all().find((candidate) => candidate.id === locationId);
+        if (updated === null || location === undefined) {
+          return;
+        }
+        renderGroups();
+        groupsView.reportMemberAdded(updated, location);
+      },
+      (message) => {
+        groupsView.reportStorageError(message);
+      },
+    );
+  },
+  onRemoveMember: (groupId, locationId) => {
+    guardStorage(
+      () => {
+        const location = locationService.all().find((candidate) => candidate.id === locationId);
+        const updated = groupService.removeMember(groupId, locationId);
+        if (updated === null || location === undefined) {
+          return;
+        }
+        renderGroups();
+        groupsView.reportMemberRemoved(updated, location);
+      },
+      (message) => {
+        groupsView.reportStorageError(message);
+      },
+    );
+  },
+  onToggleGroupHidden: (groupId, hidden) => {
+    guardStorage(
+      () => {
+        const group = groupService.byId(groupId);
+        if (group === null) {
+          return;
+        }
+        // Reihenschalter: Die Gruppe besitzt keinen Zustand, sie schreibt
+        // nur den der Mitglieder (docs/design.md 6.6).
+        for (const member of groupService.membersOf(group, locationService.all())) {
+          locationService.setHidden(member.id, hidden);
+        }
+        // Nur die eine Zeile nachziehen: Der Fokus steht auf der Birne, und
+        // ein neu gebauter Knopf naehme ihn mit.
+        groupsView.applyGroupHidden(group);
+        // Das Orte-Panel ist verdeckt - vollstaendiges Rendern unkritisch.
+        locationsView.render(locationService.all());
+        // Der Kegel rechnet im naechsten Bild mit der geaenderten Liste. Ein-
+        // und Austritts-Toene klingen wie beim einzelnen Ort.
+        dirty = true;
+      },
+      (message) => {
+        // Ehrlich bleiben: Bricht es mittendrin ab, ist ein Teil der Orte schon
+        // geschaltet. Die Meldung sagt deshalb nur, dass das Speichern
+        // fehlschlug - und beide Ansichten werden vollstaendig neu gezeichnet,
+        // damit sie den tatsaechlichen Stand zeigen statt den beabsichtigten.
+        groupsView.reportStorageError(message);
+        renderGroups();
+        locationsView.render(locationService.all());
+        dirty = true;
+      },
+    );
+  },
+  membersOf: (group) => groupService.membersOf(group, locationService.all()),
 });
 
 const settingsView = new SettingsView(settings, announcer, {
@@ -174,7 +314,9 @@ const settingsView = new SettingsView(settings, announcer, {
     const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
     const link = el('a', {
       href: url,
-      download: `orte-${new Date().toISOString().slice(0, 10)}.json`,
+      // Nicht mehr "orte-": Die Datei enthaelt seit den Gruppen beides, und in
+      // der Dateien-App ist der Name das einzige, woran sie zu erkennen ist.
+      download: `sicherung-${new Date().toISOString().slice(0, 10)}.json`,
     }) as HTMLAnchorElement;
     link.click();
     URL.revokeObjectURL(url);
@@ -199,25 +341,28 @@ const settingsView = new SettingsView(settings, announcer, {
       );
       return;
     }
-    const parsed = deserializeLocations(text);
-    if (parsed.locations.length === 0) {
+    const parsed = deserializeBackup(text);
+    if (parsed.locations.length === 0 && parsed.groups.length === 0) {
       settingsView.report(
-        parsed.skipped > 0
-          ? `Keine lesbaren Orte gefunden, ${parsed.skipped} Eintraege waren beschaedigt.`
+        parsed.skippedLocations + parsed.skippedGroups > 0
+          ? `Keine lesbaren Orte gefunden, ${parsed.skippedLocations + parsed.skippedGroups} Eintraege waren beschaedigt.`
           : 'Darin waren keine Orte zu finden.',
       );
       return;
     }
     guardStorage(
       () => {
+        // Erst die Orte, dann die Gruppen: Die Abbildung aus dem ersten Schritt
+        // traegt die Mitgliedschaften auf die lokalen Kennungen um. Beide
+        // Zusammenfuehrungen liegen im selben guardStorage() - schlaegt die
+        // zweite fehl, sind die Orte trotzdem da, und eine Gruppe fehlt statt
+        // aller Orte.
         const result = locationService.merge(parsed.locations);
+        const groupResult = groupService.merge(parsed.groups, result.idMapping);
         locationsView.render(locationService.all());
+        renderGroups();
         dirty = true;
-        settingsView.report(
-          `${result.added} Orte ergaenzt, ${result.duplicates} waren schon vorhanden` +
-            (parsed.skipped > 0 ? `, ${parsed.skipped} beschaedigt` : '') +
-            '.',
-        );
+        settingsView.report(importSummary(result, groupResult, parsed));
       },
       (message) => {
         settingsView.report(message);
@@ -230,6 +375,9 @@ const tabs = new Tabs(
   [
     { id: 'navigation', label: 'Navigation', panel: navigationView.panel },
     { id: 'orte', label: 'Orte', panel: locationsView.panel },
+    // Zwischen "Orte" und "Einstellungen": Gruppen sind eine Sicht auf Orte,
+    // kein Einstellungsthema (docs/design.md 5).
+    { id: 'gruppen', label: 'Gruppen', panel: groupsView.panel },
     { id: 'einstellungen', label: 'Einstellungen', panel: settingsView.panel },
   ],
   // Die App wird geoeffnet, um zu navigieren.
@@ -247,16 +395,25 @@ root.append(
   tabs.element,
   navigationView.panel,
   locationsView.panel,
+  groupsView.panel,
   settingsView.panel,
   announcer.element,
 );
 
 locationsView.render(locationService.all());
+renderGroups();
 
 const skipped = repository.skippedOnLoad();
 if (skipped > 0) {
   // Ehrlich melden statt still schlucken - die Orte sind nur hier gespeichert.
   announcer.announce(`Achtung: ${skipped} gespeicherte Orte waren beschaedigt und fehlen.`);
+}
+
+const skippedGroups = groupRepository.skippedOnLoad();
+if (skippedGroups > 0) {
+  announcer.announce(
+    `Achtung: ${skippedGroups} gespeicherte Gruppen waren beschaedigt und fehlen.`,
+  );
 }
 
 // --- Navigationslauf --------------------------------------------------------
@@ -437,8 +594,53 @@ function handleSave(save: () => ReturnType<LocationService['saveCurrentPosition'
   );
 }
 
+/**
+ * Zieht die Gruppen-Ansicht nach.
+ *
+ * Vollstaendig und nicht zeilenweise: Das Panel ist bei fast jedem Anlass
+ * verdeckt - eine Aenderung auf der Orte-Seite -, der Fokus also unkritisch.
+ * Die Ausnahme ist die Gluehbirne an der Gruppe; die zieht ihre eigene Zeile
+ * ueber applyGroupHidden() nach.
+ */
+function renderGroups(): void {
+  groupsView.render(groupService.all(), locationService.all());
+}
+
 function exportContent(): string {
-  return serializeBackup(locationService.all(), systemClock.now());
+  return serializeBackup(locationService.all(), groupService.all(), systemClock.now());
+}
+
+/**
+ * Meldung nach dem Import - genannt wird nur, was ungleich null ist.
+ *
+ * "1 Gruppe erweitert, 0 Gruppen ergaenzt" waere doppelt so lang und sagte
+ * nichts dazu; beschaedigte Eintraege werden dagegen immer genannt, weil sie
+ * verloren sind (docs/design.md 7).
+ */
+function importSummary(
+  locations: MergeResult,
+  groups: GroupMergeResult,
+  parsed: { skippedLocations: number; skippedGroups: number },
+): string {
+  const parts = [
+    `${locations.added} Orte ergaenzt`,
+    `${locations.duplicates} waren schon vorhanden`,
+  ];
+  if (groups.added > 0) {
+    parts.push(`${groups.added} ${groups.added === 1 ? 'Gruppe' : 'Gruppen'} ergaenzt`);
+  }
+  if (groups.extended > 0) {
+    parts.push(`${groups.extended} ${groups.extended === 1 ? 'Gruppe' : 'Gruppen'} erweitert`);
+  }
+  if (parsed.skippedLocations > 0) {
+    parts.push(`${parsed.skippedLocations} Orte beschaedigt`);
+  }
+  if (parsed.skippedGroups > 0) {
+    parts.push(
+      `${parsed.skippedGroups} ${parsed.skippedGroups === 1 ? 'Gruppe' : 'Gruppen'} beschaedigt`,
+    );
+  }
+  return `${parts.join(', ')}.`;
 }
 
 function markBackedUp(message: string): void {

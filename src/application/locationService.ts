@@ -17,6 +17,14 @@ export type SaveResult =
 export interface MergeResult {
   readonly added: number;
   readonly duplicates: number;
+  /**
+   * Eingelesene Kennung -> Kennung, unter der der Ort jetzt lokal steht.
+   *
+   * Eine Dublette behaelt die lokale Kennung; ohne diese Abbildung zeigte
+   * eine eingelesene Gruppe danach auf einen Ort, den es lokal nicht gibt
+   * (docs/design.md 7).
+   */
+  readonly idMapping: ReadonlyMap<string, string>;
 }
 
 const NAME_SUGGESTION_FORMAT = new Intl.DateTimeFormat('de-DE', {
@@ -120,19 +128,24 @@ export class LocationService {
    */
   merge(incoming: readonly Location[]): MergeResult {
     const existing = [...this.repository.all()];
+    const idMapping = new Map<string, string>();
     let added = 0;
     let duplicates = 0;
 
     for (const candidate of incoming) {
-      const known = existing.some(
+      const known = existing.find(
         (other) =>
           other.id === candidate.id ||
           isSameCoordinate(other.coordinate, candidate.coordinate),
       );
-      if (known) {
+      if (known !== undefined) {
         duplicates += 1;
+        // Auf die lokale Kennung zeigen, nicht auf die eingelesene: Genau hier
+        // wuerde eine eingelesene Mitgliedschaft sonst ins Leere laufen.
+        idMapping.set(candidate.id, known.id);
       } else {
         existing.push(candidate);
+        idMapping.set(candidate.id, candidate.id);
         added += 1;
       }
     }
@@ -140,7 +153,7 @@ export class LocationService {
     if (added > 0) {
       this.repository.replaceAll(existing);
     }
-    return { added, duplicates };
+    return { added, duplicates, idMapping };
   }
 
   private store(

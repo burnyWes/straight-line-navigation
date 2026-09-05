@@ -9,6 +9,7 @@
  */
 
 import type { Coordinate } from '../domain/coordinate.js';
+import type { Group } from '../domain/group.js';
 import type { Location } from '../domain/location.js';
 
 export type Unsubscribe = () => void;
@@ -50,6 +51,21 @@ export interface LocationRepository {
   save(location: Location): void;
   remove(id: string): void;
   replaceAll(locations: readonly Location[]): void;
+}
+
+/**
+ * Zwei Aggregate, zwei Repositories.
+ *
+ * Bewusst kein gemeinsames Basisstueck mit LocationRepository: Vierzig Zeilen
+ * Aehnlichkeit rechtfertigen keine Abstraktion, die beide Aggregate
+ * aneinanderbindet - der Ortsspeicher bleibt Zeile fuer Zeile so, wie er ist
+ * (docs/design.md 6.6).
+ */
+export interface GroupRepository {
+  all(): readonly Group[];
+  save(group: Group): void;
+  remove(id: string): void;
+  replaceAll(groups: readonly Group[]): void;
 }
 
 /**

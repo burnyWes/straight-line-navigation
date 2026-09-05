@@ -349,6 +349,16 @@ textarea {
 }
 
 /*
+ * Mitglied im Gruppen-Dialog: Der Name ist hier kein Knopf, sondern Text -
+ * getippt wird nur der Muelleimer daneben. Ohne das Wachsen klebte der an der
+ * Schrift statt am rechten Rand.
+ */
+.entry-row .entry-name {
+  flex: 1;
+  min-width: 0;
+}
+
+/*
  * Ausgeblendet auch sehend erkennbar: dunklere Birne ohne Strahlen. Die Farbe
  * traegt die Information nicht allein - die Silhouette unterscheidet sich
  * ebenfalls (docs/design.md 3).

@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   formatDirection,
   formatDistance,
+  formatDeleteGroupWarning,
   formatEntryLabel,
+  formatGroupEntryLabel,
+  formatGroupMembership,
   formatLocationDetails,
   formatSaveConfirmation,
 } from './format.js';
@@ -86,6 +89,78 @@ describe('formatLocationDetails', () => {
     );
     expect(formatLocationDetails({ createdAt: 'gestern', accuracyMetres: 12 })).toBe(
       'Anlagedatum unbekannt, Genauigkeit 12 Meter.',
+    );
+  });
+});
+
+describe('formatGroupEntryLabel', () => {
+  it('nennt Namen und Umfang', () => {
+    expect(formatGroupEntryLabel('Kiez', 4, 0)).toBe('Kiez, 4 Orte');
+  });
+
+  it('beachtet die Einzahl', () => {
+    expect(formatGroupEntryLabel('Arbeit', 1, 0)).toBe('Arbeit, 1 Ort');
+  });
+
+  it('nennt eine leere Gruppe als solche', () => {
+    expect(formatGroupEntryLabel('Wochenende', 0, 0)).toBe('Wochenende, 0 Orte');
+  });
+
+  it('haengt die Ausgeblendeten nur an, wenn es welche gibt', () => {
+    // "0 ausgeblendet" waere bei jeder Gruppe ein Wort mehr fuer keine
+    // Information.
+    expect(formatGroupEntryLabel('Kiez', 4, 1)).toBe('Kiez, 4 Orte, 1 ausgeblendet');
+    expect(formatGroupEntryLabel('Kiez', 4, 4)).toBe('Kiez, 4 Orte, 4 ausgeblendet');
+    expect(formatGroupEntryLabel('Kiez', 1, 1)).toBe('Kiez, 1 Ort, 1 ausgeblendet');
+  });
+});
+
+describe('formatGroupMembership', () => {
+  it('sagt nichts, wenn der Ort in keiner Gruppe steht', () => {
+    expect(formatGroupMembership([])).toBe('');
+  });
+
+  it('nennt eine einzelne Gruppe in der Einzahl', () => {
+    expect(formatGroupMembership(['Kiez'])).toBe('In der Gruppe Kiez.');
+  });
+
+  it('verbindet zwei Gruppen mit "und"', () => {
+    expect(formatGroupMembership(['Kiez', 'Arbeit'])).toBe('In den Gruppen Kiez und Arbeit.');
+  });
+
+  it('setzt bei mehreren Kommas und nur vor der letzten ein "und"', () => {
+    expect(formatGroupMembership(['Arbeit', 'Kiez', 'Zuhause'])).toBe(
+      'In den Gruppen Arbeit, Kiez und Zuhause.',
+    );
+  });
+});
+
+describe('formatDeleteGroupWarning', () => {
+  it('nennt, dass die Orte erhalten bleiben', () => {
+    expect(formatDeleteGroupWarning(4, 0)).toBe(
+      'Die Gruppe wird entfernt, die 4 Orte darin bleiben gespeichert.',
+    );
+  });
+
+  it('beachtet die Einzahl', () => {
+    expect(formatDeleteGroupWarning(1, 0)).toBe(
+      'Die Gruppe wird entfernt, der Ort darin bleibt gespeichert.',
+    );
+  });
+
+  it('sagt bei einer leeren Gruppe, dass sie leer ist', () => {
+    expect(formatDeleteGroupWarning(0, 0)).toBe('Die Gruppe wird entfernt. Sie ist leer.');
+  });
+
+  it('warnt nur dann vor ausgeblendeten Orten, wenn es welche gibt', () => {
+    // Sonst waere es eine Warnung vor einem Zustand, den es nicht gibt.
+    expect(formatDeleteGroupWarning(4, 4)).toBe(
+      'Die Gruppe wird entfernt, die 4 Orte darin bleiben gespeichert. ' +
+        '4 davon sind ausgeblendet und bleiben es - einblenden geht einzeln auf der Orte-Seite.',
+    );
+    expect(formatDeleteGroupWarning(4, 1)).toBe(
+      'Die Gruppe wird entfernt, die 4 Orte darin bleiben gespeichert. ' +
+        'Einer davon ist ausgeblendet und bleibt es - einblenden geht einzeln auf der Orte-Seite.',
     );
   });
 });

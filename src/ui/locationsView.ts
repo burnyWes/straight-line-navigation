@@ -21,7 +21,11 @@ import { ModalDialog } from './dialog.js';
 import type { Announcer } from './announcer.js';
 import type { Location } from '../domain/location.js';
 import type { CoordinateParseFailure } from '../domain/coordinateParser.js';
-import { formatLocationDetails, formatSaveConfirmation } from './format.js';
+import {
+  formatGroupMembership,
+  formatLocationDetails,
+  formatSaveConfirmation,
+} from './format.js';
 
 /** Gruende, aus denen ein Ort nicht angelegt werden kann. */
 type SaveFailure = CoordinateParseFailure | 'name-required' | 'no-position' | 'position-stale';
@@ -47,6 +51,14 @@ export interface LocationsViewCallbacks {
   onRemove(id: string): void;
   onToggleHidden(id: string, hidden: boolean): void;
   suggestName(): string;
+  /**
+   * Namen der Gruppen, in denen dieser Ort steht - alphabetisch.
+   *
+   * Beim Oeffnen des Dialogs aufgeloest und nicht am Ort gespeichert: Der Ort
+   * weiss nichts von Gruppen, die Gruppe haelt ihre Mitglieder
+   * (docs/design.md 6.6).
+   */
+  groupNamesOf(id: string): readonly string[];
 }
 
 /**
@@ -427,7 +439,17 @@ export class LocationsView {
   private openEdit(location: Location, opener: HTMLElement): void {
     this.editing = location;
     this.editDialog.setTitle(location.name);
-    setText(this.editDetails, formatLocationDetails(location));
+    // Die Gruppen werden hier nur **genannt**, nicht geaendert: Gepflegt wird
+    // die Mitgliedschaft auf der Gruppen-Seite (docs/design.md 6.6). Steht der
+    // Ort in keiner, bleibt der Zusatz weg - das Zusammenfuegen macht die
+    // Ansicht, damit der Formatierer nichts ueber den Satz davor wissen muss.
+    const membership = formatGroupMembership(this.callbacks.groupNamesOf(location.id));
+    setText(
+      this.editDetails,
+      membership.length === 0
+        ? formatLocationDetails(location)
+        : `${formatLocationDetails(location)} ${membership}`,
+    );
     this.editName.value = location.name;
     setText(this.editFeedback, '');
     this.editDialog.open(opener, this.editName);
