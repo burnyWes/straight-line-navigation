@@ -143,13 +143,20 @@ Prüfungen finden fehlende Labels, aber nicht „der Fokus springt beim Drehen".
   Satz neu ansetzen.
 - **Maximale Entfernung** ist einstellbar und abschaltbar.
 
-### 4.3 Auto-Freeze
+### 4.3 Anhalten der Liste
 
-Solange der Fokus **innerhalb** der Kegel-Liste steht, friert sie ein: keine
-Umsortierung, kein Entfernen von Einträgen. Verlässt der Fokus die Liste, läuft sie
-wieder live. Zusätzlich gibt es einen expliziten **Anhalten-Schalter**.
+Die Liste hält **nur auf ausdrückliche Anweisung** an: über den Anhalten-Knopf unten
+rechts. Ansonsten läuft sie live weiter — auch dann, wenn der VoiceOver-Cursor auf
+einem Eintrag steht.
 
-**Ein anderer Bereich hält die Liste ebenfalls an.** Wer in „Orte" oder
+**Der Fokus friert die Liste nicht mehr ein.** *(Nutzerentscheidung nach dem
+Praxistest; ursprünglich hielt jedes `focusin` in der Liste sie an.)* Gedacht war es
+als Schutz gegen die Umsortierung unter dem Finger, im Gebrauch war es die größere
+Störung: Beim Durchwischen hielt die Liste bei jedem Eintritt an und lief bei jedem
+Austritt wieder los, dazu sagte sie abwechselnd „angehalten" und „aktualisiert". Wer
+eine stehende Liste will, sagt das jetzt selbst.
+
+**Ein anderer Bereich hält die Liste weiterhin an.** Wer in „Orte" oder
 „Einstellungen" wechselt, liest die Liste gerade nicht; liefe sie dort weiter, stünde
 sie beim Zurückkommen in völlig anderer Reihenfolge. Der Navigationslauf selbst geht
 weiter — Sensoren bleiben angemeldet, der Bildschirm wach, die Ein-/Austritts-Signale
@@ -157,37 +164,33 @@ klingen —, denn „Hier speichern" im Bereich Orte braucht einen frischen Fix.
 Anhalten wird **nicht angesagt**: Gemeldet wird ein Freeze nur dort, wo er die gerade
 gelesene Liste betrifft.
 
-Ein- und Auftauchen des Freeze wird angesagt („angehalten" / „aktualisiert"), sonst ist
+Das Drücken des Knopfes wird angesagt („angehalten" / „aktualisiert"), sonst ist
 nicht unterscheidbar, ob Zahlen aktuell oder eingefroren sind.
 
-**Bewusst in Kauf genommen:** Während des Durchswipens sind die Daten leicht veraltet
-(bei Gehgeschwindigkeit einige Dutzend Meter). Eine stabile Liste mit kleinem Fehler ist
-brauchbar; eine exakte Liste, die den Fokus zerstört, nicht.
+**Der Fokus überlebt die Umsortierung.** Wird die fokussierte Zeile verschoben, nimmt
+der Browser sie kurz aus dem Dokument und der Fokus fällt auf den Rumpf. Seit die Liste
+unter dem Fokus weiterläuft, ist das der Normalfall; der Render setzt den Fokus deshalb
+nach jeder Umsortierung auf dieselbe Zeile zurück. Ohne das stünde der VoiceOver-Cursor
+sekündlich wieder am Seitenanfang.
 
 **Präzisierung aus der Umsetzung:** Die Entfernungen aller Zeilen aktualisieren sich
 laufend, **außer bei der gerade fokussierten**. Ändert sich der zugängliche Name eines
 fokussierten Elements, setzt VoiceOver mitten im Satz neu an — genau der Effekt, den das
 Einfrieren verhindern soll. Die Zeile unter dem Finger behält ihre Beschriftung, bis der
-Fokus sie verlässt. Diese Regel hängt **nicht** am Freeze-Zustand: Sonst wird genau in dem
-Bild neu vorgelesen, in dem der Fokus schon steht, das Einfrieren aber noch nicht
-durchgereicht ist.
+Fokus sie verlässt. Diese Regel hängt **nicht** am Anhalten-Zustand: Sie gilt auch in der
+laufenden Liste — sonst liest VoiceOver den Eintrag unter dem Finger sekündlich neu vor.
 
 **Ein Freeze, der hängen bleibt, ist schlimmer als gar keiner.** Die Liste steht still,
-die Ein- und Austritts-Signale klingen weiter — und nichts widerspricht. Drei Sicherungen
-halten ihn lösbar:
+die Ein- und Austritts-Signale klingen weiter — und nichts widerspricht. Seit nur noch
+der Knopf einfriert, bleibt eine Sicherung nötig:
 
 - **Der Freeze-Zustand gehört dem Lauf.** Start und Ende setzen ihn zurück. Sonst friert
   eine Flagge aus dem vorigen Lauf die noch leere Liste des nächsten ein, und der Lauf
   zeigt nie wieder etwas an.
-- **Vor jedem Bild wird geprüft, ob der Fokus überhaupt noch in der Liste steht.** Wird
-  das fokussierte Element entfernt — eine Zeile fällt aus dem Kegel, ein Ort wird
-  gelöscht —, fällt der Fokus ohne `focusout` auf den Rumpf zurück.
-- **„Fortsetzen" löst auch das Auto-Freeze.** Der Knopf ist der letzte Ausweg und muss
-  wirken, auch wenn der Fokus noch in der Liste hängt.
 
-**Technische Voraussetzung:** Jede Listenzeile ist ein `<button>`. Nur bei
-fokussierbaren Elementen erzeugt der VoiceOver-Cursor `focus`-Ereignisse, an denen das
-Freeze hängt.
+**Technische Voraussetzung:** Jede Listenzeile ist ein `<button>`. Nur fokussierbare
+Elemente nimmt der VoiceOver-Cursor als eigene Station, und nur an ihnen hängt die
+Regel, dass die gerade gelesene Zeile ihre Beschriftung behält.
 
 ### 4.4 Ein- und Austritts-Signale
 
@@ -266,7 +269,11 @@ erneut; jede Wiederholung anzusagen macht die App unbenutzbar.
 keiner: Der Ort landet dauerhaft in der Liste und sieht danach aus wie jeder andere.
 
 **Die Statuszeile gehört dem Render.** Sie zeigt in dieser Reihenfolge: gemeldete
-Störung, veralteter Standort, angehaltene Liste, laufende Navigation. *(Vorher
+Störung, veralteter Standort, angehaltene Liste, laufende Navigation. **Sie steht
+zusammen mit der Kompassgüte am unteren Rand des Bereichs, unter der Liste**
+*(Nutzerentscheidung)*: VoiceOver wischt in DOM-Reihenfolge, und wer navigiert, will die
+Orte hören und nicht bei jedem Anlauf zwei Zeilen Zustand davor. Was wirklich neu ist,
+wird ohnehin angesagt; die Zeilen sind zum Nachschlagen da. *(Vorher
 schrieb der Render unbedingt „Navigation läuft." und wischte damit jede
 Fehlermeldung im nächsten Bild wieder weg — der Fehler, der zu diesem Abschnitt
 geführt hat.)*
@@ -550,7 +557,7 @@ das steht in keinem Verhältnis.
 | 8 | Barrierefreiheit Stufe 2 (Audio-First) | Primärnutzer ist blind |
 | 9 | Nur Ein-/Austritts-Signal, kein automatisches Vorlesen | Nutzerentscheidung |
 | 10 | Manuelles Erswipen (Modell A) statt „Was ist da?"-Button | Nutzerentscheidung gegen den Vorschlag B |
-| 11 | Hysterese, Rundung, Auto-Freeze, Freeze-Ansage | Ohne diese vier ist Modell A mit VoiceOver nicht bedienbar |
+| 11 | Hysterese, Rundung, Anhalten-Knopf, Freeze-Ansage | Ohne diese vier ist Modell A mit VoiceOver nicht bedienbar |
 | 12 | Erfassung per GPS + Zwischenablage-Parser | Kein Share Target auf iOS; Tippen von Koordinaten mit VoiceOver unzumutbar |
 | 13 | Name ist Pflicht, Vorschlag beim Speichern | Namenlose Einträge sind in einer Audio-App wertlos |
 | 14 | `localStorage` hinter Port; Export als Datei **und** Zwischenablage; Import ergänzt | Einfachster tragfähiger Speicher; Datenverlust ist das reale Risiko |

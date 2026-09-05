@@ -1,5 +1,5 @@
 /**
- * Navigationsbereich: Kegel-Liste, Auto-Freeze, Gueteanzeige.
+ * Navigationsbereich: Kegel-Liste, Anhalten-Knopf, Gueteanzeige.
  */
 
 import { el, setText, icon, ICON_PLAY, ICON_STOP, ICON_PAUSE } from './dom.js';
@@ -63,7 +63,6 @@ export class NavigationView {
   private readonly rows = new Map<string, Row>();
 
   private manualFreeze = false;
-  private focusFreeze = false;
   private tabFreeze = false;
   private running = false;
   /**
@@ -127,52 +126,32 @@ export class NavigationView {
 
     this.freezeButton.addEventListener('click', () => {
       this.manualFreeze = !this.manualFreeze;
-      // Ein ausdrueckliches "Fortsetzen" loest auch das Auto-Freeze. Sonst
-      // bliebe der Knopf wirkungslos, solange der Fokus in der Liste haengt -
-      // und genau dann braucht ihn der Nutzer: Die Liste stuende still, die
-      // Signale klaengen weiter, und nichts koennte sie wieder loesen.
-      if (!this.manualFreeze) {
-        this.focusFreeze = false;
-      }
       this.showFreezeState(this.manualFreeze);
       this.announcer.announce(this.manualFreeze ? 'angehalten' : 'aktualisiert');
       this.syncFreeze();
     });
 
+    // Die Liste haelt **nur** auf ausdrueckliche Anweisung an. Frueher fror
+    // schon der Fokus sie ein: Der VoiceOver-Cursor setzte sich auf eine Zeile,
+    // die Liste stand, und beim Weiterwischen sagte sie abwechselnd
+    // "angehalten" und "aktualisiert" - stoerender als die Umsortierung, gegen
+    // die es half. Wer eine stehende Liste will, drueckt den Knopf unten rechts.
     this.list = el('ul', { class: 'entries', 'aria-label': 'Orte in Sichtrichtung' }) as HTMLUListElement;
 
-    // Auto-Freeze: Solange der Fokus in der Liste steht, darf sie sich nicht
-    // umsortieren - sonst laeuft sie unter dem Finger weg.
-    this.list.addEventListener('focusin', () => {
-      if (!this.focusFreeze) {
-        this.focusFreeze = true;
-        this.announcer.announce('angehalten');
-        this.syncFreeze();
-      }
-    });
-    this.list.addEventListener('focusout', (event) => {
-      const next = (event as FocusEvent).relatedTarget;
-      if (next instanceof Node && this.list.contains(next)) {
-        return;
-      }
-      if (this.focusFreeze) {
-        this.focusFreeze = false;
-        this.announcer.announce('aktualisiert');
-        this.syncFreeze();
-      }
-    });
-
+    // Status und Kompassguete stehen **unter** der Liste, nicht ueber ihr:
+    // VoiceOver wischt in DOM-Reihenfolge, und wer navigiert, will die Orte
+    // hoeren, nicht jedes Mal zwei Zeilen Zustand davor. Gesagt wird ohnehin
+    // nur der Wechsel; die Zeilen sind zum Nachschlagen da (docs/design.md 4.3).
     this.panel = el('section', { class: 'panel panel-navigation' }, [
       el('div', { class: 'panel-head' }, [
         el('h2', { text: 'Navigation' }),
         this.startButton,
         this.stopButton,
       ]),
-      this.statusLine,
-      this.qualityLine,
       this.freezeButton,
       this.emptyLine,
       this.list,
+      el('div', { class: 'panel-foot' }, [this.statusLine, this.qualityLine]),
     ]);
 
     this.freezeButton.hidden = true;
@@ -278,7 +257,6 @@ export class NavigationView {
       return;
     }
 
-    this.releaseLostFocusFreeze();
     setText(this.statusLine, statusText(snapshot, this.positionProblem ?? this.headingProblem));
 
     // Der Wechsel auf "veraltet" ist die eigentliche Nachricht: Ab hier stimmen
@@ -315,6 +293,15 @@ export class NavigationView {
    * aendert sich am DOM jetzt gar nichts mehr.
    */
   private reorder(wanted: readonly string[]): void {
+    // Wird die fokussierte Zeile verschoben, nimmt der Browser sie dabei kurz
+    // aus dem Dokument - der Fokus faellt dann auf den Rumpf. Seit die Liste
+    // unter dem Fokus weiterlaeuft, ist das der Normalfall und nicht mehr die
+    // Ausnahme, also wird der Fokus hier gehalten: Sonst stuende der
+    // VoiceOver-Cursor nach jeder Umsortierung wieder am Seitenanfang statt auf
+    // dem Ort, den er gerade las.
+    const focused = document.activeElement;
+    const keepFocus = focused instanceof HTMLElement && this.list.contains(focused);
+
     let next: ChildNode | null = this.list.firstChild;
     for (const id of wanted) {
       const row = this.rows.get(id);
@@ -327,29 +314,10 @@ export class NavigationView {
       }
       this.list.insertBefore(row.item, next);
     }
-  }
 
-  /**
-   * Loest das Auto-Freeze, wenn der Fokus die Liste verlassen hat, ohne dass
-   * ein Ereignis kam.
-   *
-   * Wird das fokussierte Element aus dem DOM genommen - eine Zeile faellt aus
-   * dem Kegel, ein Ort wird geloescht -, faellt der Fokus auf den Rumpf
-   * zurueck, ohne dass `focusout` feuert. Ohne diese Pruefung bliebe die Liste
-   * danach fuer immer eingefroren: Die Ein- und Austritts-Signale klingen
-   * weiter, die Liste steht.
-   */
-  private releaseLostFocusFreeze(): void {
-    if (!this.focusFreeze) {
-      return;
+    if (keepFocus && document.activeElement !== focused) {
+      focused.focus({ preventScroll: true });
     }
-    const active = document.activeElement;
-    if (active !== null && this.list.contains(active)) {
-      return;
-    }
-    this.focusFreeze = false;
-    this.announcer.announce('aktualisiert');
-    this.syncFreeze();
   }
 
   private dropRemoved(wanted: ReadonlySet<string>): void {
@@ -367,7 +335,8 @@ export class NavigationView {
 
     if (row === undefined) {
       // Ein echter Button, nicht nur ein Listeneintrag: Nur fokussierbare
-      // Elemente erzeugen die focus-Ereignisse, an denen das Auto-Freeze haengt.
+      // Elemente nimmt der VoiceOver-Cursor als eigene Station, und nur an
+      // ihnen haengt die Zusage, dass die gelesene Zeile stehen bleibt.
       const button = el('button', { type: 'button', class: 'entry' }) as HTMLButtonElement;
       const item = el('li', {}, [button]) as HTMLLIElement;
       row = { item, button, label: '' };
@@ -401,17 +370,16 @@ export class NavigationView {
   }
 
   /**
-   * Setzt Anhalten und Auto-Freeze zurueck - jeder Lauf beginnt laufend.
+   * Setzt das Anhalten zurueck - jeder Lauf beginnt laufend.
    *
-   * Frueher ueberlebten die Flaggen das Beenden. Wer die Liste angehalten oder
-   * nur den Fokus darin stehen hatte, startete den naechsten Lauf mit einem
-   * eingefrorenen Zustand, den der Dienst nach seinem reset() gar nicht mehr
-   * kannte: Der naechste Griff zum Knopf fror die noch leere Liste ein, und sie
-   * blieb leer. Zu hoeren waren nur noch die Ein- und Austritts-Signale.
+   * Frueher ueberlebte die Flagge das Beenden. Wer die Liste angehalten hatte,
+   * startete den naechsten Lauf mit einem eingefrorenen Zustand, den der Dienst
+   * nach seinem reset() gar nicht mehr kannte: Der naechste Griff zum Knopf fror
+   * die noch leere Liste ein, und sie blieb leer. Zu hoeren waren nur noch die
+   * Ein- und Austritts-Signale.
    */
   private resetFreeze(): void {
     this.manualFreeze = false;
-    this.focusFreeze = false;
     this.showFreezeState(false);
     this.syncFreeze();
   }
@@ -436,7 +404,7 @@ export class NavigationView {
   }
 
   private syncFreeze(): void {
-    this.callbacks.onFreezeChange(this.manualFreeze || this.focusFreeze || this.tabFreeze);
+    this.callbacks.onFreezeChange(this.manualFreeze || this.tabFreeze);
   }
 }
 

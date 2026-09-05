@@ -221,9 +221,25 @@ button[aria-pressed='true']:focus-visible {
   box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
 }
 
-/* Platz, damit der schwebende Knopf nicht auf dem letzten Listeneintrag liegt. */
+/* Platz, damit der schwebende Knopf nicht auf der Statusleiste unten liegt. */
 .panel-navigation {
   padding-bottom: 88px;
+}
+
+/*
+ * Status und Kompassguete am unteren Rand, abgesetzt vom Rest.
+ *
+ * Rechts bleibt der Streifen fuer den schwebenden Anhalten-Knopf frei: Sonst
+ * laege er beim Blaettern ans Seitenende auf dem Text.
+ */
+.panel-foot {
+  margin-top: 20px;
+  padding: 10px 80px 0 0;
+  border-top: 2px solid var(--line);
+}
+
+.panel-foot .status {
+  margin: 4px 0;
 }
 
 label {

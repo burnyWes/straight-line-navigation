@@ -41,11 +41,11 @@ x  Domaene: Coordinate, Haversine, Peilung, Winkel, Rundung
 x  Domaene: Sichtkegel mit Hysterese (20 rein / 25 raus)
 x  Domaene: Koordinaten-Parser (Dezimal, DMS, DM, geo:, Maps-Links, dt. Komma)
 x  Domaene: Kompassguete mit Hysterese
-x  Anwendung: NavigationService (Filter, Sortierung, Auto-Freeze)
+x  Anwendung: NavigationService (Filter, Sortierung, Anhalten)
 x  Anwendung: LocationService (anlegen, umbenennen, loeschen, Import-Merge)
 x  Adapter: Geolocation, DeviceOrientation, localStorage, Cues, Wake Lock
 x  UI: drei Tabs (Leiste oben), Navigation / Orte / Einstellungen
-x  UI: Kegel-Liste mit stabilen DOM-Knoten und Auto-Freeze
+x  UI: Kegel-Liste mit stabilen DOM-Knoten und Anhalten-Knopf
 x  UI: Sicherung als Datei und Zwischenablage, Import
 x  Navigation beenden (Wake Lock freigeben, Sensoren abmelden)
 x  Fehlgeschlagene Schreibzugriffe werden gemeldet statt geschluckt
@@ -85,16 +85,32 @@ b  Navigation lief nur einmal - danach nur noch Rein-/Raus-Toene, die Liste
    verlorener Fokus loeste das Auto-Freeze nie wieder. Freeze gehoert jetzt zum
    Lauf, wird vor jedem Bild gegen den echten Fokus geprueft, und
    "Fortsetzen" loest auch das Auto-Freeze (design.md 4.3, Entscheidung 32)
+x  Auto-Freeze bei Fokus entfernt: Die Liste hielt beim Durchwischen an jedem
+   Eintrag an und sagte abwechselnd "angehalten"/"aktualisiert" - stoerender
+   als die Umsortierung, gegen die es half. Angehalten wird jetzt nur noch
+   ueber den Knopf unten rechts und beim Wechsel in einen anderen Bereich. Der
+   Fokus wird dafuer ueber die Umsortierung gerettet, sonst faellt der
+   VoiceOver-Cursor auf den Rumpf (design.md 4.3)
+x  Statuszeile und Kompassguete an den unteren Rand des Navigationsbereichs,
+   unter die Liste: VoiceOver wischt in DOM-Reihenfolge, und die Orte sollen
+   frueh im Wischweg liegen (design.md 4.6)
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 /  Praxistest auf dem Geraet: fuehlen sich +-20 Grad im Gehen richtig an?
-/  Praxistest: nerven die Ansagen "angehalten" / "aktualisiert" beim Swipen?
+x  Praxistest: nerven die Ansagen "angehalten" / "aktualisiert" beim Swipen?
+   Ja - deshalb faellt das Auto-Freeze bei Fokus weg (siehe oben)
 /  Praxistest: bleibt der VoiceOver-Fokus beim Drehen wirklich stehen?
 
--  Offene Frage: fokussierte Zeile im Freeze nicht neu beschriften - richtig so,
-   oder soll sie doch mitlaufen? (design.md 4.3)
+-  Offene Frage: fokussierte Zeile nicht neu beschriften - richtig so, oder
+   soll sie doch mitlaufen? (design.md 4.3)
+-  Praxistest: laeuft die Liste jetzt unter dem Finger weg, oder reicht es, sie
+   bei Bedarf ueber den Knopf anzuhalten?
+-  Praxistest: bleibt der VoiceOver-Cursor beim Umsortieren wirklich auf dem
+   Eintrag stehen, den er gerade las?
+-  Praxistest: sind Status und Kompassguete am Seitenende noch auffindbar, oder
+   fehlen sie oben?
 -  Auf dem Geraet pruefen: laesst sich die App vom Home-Bildschirm starten und
    startet sie im Flugmodus? (am Rechner geprueft, auf dem Geraet noch nicht)
 -  Praxistest: trifft der Daumen den schwebenden Anhalten-Knopf im Gehen, und

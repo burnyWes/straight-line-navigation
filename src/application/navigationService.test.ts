@@ -141,8 +141,8 @@ describe('NavigationService', () => {
     });
   });
 
-  describe('Auto-Freeze', () => {
-    it('haelt die Reihenfolge fest, solange der Fokus in der Liste steht', () => {
+  describe('Anhalten', () => {
+    it('haelt die Reihenfolge fest, solange die Liste angehalten ist', () => {
       const bahnhof = target('Bahnhof', 5, 1200);
       const zuhause = target('Zuhause', -5, 500);
 
@@ -152,7 +152,7 @@ describe('NavigationService', () => {
       service.freeze();
 
       // Der Nutzer geht: Der Bahnhof waere jetzt naeher und wuerde die Liste
-      // umsortieren - genau das darf unter dem Finger nicht passieren.
+      // umsortieren - genau das soll der Anhalten-Knopf verhindern.
       const naeherAmBahnhof = pointAt(HERE, 5, 1100);
       const frozen = service.update(naeherAmBahnhof, NORTH, [bahnhof, zuhause]);
 
