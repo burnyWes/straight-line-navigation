@@ -32,6 +32,14 @@ n  Strassennavigation, Routing
 n  Backend, Konten, Sync
 n  Hintergrundbetrieb bei gesperrtem Bildschirm (auf einer PWA nicht moeglich)
 n  Nachgebauter Bildschirmvorhang (VoiceOver-Bordmittel)
+n  Tastatur bleibt offen, wenn der Finger daneben faellt. VoiceOver zieht den
+   Tastaturfokus mit seinem Cursor mit: Beruehrt der Finger einen anderen
+   Bedienpunkt, wandert der DOM-Fokus dorthin und iOS schliesst die Tastatur.
+   Die Seite sieht davon nur das blur - waehrend der VoiceOver-Erkundung
+   erreichen weder touchstart noch click das Dokument. Beim blur erneut zu
+   fokussieren hilft doppelt nicht: Ein focus() ausserhalb einer echten
+   Beruehrung oeffnet die Tastatur nicht, und es naegelte den Cursor ans Feld -
+   dasselbe Muster, das schon das Auto-Freeze gekostet hat (design.md 4.3)
 x  Spike: Kompass + GPS in Safari, auch im Standalone-Modus  -> funktioniert
 x  Spike: Haptik (M1)                                        -> geht nicht, endgueltig
 x  Spike: Ton bei Lautlos (M2)                               -> stumm, akzeptiert
@@ -166,7 +174,6 @@ TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
 - Optionsmenü überarbeiten
-- Bug: Wenn man in ein Textfeld klickt öffnet sich oft nur kurz die Tastatur und schließt sich dann gleich wieder.
 - Navigationsseite erweitern
   - unten links einen Button Orientierung/Navigation
   - Orientierung ist die heutige Seite
