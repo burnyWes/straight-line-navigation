@@ -168,12 +168,23 @@ x  Der zweite Knopf in den Dialogen heisst "Schliessen" statt "Abbrechen" - im
    Dialog getan wurde, ist da schon geschrieben; "Abbrechen" klang, als nehme es
    die letzte Handlung zurueck. Die Loeschen-Rueckfrage behaelt "Abbrechen", dort
    ist noch nichts geschehen (design.md 6.4, Entscheidung 35)
+x  Abstand zwischen zwei Bedienpunkten von 8 auf 20 px angehoben, gehalten von
+   einem Token --abstand in styles.css. Grund war der Finger, nicht das Auge:
+   8 px sind am Geraet keine Grenze, sondern eine Kante. Die Tab-Leiste ist
+   ausgenommen und bleibt exakt so hoch wie zuvor; die Listendichte bleibt bei
+   22 px, ihr Abstand haengt jetzt am Listeneintrag statt am Knopf darin
+   (design.md 3, Entscheidung 36)
+x  Optionsmenue ueberarbeitet: Die vier Sicherungswege liegen jetzt hinter dem
+   Dialog "Daten speichern / laden", im Panel stehen unter der Ueberschrift
+   "Daten" nur noch das Sicherungsdatum und der Oeffner. Damit werden aus
+   8 Bedienpunkten 4 und aus rund 20 Stationen 12. Der Dialog bleibt nach jeder
+   Handlung offen und meldet in seine eigene Zeile; das Datum bleibt im Panel
+   (design.md 5, 7, Entscheidung 37)
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
-- Optionsmenü überarbeiten
 - Navigationsseite erweitern
   - unten links einen Button Orientierung/Navigation
   - Orientierung ist die heutige Seite

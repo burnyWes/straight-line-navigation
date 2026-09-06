@@ -111,6 +111,17 @@ Oberfläche vollständig, alle Ressourcen aus dem Zwischenspeicher.
   Schrift, kräftige Ränder; alle Text-Hintergrund-Paare über 7:1 (WCAG AAA),
   Ränder und Fokusring über 3:1. Die App folgt bewusst *nicht* der
   Systemeinstellung — Nutzerentscheidung nach dem Praxistest.
+- **20 px zwischen zwei Bedienpunkten**, gehalten von einem Token
+  (`--abstand` in `styles.css`) und damit an einer Stelle nachjustierbar. Der
+  Grund ist der Finger, nicht das Auge: Bei den vorherigen 8 px — rund 1,3 mm
+  auf dem Gerät — überquert der erkundende Finger die Grenze ohne Pause und
+  landet auf dem Nachbarn. **Die Tab-Leiste ist davon ausgenommen**: eine
+  geschlossene Reihe ohne Zwischenraum, in der Danebenlanden „ein Tab weiter"
+  heißt und nicht „falsche Handlung ausgelöst" — dort kostet Abstand nur
+  Breite, die „Einstellungen" schon heute fehlt. Trefferflächen bleiben
+  unverändert (Knopf mindestens 52 px hoch, Symbolknopf 52 × 52), und die
+  Listendichte auch: Ihre 22 px hängen jetzt am Listeneintrag statt am Knopf
+  darin, sonst zählte der Abstand doppelt.
 
 Der maßgebliche Test ist die Bedienung mit VoiceOver auf dem Gerät. Automatisierte
 Prüfungen finden fehlende Labels, aber nicht „der Fokus springt beim Drehen".
@@ -305,7 +316,7 @@ davon abhängen, wie weit die Ortsliste gescrollt ist. Die Überschrift scrollt 
 | **Navigation** | Start/Stopp als Symbol im Kopf, Kegel-Liste, schwebender Anhalten-Schalter |
 | **Orte** | Liste aller gespeicherten Locations, nur Namen; Anlegen über ein Plus im Kopf, Bearbeiten und Löschen über Dialoge |
 | **Gruppen** | Liste der Gruppen; Anlegen über ein Plus im Kopf, Mitglieder und Löschen über Dialoge (§6.6) |
-| **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Export/Import, Datum der letzten Sicherung |
+| **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Datum der letzten Sicherung; Sichern und Einlesen hinter dem Dialog „Daten speichern / laden" (§7) |
 
 - Die App startet **immer** auf „Navigation". *(Der vierte Tab kam mit den Gruppen
   dazu — statt zweier Knöpfe unter der Leiste im Orte-Panel: Ein Umschaltmechanismus
@@ -602,6 +613,17 @@ Das **Datum der letzten Sicherung** steht in den Einstellungen. Kein Nörgel-Dia
 Text einfügen. Jeder Export braucht sein Gegenstück — eine Datei, die nur von Hand
 geöffnet und kopiert werden kann, ist mit VoiceOver keine Sicherung.
 
+**Alle vier Wege liegen hinter einem Dialog** „Daten speichern / laden". In den
+Einstellungen stehen unter der Überschrift „Daten" nur noch das Datum der letzten
+Sicherung und der Knopf, der ihn öffnet: Der Abschnitt war elf Stationen lang und lag
+bei jedem Besuch im Wischweg, auch dann, wenn nur der Kegelwinkel geändert werden
+sollte. Beim Öffnen liegt der Fokus auf „Als Datei sichern", das Textfeld ist leer.
+Der Dialog **bleibt nach jeder Handlung offen** und meldet in seine eigene Zeile — es
+sind vier Werkzeuge, kein Formular; als Datei sichern *und* zusätzlich in die
+Zwischenablage ist ein sinnvoller Doppelgriff, und Fehler zwingen ohnehin zum
+Offenbleiben (§6.6). Das **Datum bleibt draußen** im Panel: Hinter einem Dialog sähe
+es niemand, und genau das ist sein Zweck.
+
 **Import ergänzt, er ersetzt nicht.** Dubletten werden über die Koordinate erkannt.
 „Ersetzen" wäre der Klick, der im falschen Moment alles kostet.
 
@@ -793,3 +815,5 @@ das steht in keinem Verhältnis.
 | 33 | Orte ausblendbar über einen zweiten Knopf je Zeile; stille Hinweiszeile statt Statusmeldung | Löschen war bisher die einzige Art, Ruhe im Kegel zu bekommen — und ohne Backend endgültig. Der doppelte Wischweg ist der bewusst gezahlte Preis dafür, dass Ausblenden eine Reihenhandlung bleibt (§6.5) |
 | 34 | Gruppen als vierter Tab; die Gruppe hält die Mitglieder, eigener Speicherschlüssel, Name als Identität | Ein Umschaltmechanismus statt zwei; der Ort bleibt unverändert und seine Tests unberührt; über Geräte hinweg unterscheiden sich Kennungen, Namen nicht (§6.6) |
 | 35 | Der zweite Dialogknopf heißt „Schließen"; nur die Löschen-Rückfrage behält „Abbrechen" | Nutzerentscheidung: Speichern, Umbenennen und Mitgliederpflege wirken sofort — „Abbrechen" danach klingt, als nehme es die letzte Handlung zurück. In der Rückfrage ist noch nichts geschehen, dort ist „Abbrechen" die richtige Bedeutung (§6.4) |
+| 36 | Abstand zwischen zwei Bedienpunkten auf 20 px, als ein Token; Tab-Leiste ausgenommen | Nutzerentscheidung nach dem Praxistest: Beim Erkunden mit dem Finger war 8 px keine Grenze, sondern eine Kante — der Finger überquerte sie ohne Pause. Die Leiste ist eine geschlossene Reihe; dort kostet Abstand nur Breite, die „Einstellungen" schon heute fehlt (§3) |
+| 37 | Sichern und Einlesen hinter dem Dialog „Daten speichern / laden"; Überschrift „Daten", das Datum bleibt im Panel | Nutzerentscheidung: Der Abschnitt war elf der zwanzig Stationen der Einstellungen und lag bei jedem Besuch im Weg. Der Dialog bleibt nach jeder Handlung offen, damit Erfolg und Fehler an derselben Stelle stehen; das Datum gehört nach draußen, weil es ungefragt gesehen werden soll (§7) |

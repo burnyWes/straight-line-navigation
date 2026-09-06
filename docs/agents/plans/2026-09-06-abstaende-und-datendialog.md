@@ -375,7 +375,7 @@ Tab-Leiste und unveraenderten Trefferflaechen.
 
 **Tasks**:
 
-- [ ] Token in `:root` in `src/ui/styles.css` ergaenzen, mit Begruendung im
+- [x] Token in `:root` in `src/ui/styles.css` ergaenzen, mit Begruendung im
       Kommentar (Erkundung mit dem Finger, nicht Optik).
   ```css
   /*
@@ -385,47 +385,47 @@ Tab-Leiste und unveraenderten Trefferflaechen.
    */
   --abstand: 20px;
   ```
-- [ ] `button { margin: 8px 0 }` auf `margin: var(--abstand) 0` umstellen.
-- [ ] `.tab { margin: 0 }` ergaenzen und `.tablist`-Polster auf
+- [x] `button { margin: 8px 0 }` auf `margin: var(--abstand) 0` umstellen.
+- [x] `.tab { margin: 0 }` ergaenzen und `.tablist`-Polster auf
       `calc(14px + env(safe-area-inset-top)) 0 16px` anheben, damit die
       angeheftete Leiste exakt so hoch bleibt wie heute (6 + 8 oben,
       8 + 8 unten). Kommentar: Die Leiste ist von der Anhebung bewusst
       ausgenommen.
-- [ ] `.entries li` auf `padding: calc(var(--abstand) / 2) 0` umstellen
+- [x] `.entries li` auf `padding: calc(var(--abstand) / 2) 0` umstellen
       (`border-top` bleibt) und `.entries li button { margin: 0 }` ergaenzen.
       Kommentar: Der Zeilenabstand haengt am `li`, nicht am Knopf darin —
       sonst zaehlte er doppelt.
-- [ ] `.entry-row { gap: var(--abstand) }` — waagerecht zwischen Namensknopf
+- [x] `.entry-row { gap: var(--abstand) }` — waagerecht zwischen Namensknopf
       und Gluehbirne.
-- [ ] `.freeze` **nicht** anfassen — der Knopf traegt `icon-button freeze`,
+- [x] `.freeze` **nicht** anfassen — der Knopf traegt `icon-button freeze`,
       und `.icon-button { margin: 0 }` schlaegt als Klassenregel den
       Element-Selektor `button`. Sein Rand ist schon heute null, `bottom`
       bleibt wie es ist. Nur pruefen, dass er nach der Aenderung unveraendert
       steht.
-- [ ] `label { margin: var(--abstand) 0 4px }` — die 4 px unten bleiben, damit
+- [x] `label { margin: var(--abstand) 0 4px }` — die 4 px unten bleiben, damit
       das Label an seinem Feld klebt.
-- [ ] `.check { margin: var(--abstand) 0 }`.
-- [ ] `h3 { margin: calc(var(--abstand) * 1.5) 0 8px }` mit Kommentar: Ein
+- [x] `.check { margin: var(--abstand) 0 }`.
+- [x] `h3 { margin: calc(var(--abstand) * 1.5) 0 8px }` mit Kommentar: Ein
       Abschnittswechsel muss groesser sein als ein Elementwechsel, sonst
       fallen die Raender zusammen und die Gliederung verschwindet.
-- [ ] `docs/design.md` Abschnitt 3 um einen Aufzaehlungspunkt zum Abstand
+- [x] `docs/design.md` Abschnitt 3 um einen Aufzaehlungspunkt zum Abstand
       ergaenzen: 20 px zwischen zwei Bedienpunkten, Begruendung Fingererkundung,
       ein Token, Tab-Leiste ausgenommen und warum.
-- [ ] `docs/design.md` Abschnitt 12 um Entscheidung 36 ergaenzen:
+- [x] `docs/design.md` Abschnitt 12 um Entscheidung 36 ergaenzen:
       „Abstand zwischen zwei Bedienpunkten auf 20 px, als ein Token; Tab-Leiste
       ausgenommen — Nutzerentscheidung nach dem Praxistest: beim Erkunden mit
       dem Finger war 8 px keine Grenze, sondern eine Kante. Die Leiste ist eine
       geschlossene Reihe; dort kostet Abstand nur Breite."
-- [ ] `docs/notes.txt`: Zeile in der DONE-Liste ergaenzen (Abstand 20 px,
+- [x] `docs/notes.txt`: Zeile in der DONE-Liste ergaenzen (Abstand 20 px,
       Token, Tab-Leiste ausgenommen, Listendichte unveraendert).
 
 **Automated Verification**:
 
-- [ ] `npm run typecheck` laeuft ohne Fehler.
-- [ ] `npm run test` laeuft vollstaendig gruen (Domaene und Anwendung sind von
+- [x] `npm run typecheck` laeuft ohne Fehler.
+- [x] `npm run test` laeuft vollstaendig gruen (Domaene und Anwendung sind von
       der Aenderung nicht betroffen — der Lauf belegt genau das).
-- [ ] `npm run build` erzeugt ein Bundle ohne Fehler.
-- [ ] `grep -n "margin: 8px 0;" src/ui/styles.css` findet nichts mehr — der
+- [x] `npm run build` erzeugt ein Bundle ohne Fehler.
+- [x] `grep -n "margin: 8px 0;" src/ui/styles.css` findet nichts mehr — der
       Knopfrand war die einzige Fundstelle dieser Schreibweise (Zeile 145);
       `margin: 8px 0 0` an `.entries` bleibt bewusst stehen.
 
@@ -457,19 +457,19 @@ bleiben Ueberschrift, Sicherungsdatum und der oeffnende Knopf.
 
 **Tasks**:
 
-- [ ] In `src/ui/settingsView.ts` eine Konstante fuer den Namen anlegen, damit
+- [x] In `src/ui/settingsView.ts` eine Konstante fuer den Namen anlegen, damit
       Knopf und Dialogtitel nicht auseinanderlaufen:
   ```ts
   // Knopf und Dialog tragen denselben Namen - VoiceOver sagt den Titel beim
   // Oeffnen an, ein anderer Name klaenge, als sei man woanders gelandet.
   const BACKUP_TITLE = 'Daten speichern / laden';
   ```
-- [ ] Die vorhandenen fuenf Bedienelemente unveraendert lassen
+- [x] Die vorhandenen fuenf Bedienelemente unveraendert lassen
       (`exportFile`, `exportClipboard`, `importFileField`, `importField`,
       `importButton` — vier Wege, aber fuenf Knoten: der Textweg braucht Feld
       und Knopf) und `exportFile` als Feld `exportFileButton` festhalten — es
       traegt beim Oeffnen den Fokus.
-- [ ] Neue Felder `backupFeedback` (`p.status` mit `role="status"`) und
+- [x] Neue Felder `backupFeedback` (`p.status` mit `role="status"`) und
       `backupDialog` (`ModalDialog`, id `sicherung`, Titel `BACKUP_TITLE`)
       anlegen; „Schliessen" bleibt eine lokale Konstante wie `closeCreate` in
       `locationsView.ts` — auf ihn muss spaeter nichts zugreifen. Reihenfolge im Dialog: Warnsatz, „Als Datei sichern",
@@ -477,9 +477,9 @@ bleiben Ueberschrift, Sicherungsdatum und der oeffnende Knopf.
       Textfeld, „Sicherung einlesen", Meldungszeile, „Schliessen".
       Die Meldungszeile steht **vor** „Schliessen": Sie muss erreichbar sein,
       bevor der Weg aus dem Dialog kommt.
-- [ ] `backupButton` anlegen (`button` mit Text `BACKUP_TITLE`), Klick ruft
+- [x] `backupButton` anlegen (`button` mit Text `BACKUP_TITLE`), Klick ruft
       `openBackup()`.
-- [ ] `openBackup()` ergaenzen:
+- [x] `openBackup()` ergaenzen:
   ```ts
   private openBackup(): void {
     // Leeren wie beim Anlegen-Dialog: Ein stehen gebliebener Text aus einer
@@ -489,7 +489,7 @@ bleiben Ueberschrift, Sicherungsdatum und der oeffnende Knopf.
     this.backupDialog.open(this.backupButton, this.exportFileButton);
   }
   ```
-- [ ] `report()` auf die Weiche umstellen — dasselbe Muster wie
+- [x] `report()` auf die Weiche umstellen — dasselbe Muster wie
       `LocationsView.report()`:
   ```ts
   report(text: string): void {
@@ -499,40 +499,40 @@ bleiben Ueberschrift, Sicherungsdatum und der oeffnende Knopf.
     this.announcer.announce(text);
   }
   ```
-- [ ] Panel neu zusammensetzen: Der Block ab `h3 Sicherung` wird ersetzt durch
+- [x] Panel neu zusammensetzen: Der Block ab `h3 Sicherung` wird ersetzt durch
       `h3` „Daten", `this.backupLine`, `this.backupButton`, `this.feedback`
       und `this.backupDialog.element`. Kommentar dazu: Das Datum bleibt
       **draussen** (`design.md` 7 — kein Noergel-Dialog; hinter einem Dialog
       saehe es niemand), der Warnsatz zieht mit hinein, weil er die Handlung
       begruendet.
-- [ ] Pruefen, dass `renderBackupDate()` und `setSettings()` unveraendert
+- [x] Pruefen, dass `renderBackupDate()` und `setSettings()` unveraendert
       bleiben und weiter in `this.backupLine` im Panel schreiben.
-- [ ] Pruefen, dass `SettingsViewCallbacks` und `src/main.ts` unveraendert
+- [x] Pruefen, dass `SettingsViewCallbacks` und `src/main.ts` unveraendert
       bleiben.
-- [ ] `docs/design.md` Abschnitt 5, Zeile „Einstellungen" der Tabelle:
+- [x] `docs/design.md` Abschnitt 5, Zeile „Einstellungen" der Tabelle:
       „Kegelwinkel, max. Entfernung, Signalkanal, Datum der letzten Sicherung;
       Sichern und Einlesen hinter dem Dialog „Daten speichern / laden"".
-- [ ] `docs/design.md` Abschnitt 7 um einen Absatz ergaenzen: Alle vier Wege
+- [x] `docs/design.md` Abschnitt 7 um einen Absatz ergaenzen: Alle vier Wege
       liegen hinter einem Dialog; im Panel stehen unter „Daten" nur Datum und
       Oeffner; der Dialog bleibt nach jeder Handlung offen und meldet in seine
       eigene Zeile (vier Werkzeuge, kein Formular; Fehler zwingen ohnehin zum
       Offenbleiben); der Fokus liegt beim Oeffnen auf „Als Datei sichern".
-- [ ] `docs/design.md` Abschnitt 12 um Entscheidung 37 ergaenzen:
+- [x] `docs/design.md` Abschnitt 12 um Entscheidung 37 ergaenzen:
       „Sicherung hinter dem Dialog „Daten speichern / laden", Ueberschrift
       „Daten", Datum bleibt im Panel — Nutzerentscheidung: Der Abschnitt war
       elf Stationen lang und lag bei jedem Besuch der Einstellungen im Weg.
       Der Dialog bleibt nach jeder Handlung offen, damit Erfolg und Fehler an
       derselben Stelle stehen."
-- [ ] `docs/notes.txt`: „- Optionsmenue ueberarbeiten" aus der TODO-Liste
+- [x] `docs/notes.txt`: „- Optionsmenue ueberarbeiten" aus der TODO-Liste
       entfernen und als `x`-Zeile in die DONE-Liste aufnehmen, mit dem
       Ergebnis in einem Satz.
 
 **Automated Verification**:
 
-- [ ] `npm run typecheck` laeuft ohne Fehler.
-- [ ] `npm run test` laeuft vollstaendig gruen.
-- [ ] `npm run build` erzeugt ein Bundle ohne Fehler.
-- [ ] `git status --porcelain src/main.ts` bleibt leer (Beleg fuer
+- [x] `npm run typecheck` laeuft ohne Fehler.
+- [x] `npm run test` laeuft vollstaendig gruen.
+- [x] `npm run build` erzeugt ein Bundle ohne Fehler.
+- [x] `git status --porcelain src/main.ts` bleibt leer (Beleg fuer
       Entscheidung 7: Der Umzug beruehrt die Verdrahtung nicht).
 
 **Manual Verification**:
@@ -560,6 +560,26 @@ bleiben Ueberschrift, Sicherungsdatum und der oeffnende Knopf.
 ## Implementation Notes
 
 During implementation, document user feedback, problems, and decisions here.
+
+Beide Phasen sind wie geplant aufgegangen; keine fachliche Abweichung.
+
+- **`.freeze` blieb unberuehrt und steht unveraendert.** Wie im Plan vermutet
+  traegt der Knopf `class="icon-button freeze"` (`navigationView.ts`), und
+  `.icon-button { margin: 0 }` schlaegt als Klassenregel den Element-Selektor
+  `button`. Der angehobene Knopfrand geht damit nicht in die
+  `bottom`-Rechnung ein.
+- **Der Zaehlwert stimmt:** Der Wischweg der Einstellungen ist jetzt
+  h2, h3 Sichtkegel, Label, Auswahlrad, Label, Auswahlrad, h3 Signale,
+  Hinweis, Ankreuzfeld, h3 Daten, Datumszeile, Oeffner - zwoelf Stationen,
+  vier Bedienpunkte. Die Meldungszeile des Panels bleibt still, solange sie
+  leer ist.
+- **`grep "margin: 8px 0;"` findet nichts mehr**; `margin: 8px 0 0` an
+  `.entries` steht wie vorgesehen weiterhin da.
+- `src/main.ts` ist unveraendert (`git status --porcelain src/main.ts` leer),
+  ebenso `SettingsViewCallbacks`, `dialog.ts`, `dom.ts` und `announcer.ts`.
+- Handwerklich: Die Konstante `BACKUP_TITLE` traegt Knopfnamen und Dialogtitel
+  gemeinsam; der Schraegstrich bleibt wie entschieden (Entscheidung 8 des
+  Plans) und ist damit eine Zeile, falls er sich am Geraet stoerend liest.
 
 ## References
 

@@ -1,8 +1,14 @@
 /**
  * Einstellungen: Kegel, Entfernungsgrenze, Signalkanaele, Sicherung.
+ *
+ * Die vier Sicherungswege liegen hinter einem modalen Dialog. Im Panel stehen
+ * unter "Daten" nur das Datum der letzten Sicherung und der Oeffner: Der
+ * Abschnitt war elf Stationen lang und lag bei jedem Besuch im Wischweg, auch
+ * dann, wenn nur der Kegelwinkel geaendert werden sollte (docs/design.md 7).
  */
 
 import { el, setText } from './dom.js';
+import { ModalDialog } from './dialog.js';
 import type { Announcer } from './announcer.js';
 import {
   CONE_ANGLE_CHOICES,
@@ -15,6 +21,10 @@ const BACKUP_DATE_FORMAT = new Intl.DateTimeFormat('de-DE', {
   dateStyle: 'long',
   timeStyle: 'short',
 });
+
+// Knopf und Dialog tragen denselben Namen - VoiceOver sagt den Titel beim
+// Oeffnen an, ein anderer Name klaenge, als sei man woanders gelandet.
+const BACKUP_TITLE = 'Daten speichern / laden';
 
 export interface SettingsViewCallbacks {
   onChange(settings: AppSettings): void;
@@ -33,6 +43,13 @@ export class SettingsView {
   private readonly importField: HTMLTextAreaElement;
   private readonly backupLine: HTMLElement;
   private readonly feedback: HTMLElement;
+
+  /** Traegt beim Oeffnen den Fokus - deshalb als einziger der vier Wege festgehalten. */
+  private readonly exportFileButton: HTMLButtonElement;
+  private readonly backupButton: HTMLButtonElement;
+  private readonly backupFeedback: HTMLElement;
+  private readonly backupDialog: ModalDialog;
+
   private settings: AppSettings;
 
   constructor(
@@ -73,12 +90,12 @@ export class SettingsView {
       this.update({ cues: { ...this.settings.cues, earcon: checked } });
     });
 
-    const exportFile = el('button', {
+    this.exportFileButton = el('button', {
       type: 'button',
       class: 'primary',
       text: 'Als Datei sichern',
     }) as HTMLButtonElement;
-    exportFile.addEventListener('click', () => {
+    this.exportFileButton.addEventListener('click', () => {
       this.callbacks.onExportFile();
     });
 
@@ -133,6 +150,50 @@ export class SettingsView {
       this.callbacks.onImport(this.importField.value);
     });
 
+    const closeBackup = el('button', {
+      type: 'button',
+      class: 'secondary',
+      text: 'Schliessen',
+    }) as HTMLButtonElement;
+    // Der Weg ohne Tastatur: Escape leistet dasselbe, aber am iPhone ist keine da.
+    closeBackup.addEventListener('click', () => {
+      this.backupDialog.close();
+    });
+
+    this.backupFeedback = el('p', { class: 'status', role: 'status' });
+
+    // Die Meldungszeile steht **vor** "Schliessen": Sie muss erreichbar sein,
+    // bevor der Weg aus dem Dialog kommt.
+    this.backupDialog = new ModalDialog('sicherung', BACKUP_TITLE, [
+      el('p', {
+        class: 'hint',
+        // Nennt beides, seit die Sicherung beides enthaelt: Wer hier nur
+        // "Orte" liest, haelt seine Gruppen faelschlich fuer ungesichert.
+        text: 'Orte und Gruppen liegen nur auf diesem Geraet. Es gibt keine zweite Kopie.',
+      }),
+      this.exportFileButton,
+      exportClipboard,
+      el('label', { for: 'import-datei', text: 'Sicherungsdatei einlesen' }),
+      this.importFileField,
+      el('label', { for: 'import', text: 'Oder Sicherung als Text einfuegen' }),
+      el('p', {
+        class: 'hint',
+        text: 'Den kopierten Text hier einfuegen und dann "Sicherung einlesen" waehlen.',
+      }),
+      this.importField,
+      importButton,
+      this.backupFeedback,
+      closeBackup,
+    ]);
+
+    this.backupButton = el('button', {
+      type: 'button',
+      text: BACKUP_TITLE,
+    }) as HTMLButtonElement;
+    this.backupButton.addEventListener('click', () => {
+      this.openBackup();
+    });
+
     this.backupLine = el('p', { class: 'status' });
     this.feedback = el('p', { class: 'status', role: 'status' });
 
@@ -152,26 +213,18 @@ export class SettingsView {
       }),
       this.labelledCheckbox('earcon', 'Ton bei Ein- und Austritt', this.earconBox),
 
-      el('h3', { text: 'Sicherung' }),
-      el('p', {
-        class: 'hint',
-        // Nennt beides, seit die Sicherung beides enthaelt: Wer hier nur
-        // "Orte" liest, haelt seine Gruppen faelschlich fuer ungesichert.
-        text: 'Orte und Gruppen liegen nur auf diesem Geraet. Es gibt keine zweite Kopie.',
-      }),
+      // Das Datum bleibt **draussen**: Es gehoert in die Einstellungen, wo es
+      // ungefragt ins Auge faellt (docs/design.md 7 - kein Noergel-Dialog);
+      // hinter einem Dialog saehe es niemand, und genau das ist sein Zweck.
+      // Der Warnsatz zieht dagegen mit hinein - er begruendet die Handlung.
+      el('h3', { text: 'Daten' }),
       this.backupLine,
-      exportFile,
-      exportClipboard,
-      el('label', { for: 'import-datei', text: 'Sicherungsdatei einlesen' }),
-      this.importFileField,
-      el('label', { for: 'import', text: 'Oder Sicherung als Text einfuegen' }),
-      el('p', {
-        class: 'hint',
-        text: 'Den kopierten Text hier einfuegen und dann "Sicherung einlesen" waehlen.',
-      }),
-      this.importField,
-      importButton,
+      this.backupButton,
       this.feedback,
+      // Der Dialog haengt im Panel. Unkritisch, weil ein modaler Dialog den
+      // Bereichswechsel blockiert - er kann nie offen sein, waehrend das Panel
+      // ueber hidden aus dem Baum genommen wird.
+      this.backupDialog.element,
     ]);
 
     this.renderBackupDate();
@@ -183,7 +236,12 @@ export class SettingsView {
   }
 
   report(text: string): void {
-    setText(this.feedback, text);
+    // Solange der Dialog offen ist, laege die Zeile des Panels hinter dem
+    // modalen Hintergrund - weder zu sehen noch zu erswipen (design.md 6.4).
+    // Die Weiche entscheidet nach dem Zustand des Dialogs, nie nach dem Text:
+    // "Speichern fehlgeschlagen." aus onChange gehoert ins Panel, derselbe
+    // Satz aus onImport in den Dialog.
+    setText(this.backupDialog.isOpen ? this.backupFeedback : this.feedback, text);
     this.announcer.announce(text);
   }
 
@@ -195,6 +253,21 @@ export class SettingsView {
         ? 'Noch nie gesichert.'
         : `Zuletzt gesichert: ${BACKUP_DATE_FORMAT.format(new Date(at))}`,
     );
+  }
+
+  /**
+   * Oeffnet den Sicherungs-Dialog mit leerem Feld und stiller Meldungszeile.
+   *
+   * Er bleibt nach jeder der vier Handlungen offen: Es sind vier Werkzeuge,
+   * kein Formular - als Datei sichern *und* zusaetzlich in die Zwischenablage
+   * ist ein sinnvoller Doppelgriff (docs/design.md 6.6).
+   */
+  private openBackup(): void {
+    // Leeren wie beim Anlegen-Dialog: Ein stehen gebliebener Text aus einer
+    // frueheren Sitzung liesse sich versehentlich ein zweites Mal einlesen.
+    this.importField.value = '';
+    setText(this.backupFeedback, '');
+    this.backupDialog.open(this.backupButton, this.exportFileButton);
   }
 
   private update(patch: Partial<AppSettings>): void {

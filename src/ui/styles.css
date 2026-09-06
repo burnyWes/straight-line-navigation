@@ -20,6 +20,15 @@
   --danger: #a4130a;
   --focus: #0b46c8;
   --on-dark: #ffffff;
+
+  /*
+   * Abstand zwischen zwei Bedienpunkten. Kein Geschmackswert: Bei 8 px - rund
+   * 1,3 mm auf dem Geraet - ueberquert der erkundende Finger die Grenze ohne
+   * Pause und landet auf dem Nachbarn (docs/design.md 3). An einer Stelle
+   * nachjustierbar, damit der Wert nach einem Praxistest eine Zeile bleibt.
+   */
+  --abstand: 20px;
+
   /* Kein Dunkelmodus: Formularelemente sollen hell bleiben. */
   color-scheme: light;
 }
@@ -64,9 +73,14 @@ h2 {
   margin: 0 0 12px;
 }
 
+/*
+ * Bewusst mehr als --abstand: Ein Abschnittswechsel muss groesser sein als ein
+ * Elementwechsel. Bei gleichem Wert fielen die Raender zusammen und der
+ * Themenwechsel saehe aus wie der naechste Knopf - die Gliederung verschwaende.
+ */
 h3 {
   font-size: 16px;
-  margin: 20px 0 8px;
+  margin: calc(var(--abstand) * 1.5) 0 8px;
   color: var(--dim);
 }
 
@@ -102,14 +116,29 @@ h3 {
   z-index: 10;
   display: flex;
   gap: 6px;
-  padding: calc(6px + env(safe-area-inset-top)) 0 8px;
+  /*
+   * Gleicht den entfallenen Knopfrand aus (siehe .tab): 6 + 8 oben, 8 + 8
+   * unten wie zuvor. Die angeheftete Leiste bleibt exakt so hoch wie vorher.
+   */
+  padding: calc(14px + env(safe-area-inset-top)) 0 16px;
   margin-bottom: 6px;
   background: var(--bg);
   border-bottom: 2px solid var(--line);
 }
 
+/*
+ * Von der Anhebung auf --abstand bewusst ausgenommen: Die Leiste ist eine
+ * geschlossene Reihe, der Finger landet immer auf einem Tab und nie im Nichts -
+ * Danebenlanden heisst hier "ein Tab weiter", nicht "falsche Handlung".
+ * Abstand kostete dort nur Breite, die "Einstellungen" schon heute fehlt.
+ *
+ * Der Rand muss aktiv genullt werden: .tab ist ein Flex-Kind, dort fallen
+ * Raender nicht zusammen - der globale Knopfrand wuechse die Leiste sonst um
+ * 2 x var(--abstand).
+ */
 .tab {
   flex: 1;
+  margin: 0;
   padding: 14px 8px;
   font: inherit;
   font-weight: 600;
@@ -142,7 +171,7 @@ button {
   width: 100%;
   /* Grosszuegige Trefferflaeche - die App wird im Gehen bedient. */
   min-height: 52px;
-  margin: 8px 0;
+  margin: var(--abstand) 0;
   padding: 14px;
   font: inherit;
   font-weight: 600;
@@ -256,9 +285,10 @@ button[aria-pressed='true']:focus-visible {
   margin: 4px 0;
 }
 
+/* Die 4 px unten bleiben: Das Label klebt an seinem Feld, der Zuwachs liegt darueber. */
 label {
   display: block;
-  margin: 12px 0 4px;
+  margin: var(--abstand) 0 4px;
   color: var(--dim);
   font-size: 15px;
 }
@@ -291,7 +321,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 10px 0;
+  margin: var(--abstand) 0;
 }
 
 .check input {
@@ -325,9 +355,17 @@ textarea {
   padding: 0;
 }
 
+/*
+ * Der senkrechte Zeilenabstand haengt am li, nicht am Knopf darin - sonst
+ * zaehlte er doppelt (10 + 2 + 10 = 22 px wie zuvor, statt 20 + 2 + 20).
+ */
 .entries li {
   border-top: 2px solid var(--line);
-  padding-top: 4px;
+  padding: calc(var(--abstand) / 2) 0;
+}
+
+.entries li button {
+  margin: 0;
 }
 
 /*
@@ -338,7 +376,7 @@ textarea {
 .entry-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--abstand);
 }
 
 /* Ohne das nimmt der Namensknopf die volle Breite und drueckt die Birne raus. */
