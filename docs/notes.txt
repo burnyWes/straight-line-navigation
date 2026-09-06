@@ -155,6 +155,11 @@ x  Praxistest: Sicherung mit Gruppen auf dem Geraet aus der Dateien-App
    eingelesen - Orte, Gruppen und Mitgliedschaften kommen vollstaendig zurueck
 x  Praxistest: eine Sicherung von vor dieser Fassung eingelesen - keine
    Fehlermeldung wegen fehlender Gruppen
+x  Der zweite Knopf in den Dialogen heisst "Schliessen" statt "Abbrechen" - im
+   Anlegen- und im Bearbeiten-Dialog, bei Orten wie bei Gruppen. Grund: Was im
+   Dialog getan wurde, ist da schon geschrieben; "Abbrechen" klang, als nehme es
+   die letzte Handlung zurueck. Die Loeschen-Rueckfrage behaelt "Abbrechen", dort
+   ist noch nichts geschehen (design.md 6.4, Entscheidung 35)
 
 --------------------------------------------------------------------------------
 TODO
@@ -162,3 +167,16 @@ TODO
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
 - Optionsmenü überarbeiten
 - Bug: Wenn man in ein Textfeld klickt öffnet sich oft nur kurz die Tastatur und schließt sich dann gleich wieder.
+- Navigationsseite erweitern
+  - unten links einen Button Orientierung/Navigation
+  - Orientierung ist die heutige Seite
+  - Navigation wird die neue Seite
+  - Auf Navigationsseite ganz oben ein Dropdown in dem man einen existierenden Ort auswählen kann.
+  - In der Mitte einen Pfeil der nach oben zeigt (gleiches Symbol, wie auf  App-Icon)
+  - Drumrum ein Kreis auf dem in korrekter Richtung der ausgewählte Ort mit Entfernung angezeigt wrid.
+  - Der Fixier-Button von der Orientierungsseite unten rechts wird ersetzt durch einen Button mit Lautsprecher-Symbol
+  (Audio-Navigation aktivieren/deaktivieren)
+  - Bei aktivierter Audio-Navigation werden Töne abgespielt
+    - Tonhöhe = Richtung (tief = hinter mmir, hmittel = neben mir, hoch = vor mir)
+    - Frequenz = Entfernung
+

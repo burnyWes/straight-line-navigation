@@ -142,12 +142,12 @@ export class LocationsView {
       this.callbacks.onSaveText(this.currentName(), this.coordinateInput.value);
     });
 
-    const cancelCreate = el('button', {
+    const closeCreate = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Abbrechen',
+      text: 'Schliessen',
     }) as HTMLButtonElement;
-    cancelCreate.addEventListener('click', () => {
+    closeCreate.addEventListener('click', () => {
       this.createDialog.close();
     });
 
@@ -164,7 +164,7 @@ export class LocationsView {
       this.coordinateInput,
       saveText,
       this.createFeedback,
-      cancelCreate,
+      closeCreate,
     ]);
 
     this.addButton = el(
@@ -225,13 +225,13 @@ export class LocationsView {
       this.openDelete();
     });
 
-    const cancelEdit = el('button', {
+    const closeEdit = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Abbrechen',
+      text: 'Schliessen',
     }) as HTMLButtonElement;
     // Der Weg ohne Tastatur: Escape leistet dasselbe, aber am iPhone ist keine da.
-    cancelEdit.addEventListener('click', () => {
+    closeEdit.addEventListener('click', () => {
       this.editDialog.close();
     });
 
@@ -243,7 +243,7 @@ export class LocationsView {
       this.editName,
       saveName,
       this.deleteButton,
-      cancelEdit,
+      closeEdit,
       this.editFeedback,
     ]);
 

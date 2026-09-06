@@ -383,7 +383,7 @@ VoiceOver als „Bahnhof, Button" angesagt, ohne Zusatz. Rechts daneben steht ei
 unbeschrifteter Knopf zum Ausblenden (§6.5); alles Weitere liegt hinter dem Eintrag:
 
 - **Ein Tipp auf den Eintrag** öffnet einen modalen Dialog mit Anlagedatum und
-  Genauigkeit, dem Namensfeld, „Namen speichern", „Löschen" und „Abbrechen". Die
+  Genauigkeit, dem Namensfeld, „Namen speichern", „Löschen" und „Schließen". Die
   Koordinate steht bewusst **nicht** darin — sie sagt nichts, was im Gehen hilft, und
   VoiceOver läse zwölf Ziffern mit. Datum und Genauigkeit sagen stattdessen, wie
   verlässlich der Punkt ist.
@@ -393,7 +393,11 @@ unbeschrifteter Knopf zum Ausblenden (§6.5); alles Weitere liegt hinter dem Ein
   den Bearbeiten-Dialog, ohne etwas zu ändern.
 - **Modale Dialoge, nativ** (`<dialog>` mit `showModal()`): Der Browser setzt den
   Hintergrund inert, hält den Fokus im Dialog und behandelt Escape. Ohne Tastatur trägt
-  „Abbrechen" denselben Weg.
+  „Schließen" denselben Weg.
+- **Der zweite Knopf heißt „Schließen", nicht „Abbrechen".** Jede Handlung im Dialog wirkt sofort und
+  ist längst geschrieben, wenn der Knopf wieder erreichbar ist — „Abbrechen" klänge danach,
+  als nähme es sie zurück. Nur die Löschen-Rückfrage behält „Abbrechen": Dort wendet der Knopf
+  tatsächlich eine schwebende Handlung ab.
 - **Solange ein Dialog offen ist, gehört die Meldung in den Dialog.** Die Meldungszeile
   des Panels läge hinter dem modalen Hintergrund — weder zu sehen noch zu erswipen. Erst
   beim Schließen wandert die Bestätigung ins Panel.
@@ -788,3 +792,4 @@ das steht in keinem Verhältnis.
 | 32 | Freeze ist an drei Stellen lösbar, und der Render bewegt nur, was falsch steht | Ein hängender Freeze und eine im Sekundentakt neu eingehängte Zeile machen die Liste unbrauchbar, ohne dass etwas widerspricht (§4.3, §9) |
 | 33 | Orte ausblendbar über einen zweiten Knopf je Zeile; stille Hinweiszeile statt Statusmeldung | Löschen war bisher die einzige Art, Ruhe im Kegel zu bekommen — und ohne Backend endgültig. Der doppelte Wischweg ist der bewusst gezahlte Preis dafür, dass Ausblenden eine Reihenhandlung bleibt (§6.5) |
 | 34 | Gruppen als vierter Tab; die Gruppe hält die Mitglieder, eigener Speicherschlüssel, Name als Identität | Ein Umschaltmechanismus statt zwei; der Ort bleibt unverändert und seine Tests unberührt; über Geräte hinweg unterscheiden sich Kennungen, Namen nicht (§6.6) |
+| 35 | Der zweite Dialogknopf heißt „Schließen"; nur die Löschen-Rückfrage behält „Abbrechen" | Nutzerentscheidung: Speichern, Umbenennen und Mitgliederpflege wirken sofort — „Abbrechen" danach klingt, als nehme es die letzte Handlung zurück. In der Rückfrage ist noch nichts geschehen, dort ist „Abbrechen" die richtige Bedeutung (§6.4) |

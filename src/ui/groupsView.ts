@@ -92,7 +92,7 @@ export class GroupsView {
   private readonly editName: HTMLInputElement;
   private readonly editFeedback: HTMLElement;
   private readonly deleteButton: HTMLButtonElement;
-  private readonly cancelEdit: HTMLButtonElement;
+  private readonly closeEdit: HTMLButtonElement;
 
   private readonly pickerLabel: HTMLLabelElement;
   private readonly picker: HTMLSelectElement;
@@ -140,12 +140,12 @@ export class GroupsView {
       this.callbacks.onCreate(this.createName.value);
     });
 
-    const cancelCreate = el('button', {
+    const closeCreate = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Abbrechen',
+      text: 'Schliessen',
     }) as HTMLButtonElement;
-    cancelCreate.addEventListener('click', () => {
+    closeCreate.addEventListener('click', () => {
       this.createDialog.close();
     });
 
@@ -155,7 +155,7 @@ export class GroupsView {
       el('label', { for: 'gruppe-name', text: 'Name' }),
       this.createName,
       create,
-      cancelCreate,
+      closeCreate,
       this.createFeedback,
     ]);
 
@@ -207,13 +207,13 @@ export class GroupsView {
       this.openDelete();
     });
 
-    this.cancelEdit = el('button', {
+    this.closeEdit = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Abbrechen',
+      text: 'Schliessen',
     }) as HTMLButtonElement;
     // Der Weg ohne Tastatur: Escape leistet dasselbe, aber am iPhone ist keine da.
-    this.cancelEdit.addEventListener('click', () => {
+    this.closeEdit.addEventListener('click', () => {
       this.editDialog.close();
     });
 
@@ -259,7 +259,7 @@ export class GroupsView {
       this.membersHeading,
       this.membersList,
       this.deleteButton,
-      this.cancelEdit,
+      this.closeEdit,
       this.editFeedback,
     ]);
 
@@ -354,7 +354,7 @@ export class GroupsView {
     const index = this.callbacks
       .membersOf(group)
       .findIndex((member) => member.id === location.id);
-    (this.memberButtons[index] ?? this.cancelEdit).focus();
+    (this.memberButtons[index] ?? this.closeEdit).focus();
   }
 
   /**
@@ -363,7 +363,7 @@ export class GroupsView {
    * Aufraeumen ist eine Reihenhandlung - dasselbe Argument, mit dem die
    * Gluehbirne in der Zeile steht und nicht im Dialog (docs/design.md 6.5).
    * War es das letzte Mitglied, bleibt das Auswahlrad; fehlt auch das, ist
-   * "Abbrechen" der letzte sichere Halt.
+   * "Schliessen" der letzte sichere Halt.
    */
   reportMemberRemoved(group: Group, location: Location): void {
     this.editing = group;
@@ -377,7 +377,7 @@ export class GroupsView {
     } else if (!this.picker.hidden) {
       this.picker.focus();
     } else {
-      this.cancelEdit.focus();
+      this.closeEdit.focus();
     }
   }
 
