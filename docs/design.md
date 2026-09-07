@@ -444,6 +444,10 @@ Hysterese des alten Kegels noch (wie beim Gütemonitor, §4.5).
 eine Klaviatur gibt es hier nicht — und rein gestimmt stehen die Teiltöne still zueinander,
 statt zu schweben. Ein Schweben wäre eine Bewegung, die nichts bedeutet.
 
+**Am Gerät abgenommen:** Der Dreiklang ist beim Gehen als „jetzt stimmt es" zu hören,
+ohne die Tonhöhe zu verdecken; der Pegel der Teiltöne trägt über Lautsprecher wie über
+Kopfhörer, und der Kegel passt als Schwelle *(Praxistest)*.
+
 **Der Dreiklang bekommt keinen eigenen Schalter und keine Ansage.** Er hängt am
 Tonschalter, weil er derselbe Ton ist; und was er sagt, sagt die Peilzeile bereits in
 Worten („geradeaus"). Zwei Kanäle für dieselbe Nachricht sind das Muster, das §6.5 beim
