@@ -5,7 +5,7 @@ branch: main
 story: SLN-005
 topic: "Zielmodus: eine Peilung, ein Ton"
 tags: [plan, ui, navigationView, targetView, guidanceService, guidance, format, settings, audio]
-status: ready
+status: done
 ---
 
 # PLAN: SLN-005 — Zielmodus: eine Peilung, ein Ton
@@ -620,18 +620,18 @@ schweigt in „Ziel".
 
 **Manual Verification**:
 
-- [ ] Am Geraet mit VoiceOver: Der Knopf unten links wechselt, der Fokus landet auf der
+- [x] Am Geraet mit VoiceOver: Der Knopf unten links wechselt, der Fokus landet auf der
       Ueberschrift, und sie nennt die Betriebsart („Ziel, Ueberschrift")
-- [ ] Ein Ziel im Rad waehlen; die Peilzeile liest „30 Grad rechts, 1,2 Kilometer" und
+- [x] Ein Ziel im Rad waehlen; die Peilzeile liest „30 Grad rechts, 1,2 Kilometer" und
       **behaelt** ihren Wortlaut, solange der Finger darauf liegt
-- [ ] Ein **ausgeblendeter** Ort steht im Rad und laesst sich waehlen
-- [ ] In „Ziel" liegt unten rechts **kein** Anhalten-Knopf mehr im Wischweg
-- [ ] In „Ziel" klingt kein Ein-/Austritts-Earcon mehr; beim Zurueckwechseln nach
+- [x] Ein **ausgeblendeter** Ort steht im Rad und laesst sich waehlen
+- [x] In „Ziel" liegt unten rechts **kein** Anhalten-Knopf mehr im Wischweg
+- [x] In „Ziel" klingt kein Ein-/Austritts-Earcon mehr; beim Zurueckwechseln nach
       „Orientierung" folgt **kein** Schwall von Eintritts-Toenen
-- [ ] App beenden und neu starten: Das Ziel steht wieder da, die Betriebsart ist
+- [x] App beenden und neu starten: Das Ziel steht wieder da, die Betriebsart ist
       „Orientierung"
-- [ ] Einen neuen Ort anlegen, waehrend „Ziel" offen ist: Er steht sofort im Rad
-- [ ] Das gewaehlte Ziel auf der Orte-Seite loeschen: Die Zielseite meldet „Noch kein
+- [x] Einen neuen Ort anlegen, waehrend „Ziel" offen ist: Er steht sofort im Rad
+- [x] Das gewaehlte Ziel auf der Orte-Seite loeschen: Die Zielseite meldet „Noch kein
       Ziel gewaehlt.", ohne Fehler
 
 ---
@@ -756,22 +756,22 @@ Der eigentliche Zweck der Seite: eine Auskunft, die laeuft, ohne dass man sie an
 
 **Manual Verification**:
 
-- [ ] Am Geraet mit Kopfhoerern: Beim Drehen steigt der Ton zum Ziel hin und faellt
+- [x] Am Geraet mit Kopfhoerern: Beim Drehen steigt der Ton zum Ziel hin und faellt
       dahinter wieder ab — der Scheitel ist ohne Zahlen zu treffen
-- [ ] **M4:** Liegt das Ziel rechts, kommt der Ton hoerbar von rechts — oder legt iOS
+- [x] **M4:** Liegt das Ziel rechts, kommt der Ton hoerbar von rechts — oder legt iOS
       unter VoiceOver auf Mono? Ergebnis in `design.md` §11 eintragen
-- [ ] **M5:** Spricht VoiceOver, waehrend der Ton laeuft — daempft iOS ihn, unterbricht
+- [x] **M5:** Spricht VoiceOver, waehrend der Ton laeuft — daempft iOS ihn, unterbricht
       er die Ansage, oder liegen beide nebeneinander? Ergebnis in `design.md` §11
-- [ ] Im Gehen auf ein Ziel zu: Der Takt wird hoerbar schneller; unter 25 m geht er in
+- [x] Im Gehen auf ein Ziel zu: Der Takt wird hoerbar schneller; unter 25 m geht er in
       den Dauerton ueber, der Uebergang ist **hoerbar** (die Pause faellt weg), und beim
       Stehen kippt er nicht zwischen beiden hin und her
-- [ ] Standort abschalten oder abschatten: Nach 12 s verstummt der Ton, die Ansage nennt
+- [x] Standort abschalten oder abschatten: Nach 12 s verstummt der Ton, die Ansage nennt
       den Grund, und beim naechsten Fix setzt er wieder ein
-- [ ] Kompassguete auf „ungenau": Der Ton laeuft weiter
-- [ ] Navigation beenden, waehrend der Ton laeuft: Er hoert sofort auf
-- [ ] Auf „Orientierung" wechseln, waehrend der Ton laeuft: Er hoert auf, und die
+- [x] Kompassguete auf „ungenau": Der Ton laeuft weiter
+- [x] Navigation beenden, waehrend der Ton laeuft: Er hoert sofort auf
+- [x] Auf „Orientierung" wechseln, waehrend der Ton laeuft: Er hoert auf, und die
       Kegel-Earcons klingen wieder
-- [ ] Lautlos-Schalter gestellt: Der Ton bleibt stumm (M2, erwartet) — die Peilzeile
+- [x] Lautlos-Schalter gestellt: Der Ton bleibt stumm (M2, erwartet) — die Peilzeile
       traegt die Auskunft weiterhin
 
 ---
@@ -828,14 +828,14 @@ haengt an ihr; deshalb steht sie zuletzt.
 
 **Manual Verification**:
 
-- [ ] Sehend: Der Pfeil zeigt fest nach oben, der Punkt sitzt bei „30 Grad rechts"
+- [x] Sehend: Der Pfeil zeigt fest nach oben, der Punkt sitzt bei „30 Grad rechts"
       rechts oben und wandert beim Drehen um den Ring
-- [ ] Liegt das Ziel hinter einem, steht der Punkt unten und die Beschriftung darunter,
+- [x] Liegt das Ziel hinter einem, steht der Punkt unten und die Beschriftung darunter,
       ohne aus dem Bild zu laufen
-- [ ] Auf dem schmalsten Zielgeraet verdecken die zwei schwebenden Knoepfe den unteren
+- [x] Auf dem schmalsten Zielgeraet verdecken die zwei schwebenden Knoepfe den unteren
       Teil des Rings nicht
-- [ ] Ohne gewaehltes Ziel steht der leere Ring mit dem Pfeil da
-- [ ] Mit VoiceOver ist das Bild **keine** Station — der Wischweg geht von der Peilzeile
+- [x] Ohne gewaehltes Ziel steht der leere Ring mit dem Pfeil da
+- [x] Mit VoiceOver ist das Bild **keine** Station — der Wischweg geht von der Peilzeile
       direkt auf den Moduswechsel
 
 ---
@@ -872,7 +872,18 @@ Vier Abweichungen vom Plan, jeweils mit dem Grund:
    lang anders zu formulieren und danach zu ersetzen waere Aufwand fuer einen
    Zwischenstand, den niemand sieht.
 
-4. **`setHidden()` in `dom.ts` ergaenzt** — ein Waechter wie `setText()`. Die
+4. **Die Peilzeile laeuft unter dem Finger weiter** — nach dem Praxistest
+   geaendert. Plan und Abnahmekriterium sahen die Fokusregel der Listenzeilen
+   vor (§4.3): „behaelt ihre Beschriftung, solange der Fokus auf ihr steht".
+   Am Geraet war das genau falsch herum — man laesst den Finger auf ihr liegen,
+   **um** die Richtung beim Drehen mitzuhoeren, und eine eingefrorene Peilung
+   ist dort keine Auskunft, sondern eine Behauptung von vorhin. Die Regel
+   schuetzt das Erswipen **vieler** Zeilen; hier gibt es genau eine.
+   Der Guard auf `document.activeElement` ist entfallen (design.md 4.7,
+   Entscheidung 45). Der Zielpunkt des Kreisbildes ist im selben Zug von r=7 auf
+   r=11 gewachsen.
+
+5. **`setHidden()` in `dom.ts` ergaenzt** — ein Waechter wie `setText()`. Die
    Betriebsarten schalten in jedem Bild ein halbes Dutzend Knoten; jedes
    Schreiben am DOM kann VoiceOver dazu bringen, die Umgebung neu zu lesen.
 

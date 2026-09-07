@@ -87,7 +87,10 @@ export class Dial {
     });
     arrow.append(svg('path', { d: ICON_ARROW, fill: 'currentColor' }));
 
-    this.point = svg('circle', { cx: CENTRE, cy: CENTRE - RADIUS, r: 7, class: 'dial-point' });
+    // Deutlich groesser als der Strich einer Marke: Der Punkt ist das, was man
+    // sucht, und er soll im Vorbeigehen auffallen (Nutzerentscheidung nach dem
+    // Praxistest).
+    this.point = svg('circle', { cx: CENTRE, cy: CENTRE - RADIUS, r: 11, class: 'dial-point' });
     // text-anchor steht fest auf middle: Die Beschriftung sitzt auf der Peilung
     // des Punktes, nicht neben ihm, und wird nur waagerecht in den Rahmen
     // gerueckt.

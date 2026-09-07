@@ -187,15 +187,7 @@ x  Deploy-Workflow auf node24-Actions gehoben (checkout v7, setup-node v7,
    die node20-Laufzeit abgekuendigt und warnte in jedem Lauf; die gebaute
    Node-Version ('22' im setup-node-Schritt) ist davon unberuehrt
 
---------------------------------------------------------------------------------
-TODO
---------------------------------------------------------------------------------
-m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
--  M4 Praxistest: Liegt das Ziel rechts, kommt der Ton hoerbar von rechts -
-   oder legt iOS unter VoiceOver auf Mono? (design.md 11)
--  M5 Praxistest: Spricht VoiceOver, waehrend der Ton laeuft - daempft iOS ihn,
-   unterbricht er die Ansage, oder liegen beide nebeneinander? (design.md 11)
-/ Navigationsseite erweitern (design.md 4.7, Entscheidungen 38-41)
+x  Navigationsseite erweitern (design.md 4.7, Entscheidungen 38-45)
   x Zwei Betriebsarten im Tab Navigation: Orientierung (die heutige Kegel-Liste)
     und Ziel (neu). Ein schwebender Knopf unten links wechselt und benennt, was
     der Tipp bewirkt; die h2 traegt den Modusnamen, der Fokus landet nach dem
@@ -206,8 +198,11 @@ m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
     Stelle steht der Grund. Die Wahl liegt in AppSettings.targetId und
     ueberlebt den Neustart; ein geloeschter Ort faellt still auf "kein Ziel"
   x Peilzeile als button.entry: "30 Grad rechts, 1,2 Kilometer" - Richtung
-    zuerst, auf 5 Grad gerundet, "genau hinter dir" ab 175 Grad. Sie behaelt
-    ihre Beschriftung, solange der Fokus auf ihr steht
+    zuerst, auf 5 Grad gerundet, "genau hinter dir" ab 175 Grad
+  x Praxistest: Die Peilzeile lief zuerst unter dem Finger **nicht** mit, wie
+    eine Listenzeile (design.md 4.3). Falsch herum: Man laesst den Finger auf
+    ihr liegen, um die Richtung beim Drehen mitzuhoeren. Die Fokusregel gilt
+    dort jetzt ausdruecklich nicht (design.md 4.7, Entscheidung 45)
   x In "Ziel" schweigt der Kegel-Earcon, rechnet aber weiter - beim
     Zurueckwechseln folgt deshalb kein Schwall von Eintritts-Toenen. Der
     Anhalten-Knopf erscheint nur in Orientierung
@@ -218,5 +213,19 @@ m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
     veraltetem Standort, ohne Ziel, ausserhalb "Ziel" und bei stehendem Lauf -
     die Kompassguete stoppt ihn nicht. Lautsprecher-Knopf unten rechts, sein
     Zustand ueberlebt den Neustart (design.md 4.7, Entscheidungen 42-44)
-  - Kreisbild mit Pfeil (App-Symbol) und dem Zielpunkt auf dem Ring
+  x Kreisbild mit Pfeil (App-Symbol) und dem Zielpunkt auf dem Ring, Name und
+    Entfernung als Bildunterschrift darunter. Der Zielpunkt ist nach dem
+    Praxistest groesser geworden
+  x Praxistest am Geraet mit VoiceOver: Moduswechsel, Fokus auf der
+    Ueberschrift, Zielrad mit ausgeblendeten Orten, gespeicherte Zielwahl ueber
+    den Neustart, schweigender Kegel in "Ziel", Tonhoehe und Takt, Verstummen
+    bei veraltetem Standort - alles abgenommen
 
+--------------------------------------------------------------------------------
+TODO
+--------------------------------------------------------------------------------
+m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
+-  M4 Praxistest: Liegt das Ziel rechts, kommt der Ton hoerbar von rechts -
+   oder legt iOS unter VoiceOver auf Mono? (design.md 11)
+-  M5 Praxistest: Spricht VoiceOver, waehrend der Ton laeuft - daempft iOS ihn,
+   unterbricht er die Ansage, oder liegen beide nebeneinander? (design.md 11)

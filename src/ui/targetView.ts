@@ -70,9 +70,10 @@ export class TargetView {
     this.hint = el('p', { class: 'hint' });
 
     // Ein echter Button, obwohl nichts passiert, wenn man ihn drueckt: Nur
-    // fokussierbare Elemente nimmt der VoiceOver-Cursor als eigene Station,
-    // und nur an ihnen haengt die Zusage, dass die gelesene Zeile stehen
-    // bleibt (navigationView.ts:388).
+    // fokussierbare Elemente nimmt der VoiceOver-Cursor als eigene Station
+    // (navigationView.ts). Die Zusage einer Listenzeile, unter dem Finger
+    // stehen zu bleiben, gilt hier aber ausdruecklich **nicht** - siehe
+    // render().
     this.bearing = el('button', {
       type: 'button',
       class: 'entry target-bearing',
@@ -193,13 +194,13 @@ export class TargetView {
       return;
     }
 
-    // Die Zeile unter dem Finger wird nicht neu beschriftet: Aendert sich der
-    // Name eines fokussierten Elements, liest VoiceOver ihn mitten im Satz neu
-    // vor. Dieselbe Zusage wie fuer eine Listenzeile (docs/design.md 4.3).
-    if (document.activeElement === this.bearing) {
-      return;
-    }
-
+    // Sie wird **auch** unter dem Finger neu beschriftet - anders als eine
+    // Listenzeile (docs/design.md 4.3). Dort ist das Neubeschriften eine
+    // Stoerung: Man wischt durch viele Zeilen, und eine, die sich mitten im
+    // Satz aendert, reisst den Faden ab. Hier ist es der Zweck: Es gibt genau
+    // eine Zeile, und man laesst den Finger auf ihr liegen, **um** die Richtung
+    // beim Drehen mitlaufen zu hoeren. Die Rundung auf fuenf Grad haelt die
+    // Zahl dabei ruhig genug (Praxistest, docs/design.md 4.7).
     this.bearing.textContent = label;
     this.bearingLabel = label;
   }

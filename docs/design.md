@@ -370,8 +370,15 @@ Stelle steht der Grund — nicht Stille.
 
 **Die Peilzeile** ist ein `<button>` wie eine Listenzeile und liest „30 Grad rechts,
 1,2 Kilometer": **Richtung zuerst**, denn sie ist das, was sich ständig ändert; der Name
-steht eine Station darüber im Rad. Sie behält ihre Beschriftung, solange der Fokus auf ihr
-steht — dieselbe Zusage wie für eine Listenzeile (§4.3).
+steht eine Station darüber im Rad.
+
+**Sie läuft unter dem Finger weiter** — hier gilt die Zusage aus §4.3 ausdrücklich
+**nicht**. Dort ist das Neubeschriften eine Störung: Man wischt durch viele Zeilen, und
+eine, die sich mitten im Satz ändert, reißt den Faden ab. Hier ist es der Zweck. Es gibt
+genau eine Zeile, und man lässt den Finger auf ihr liegen, **um** die Richtung beim Drehen
+mitlaufen zu hören — eine eingefrorene Peilung wäre an dieser Stelle keine Auskunft,
+sondern eine Behauptung von vorhin. Die Rundung auf 5° hält die Zahl dabei ruhig genug
+*(Nutzerentscheidung nach dem Praxistest; zuerst war es umgekehrt gebaut)*.
 
 **Die Richtung wird auf 5° gerundet, „geradeaus" bei 0, „genau hinter dir" ab 175°.** Die
 Rundung ist Ehrlichkeit: Dieselbe App erklärt ihre Richtungsangabe für „ungenau", sobald
@@ -446,8 +453,9 @@ Er liest seinen neuen Namen selbst vor (§6.5).
 **Wie der Earcon ist auch dieser Ton bei Lautlos stumm** (M2, §11). Die Peilzeile trägt die
 Auskunft dann weiterhin.
 
-**Das Kreisbild** zeigt den App-Pfeil fest nach oben, vier Marken und den Zielpunkt mit
-Name und Entfernung an der relativen Peilung. Der Pfeil ist die eigene Nase, nicht Norden —
+**Das Kreisbild** zeigt den App-Pfeil fest nach oben, vier Marken und den Zielpunkt an der
+relativen Peilung, mit Name und Entfernung als Bildunterschrift darunter. Der Zielpunkt ist
+bewusst groß — er ist das, was man sucht, und soll im Vorbeigehen auffallen. Der Pfeil ist die eigene Nase, nicht Norden —
 der Ring dreht sich unter ihm weg. Es ist `aria-hidden` wie jedes Symbol dieser App: Es
 trägt für VoiceOver nichts und ist für Mitschauende da. Vier Marken machen „30 Grad
 rechts" auf einen Blick ablesbar; eine Gradskala liest niemand.
@@ -982,3 +990,4 @@ das steht in keinem Verhältnis.
 | 42 | Nicht-Ziel „Entfernung als Tonhöhe/Klickrate" aufgehoben und als Zielton gebaut | Die in §10 gesetzte Bedingung — „erst nach Praxiserfahrung" — ist eingetreten. Vier Praxistestrunden liegen hinter der App, das Fundament steht, und der Nutzer hat die Erweiterung angefordert (§4.7) |
 | 43 | Tonhöhe exponentiell über zwei Oktaven, Panorama nach dem Sinus, Takt logarithmisch mit Ankunfts-Hysterese | Das Gehör hört Tonhöhe logarithmisch, und zwischen 50 m und 5 km liegen zwei Größenordnungen — linear wäre in beiden Fällen die Hälfte der Spanne unbrauchbar. Die Hysterese verhindert, dass der Ton im Takt der GPS-Streuung zwischen Ticken und Dauerton kippt (§4.7) |
 | 44 | Der Tonschalter überlebt den Neustart, der Anhalten-Knopf nicht | Ein hängender Freeze war **stumm** und hat einen ganzen Lauf gefressen (§4.3); ein hängender Tonschalter ist das Gegenteil von stumm und fällt sofort auf. Sein Knopf steht dort, wo er klingt — deshalb auch kein Eintrag in den Einstellungen (§4.7) |
+| 45 | Die Peilzeile läuft unter dem Finger weiter, entgegen der Fokusregel aus §4.3 | Nutzerentscheidung nach dem Praxistest. Die Regel schützt das Erswipen **vieler** Zeilen; hier gibt es genau eine, und der Finger liegt auf ihr, um die Richtung beim Drehen mitlaufen zu hören. Eine eingefrorene Peilung wäre dort keine Auskunft, sondern eine Behauptung von vorhin (§4.7) |
