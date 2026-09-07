@@ -17,13 +17,16 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Alle Actions laufen auf node24. Die Vorgaengerfassungen liefen auf node20,
+# das GitHub abgekuendigt hat - daher die Warnung im Lauf. Sie hat nichts mit
+# dem node-version-Feld unten zu tun; das ist die Version, mit der gebaut wird.
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -44,9 +47,9 @@ jobs:
         # Messfragen aus docs/design.md weiter geprüft werden können.
         run: cp -r spike dist/spike
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -58,4 +61,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

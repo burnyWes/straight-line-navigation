@@ -431,19 +431,19 @@ Tab-Leiste und unveraenderten Trefferflaechen.
 
 **Manual Verification**:
 
-- [ ] Am Geraet mit VoiceOver ueber den Dialog „Neuen Ort anlegen" streichen:
+- [x] Am Geraet mit VoiceOver ueber den Dialog „Neuen Ort anlegen" streichen:
       Zwischen „Aktuellen Standort speichern" und „Koordinate speichern" ist
       eine Pause spuerbar; der Finger landet nicht mehr ungewollt auf dem
       Nachbarknopf.
-- [ ] Ortsliste: Der Abstand zweier Zeilen fuehlt sich an wie vorher; zwischen
+- [x] Ortsliste: Der Abstand zweier Zeilen fuehlt sich an wie vorher; zwischen
       Namensknopf und Gluehbirne derselben Zeile ist jetzt eine spuerbare
       Luecke.
-- [ ] Tab-Leiste: gleiche Hoehe wie vorher, „Einstellungen" bricht nicht
+- [x] Tab-Leiste: gleiche Hoehe wie vorher, „Einstellungen" bricht nicht
       staerker um, alle vier Tabs sind wie gewohnt zu treffen.
-- [ ] Navigation starten: Der schwebende Anhalten-Knopf und die angeheftete
+- [x] Navigation starten: Der schwebende Anhalten-Knopf und die angeheftete
       Statusleiste stehen unveraendert, der letzte Listeneintrag wird nicht
       verdeckt.
-- [ ] Einstellungen: Die drei Abschnitte sind sehend weiterhin als Bloecke
+- [x] Einstellungen: Die drei Abschnitte sind sehend weiterhin als Bloecke
       erkennbar — ueber einer Ueberschrift ist mehr Luft als zwischen zwei
       Knoepfen.
 
@@ -537,24 +537,24 @@ bleiben Ueberschrift, Sicherungsdatum und der oeffnende Knopf.
 
 **Manual Verification**:
 
-- [ ] Einstellungen mit VoiceOver von oben nach unten erswipen: zwoelf
+- [x] Einstellungen mit VoiceOver von oben nach unten erswipen: zwoelf
       Stationen, die letzte ist „Daten speichern / laden"; darunter kommt
       nichts mehr, solange keine Fehlermeldung im Panel steht.
-- [ ] Knopf tippen: VoiceOver sagt „Daten speichern / laden" an, der Fokus
+- [x] Knopf tippen: VoiceOver sagt „Daten speichern / laden" an, der Fokus
       liegt auf „Als Datei sichern".
-- [ ] „Als Datei sichern": Die Datei landet in der Dateien-App, der Dialog
+- [x] „Als Datei sichern": Die Datei landet in der Dateien-App, der Dialog
       bleibt offen, die Meldung „Sicherung als Datei erstellt." steht in seiner
       Zeile und wird angesagt.
-- [ ] Direkt danach „In die Zwischenablage kopieren": funktioniert ohne den
+- [x] Direkt danach „In die Zwischenablage kopieren": funktioniert ohne den
       Dialog erneut zu oeffnen.
-- [ ] „Schliessen": Der Fokus steht wieder auf „Daten speichern / laden", und
+- [x] „Schliessen": Der Fokus steht wieder auf „Daten speichern / laden", und
       das Panel nennt das neue Sicherungsdatum.
-- [ ] Sicherungsdatei ueber die Dateiauswahl einlesen: Orte und Gruppen kommen
+- [x] Sicherungsdatei ueber die Dateiauswahl einlesen: Orte und Gruppen kommen
       zurueck, die Zusammenfassung steht in der Dialogzeile.
-- [ ] „Sicherung einlesen" mit leerem Textfeld: „Das Feld war leer. …" steht in
+- [x] „Sicherung einlesen" mit leerem Textfeld: „Das Feld war leer. …" steht in
       der Dialogzeile, der Dialog bleibt offen.
-- [ ] Dialog erneut oeffnen: Das Textfeld ist leer, die Meldungszeile still.
-- [ ] Escape bzw. der Ruecknahmeweg ohne Tastatur schliesst den Dialog und gibt
+- [x] Dialog erneut oeffnen: Das Textfeld ist leer, die Meldungszeile still.
+- [x] Escape bzw. der Ruecknahmeweg ohne Tastatur schliesst den Dialog und gibt
       den Fokus an den Oeffner zurueck.
 
 ## Implementation Notes
@@ -580,6 +580,9 @@ Beide Phasen sind wie geplant aufgegangen; keine fachliche Abweichung.
 - Handwerklich: Die Konstante `BACKUP_TITLE` traegt Knopfnamen und Dialogtitel
   gemeinsam; der Schraegstrich bleibt wie entschieden (Entscheidung 8 des
   Plans) und ist damit eine Zeile, falls er sich am Geraet stoerend liest.
+
+Die manuelle Abnahme am Geraet ist am 7. September 2026 erfolgt: Abstaende und
+Dialog funktionieren wie geplant, keine Nachbesserung noetig.
 
 ## References
 

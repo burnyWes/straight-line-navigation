@@ -180,6 +180,12 @@ x  Optionsmenue ueberarbeitet: Die vier Sicherungswege liegen jetzt hinter dem
    8 Bedienpunkten 4 und aus rund 20 Stationen 12. Der Dialog bleibt nach jeder
    Handlung offen und meldet in seine eigene Zeile; das Datum bleibt im Panel
    (design.md 5, 7, Entscheidung 37)
+x  Praxistest: Abstaende und der Dialog "Daten speichern / laden" am Geraet mit
+   VoiceOver abgenommen - beides funktioniert wie geplant
+x  Deploy-Workflow auf node24-Actions gehoben (checkout v7, setup-node v7,
+   configure-pages v6, upload-pages-artifact v5, deploy-pages v5). GitHub hat
+   die node20-Laufzeit abgekuendigt und warnte in jedem Lauf; die gebaute
+   Node-Version ('22' im setup-node-Schritt) ist davon unberuehrt
 
 --------------------------------------------------------------------------------
 TODO
