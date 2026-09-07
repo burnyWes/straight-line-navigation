@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { GuidanceService } from './guidanceService.js';
 import { BRANDENBURGER_TOR, pointAt, testLocation } from '../testing/fixtures.js';
+import { viewConeConfig } from '../domain/viewCone.js';
 
 const BAHNHOF = testLocation('Bahnhof', pointAt(BRANDENBURGER_TOR, 90, 1200));
 const KIOSK = testLocation('Kiosk', pointAt(BRANDENBURGER_TOR, 0, 300));
@@ -128,5 +129,50 @@ describe('GuidanceService', () => {
     expect(service.holdStale().entry).toBeNull();
     // Das Ziel selbst ist eine Absicht und ueberlebt den Lauf.
     expect(service.selectedId).toBe(BAHNHOF.id);
+  });
+
+  it('legt den Dreiklang auf das Ziel, sobald es geradeaus liegt', () => {
+    service.setTarget(BAHNHOF.id);
+
+    // Der Bahnhof liegt genau oestlich: Wer nach Osten schaut, hat ihn vorn.
+    expect(service.update(BRANDENBURGER_TOR, 90, [BAHNHOF]).tone?.chord).toBe(true);
+    expect(service.update(BRANDENBURGER_TOR, 130, [BAHNHOF]).tone?.chord).toBe(false);
+  });
+
+  it('haelt den Dreiklang ueber die Hysterese des Kegels hinweg', () => {
+    service.setTarget(BAHNHOF.id);
+    service.update(BRANDENBURGER_TOR, 90, [BAHNHOF]);
+
+    // 22 Grad daneben: drin, weil vorher drin - sonst flackerte der Akkord im
+    // Takt des Handzitterns (docs/design.md 4.1, 4.7).
+    expect(service.update(BRANDENBURGER_TOR, 112, [BAHNHOF]).tone?.chord).toBe(true);
+  });
+
+  it('nimmt die Schwelle aus dem eingestellten Kegel', () => {
+    const wide = new GuidanceService(viewConeConfig(45));
+    wide.setTarget(BAHNHOF.id);
+
+    expect(wide.update(BRANDENBURGER_TOR, 130, [BAHNHOF]).tone?.chord).toBe(true);
+  });
+
+  it('vergisst den Dreiklang, wenn der Kegel neu eingestellt wird', () => {
+    service.setTarget(BAHNHOF.id);
+    service.update(BRANDENBURGER_TOR, 90, [BAHNHOF]);
+
+    service.setCone(viewConeConfig(10));
+
+    // Ohne das Vergessen haelte die Hysterese des alten Kegels hier noch.
+    expect(service.update(BRANDENBURGER_TOR, 103, [BAHNHOF]).tone?.chord).toBe(false);
+  });
+
+  it('vergisst den Dreiklang beim Zielwechsel', () => {
+    service.setTarget(BAHNHOF.id);
+    service.update(BRANDENBURGER_TOR, 90, [BAHNHOF, KIOSK]);
+
+    service.setTarget(KIOSK.id);
+
+    // Der Kiosk liegt noerdlich; wer nach Osten schaut, hat ihn nicht vorn -
+    // und darf die Hysterese des alten Ziels nicht erben.
+    expect(service.update(BRANDENBURGER_TOR, 90, [BAHNHOF, KIOSK]).tone?.chord).toBe(false);
   });
 });

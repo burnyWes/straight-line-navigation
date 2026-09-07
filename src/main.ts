@@ -10,7 +10,7 @@ import { NavigationService } from './application/navigationService.js';
 import { GuidanceService } from './application/guidanceService.js';
 import { LocationService, type MergeResult } from './application/locationService.js';
 import { GroupService, type GroupMergeResult } from './application/groupService.js';
-import { toNavigationSettings, type AppSettings } from './application/settings.js';
+import { coneFor, toNavigationSettings, type AppSettings } from './application/settings.js';
 import { isPositionStale } from './application/positionFreshness.js';
 import { systemClock, type CuePort, type PositionFix, type Unsubscribe } from './application/ports.js';
 import type { GuidanceTone } from './domain/guidance.js';
@@ -59,7 +59,9 @@ const groupService = new GroupService(groupRepository, newId);
 const navigationService = new NavigationService(toNavigationSettings(settings));
 // Ein Lauf, zwei Sichten: Der Kegel beantwortet "was ist da?", das Ziel "wo ist
 // **das**?" - beide aus denselben Messwerten (docs/design.md 4.7).
-const guidanceService = new GuidanceService();
+// Der Kegel entscheidet hier nicht ueber die Liste, sondern darueber, wann das
+// Ziel als "geradeaus" gilt und der Dreiklang steht (docs/design.md 4.7).
+const guidanceService = new GuidanceService(coneFor(settings.coneHalfAngleDeg));
 const qualityMonitor = new HeadingQualityMonitor(settings.coneHalfAngleDeg);
 const wakeLock = new ScreenWakeLock();
 
@@ -344,6 +346,8 @@ const settingsView = new SettingsView(settings, announcer, {
     // also muss auch ihr Zustand neu anlaufen.
     qualityMonitor.setConeHalfAngle(settings.coneHalfAngleDeg);
     qualityMonitor.reset();
+    // Und "geradeaus" auf der Zielseite meint denselben Kegel.
+    guidanceService.setCone(coneFor(settings.coneHalfAngleDeg));
     dirty = true;
   },
   onExportFile: () => {

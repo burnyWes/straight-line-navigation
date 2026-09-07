@@ -12,6 +12,7 @@
  */
 
 import { toRadians } from './angle.js';
+import { DEFAULT_VIEW_CONE, type ViewConeConfig } from './viewCone.js';
 
 /** A3 - genau hinter mir. */
 export const GUIDANCE_LOW_HZ = 220;
@@ -28,6 +29,15 @@ export const ARRIVAL_ENTER_METRES = 25;
 /** Erst ab hier wieder Ticken - die Hysterese gegen die GPS-Streuung. */
 export const ARRIVAL_EXIT_METRES = 35;
 
+/**
+ * Der Dreiklang ueber dem Zielton: Grundton, grosse Terz, Quinte.
+ *
+ * Reine Verhaeltnisse und nicht die temperierten Halbtoene: Der Grundton
+ * gleitet ohnehin stufenlos, eine Klaviatur gibt es hier nicht - und rein
+ * gestimmt stehen die Teiltoene still zueinander, statt zu schweben.
+ */
+export const GUIDANCE_CHORD_RATIOS: readonly number[] = [1, 5 / 4, 3 / 2];
+
 /** Laenge eines Schlages, wie beim Earcon (cues.ts NOTE_SECONDS). */
 export const GUIDANCE_TONE_SECONDS = 0.12;
 
@@ -40,6 +50,8 @@ export interface GuidanceTone {
   readonly rateHz: number;
   /** Angekommen: ein stehender Ton statt einzelner Schlaege. */
   readonly continuous: boolean;
+  /** Geradeaus: ein Dreiklang statt eines einzelnen Sinus. */
+  readonly chord: boolean;
 }
 
 /**
@@ -52,13 +64,24 @@ export interface GuidanceTone {
  * So aendern fuenf Grad Drehung den Ton ueberall um zwei Drittel eines
  * Halbtons.
  *
- * Bewusst **ohne** Markierung bei "geradeaus": Ein zweiter Kanal neben dem
- * stetigen Gleiten ist genau das, was diese App wiederholt entfernt hat
- * (docs/design.md 4.4, 6.5) - und er flackerte an seiner Grenze.
+ * Das Gleiten selbst kennt kein "geradeaus" - die Marke traegt der Dreiklang
+ * (guidanceChordHz, OnTargetState), und zwar als Klangfarbe **desselben** Tons,
+ * nicht als zweiter Kanal daneben (docs/design.md 4.7).
  */
 export function guidancePitchHz(offsetDeg: number): number {
   const magnitude = Math.min(180, Math.abs(offsetDeg));
   return GUIDANCE_LOW_HZ * 4 ** ((180 - magnitude) / 180);
+}
+
+/**
+ * Die Teiltoene des Dreiklangs ueber einem Grundton.
+ *
+ * Der Grundton bleibt der gleitende Zielton: Der Akkord sagt "geradeaus",
+ * ohne die Feinauskunft zu ueberdecken - innerhalb des Kegels laesst sich
+ * weiter nachjustieren, weil die Tonhoehe weiterlaeuft.
+ */
+export function guidanceChordHz(frequencyHz: number): readonly number[] {
+  return GUIDANCE_CHORD_RATIOS.map((ratio) => frequencyHz * ratio);
 }
 
 /**
@@ -136,5 +159,53 @@ export class ArrivalState {
       this.arrived = true;
     }
     return this.arrived;
+  }
+}
+
+/**
+ * "Geradeaus" mit Hysterese - dieselbe Frage wie beim Sichtkegel, deshalb
+ * dieselben Schwellen.
+ *
+ * Der Kegel entscheidet auf der Orientierungsseite, was "in Blickrichtung"
+ * heisst; hier entscheidet er, wann der Dreiklang steht. Zwei Antworten auf
+ * dieselbe Frage waeren eine zu viel - wer den Kegel auf 45 Grad stellt, meint
+ * das auch hier.
+ *
+ * Nicht die ViewCone selbst: Die verwaltet eine Menge von Kennungen und
+ * liefert Ein- und Austritte fuer eine Liste. Hier gibt es genau ein Ziel und
+ * genau einen Winkel - wie bei ArrivalState sind das sechs Zeilen Hysterese,
+ * keine geteilte Mechanik.
+ */
+export class OnTargetState {
+  private onTarget = false;
+
+  constructor(private config: ViewConeConfig = DEFAULT_VIEW_CONE) {}
+
+  /** Der Kegel ist einstellbar; die Schwellen wandern mit ihm. */
+  setConfig(config: ViewConeConfig): void {
+    this.config = config;
+  }
+
+  /** Vergisst den Zustand - etwa beim Zielwechsel oder Neustart des Laufs. */
+  reset(): void {
+    this.onTarget = false;
+  }
+
+  get isOnTarget(): boolean {
+    return this.onTarget;
+  }
+
+  /**
+   * Die Abweichung ist vorzeichenbehaftet; fuer "geradeaus" zaehlt nur ihr
+   * Betrag. Die Grenzen sind einschliessend, wie beim Kegel: 20 schaltet ein,
+   * 25 haelt noch.
+   */
+  update(offsetDeg: number): boolean {
+    const magnitude = Math.abs(offsetDeg);
+    const threshold = this.onTarget
+      ? this.config.exitHalfAngleDeg
+      : this.config.enterHalfAngleDeg;
+    this.onTarget = magnitude <= threshold;
+    return this.onTarget;
   }
 }

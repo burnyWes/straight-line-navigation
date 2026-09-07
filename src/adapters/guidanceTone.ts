@@ -6,12 +6,22 @@
  * ab der Ankunftsschwelle. Der Uebergang ist die eigentliche Ankunftsmeldung
  * und muss hoerbar sein, deshalb faellt dabei die Pause weg.
  *
+ * Quer dazu der **Dreiklang**, solange das Ziel geradeaus liegt: Terz und
+ * Quinte schwellen ueber demselben Grundton auf und wieder ab. Kein zweiter
+ * Ton neben dem ersten, sondern eine andere Klangfarbe desselben - deshalb
+ * gilt er im Ticken wie im Dauerton.
+ *
  * Wie der Earcon bei Lautlos stumm (M2, docs/design.md 11). Die Peilzeile
  * traegt die Auskunft dann weiterhin.
  */
 
 import type { GuidancePort } from '../application/ports.js';
-import { guidanceToneSeconds, type GuidanceTone } from '../domain/guidance.js';
+import {
+  GUIDANCE_CHORD_RATIOS,
+  guidanceChordHz,
+  guidanceToneSeconds,
+  type GuidanceTone,
+} from '../domain/guidance.js';
 import { sharedAudioContext } from './audioContext.js';
 
 /**
@@ -38,10 +48,48 @@ const GLIDE_SECONDS = 0.05;
 /** Ausklingen beim Verstummen: kurz genug, um als "sofort" zu gelten. */
 const RELEASE_SECONDS = 0.05;
 
-interface SteadyTone {
+/**
+ * Lautstaerke von Terz und Quinte, gemessen am Grundton.
+ *
+ * Deutlich leiser als er: Der Akkord soll die Klangfarbe faerben, nicht die
+ * Tonhoehe verdecken - innerhalb des Kegels wird weiter nachjustiert, und dazu
+ * muss der Grundton der hoerbar fuehrende bleiben. Der Summenpegel bleibt so
+ * bei 0,38 und damit unter der Uebersteuerung.
+ */
+const CHORD_PARTIAL_GAIN = 0.45;
+
+/**
+ * Ein Teilton des Dreiklangs mit eigenem Regler.
+ *
+ * Eigener Regler je Teilton, damit der Akkord auf- und abschwellen kann, ohne
+ * den Grundton anzufassen: Ein neu gestarteter Oszillator an der Kegelgrenze
+ * waere genau das Knacken, gegen das die Hysterese gebaut ist.
+ */
+interface Partial {
   readonly oscillator: OscillatorNode;
   readonly gain: GainNode;
+  /** Sein Verhaeltnis zum Grundton - daraus gleitet seine Hoehe mit. */
+  readonly ratio: number;
+}
+
+interface SteadyTone {
+  readonly partials: readonly Partial[];
+  /** Gemeinsame Huellkurve ueber allen Teiltoenen. */
+  readonly gain: GainNode;
   readonly panner: StereoPannerNode | null;
+}
+
+/**
+ * Der Grundton traegt immer, die Teiltoene nur bei "geradeaus".
+ *
+ * Sie werden nicht abgeschaltet, sondern auf null gefahren: Der Weg zurueck
+ * ist derselbe Regler, und ein stehender Oszillator bei null kostet nichts.
+ */
+function partialGain(index: number, chord: boolean): number {
+  if (index === 0) {
+    return 1;
+  }
+  return chord ? CHORD_PARTIAL_GAIN : 0;
 }
 
 export class WebAudioGuidance implements GuidancePort {
@@ -112,19 +160,34 @@ export class WebAudioGuidance implements GuidancePort {
     const seconds = guidanceToneSeconds(tone.rateHz);
     const at = context.currentTime;
 
-    const oscillator = context.createOscillator();
-    oscillator.type = 'sine';
-    oscillator.frequency.value = tone.frequencyHz;
-
+    // Ein Regler und ein Panorama fuer den ganzen Schlag: Terz und Quinte
+    // gehoeren zum selben Ton und muessen aus derselben Richtung kommen.
     const gain = context.createGain();
     gain.gain.setValueAtTime(0, at);
     gain.gain.linearRampToValueAtTime(PEAK_GAIN, at + ATTACK_SECONDS);
     gain.gain.linearRampToValueAtTime(0, at + seconds);
-
-    oscillator.connect(gain);
     connect(context, gain, tone.pan);
-    oscillator.start(at);
-    oscillator.stop(at + seconds);
+
+    // Beim Schlag kostet das Ab- und Aufschwellen nichts: Jeder Schlag baut
+    // seine Toene ohnehin neu auf, also entstehen die stummen gar nicht erst.
+    guidanceChordHz(tone.frequencyHz).forEach((frequency, index) => {
+      const level = partialGain(index, tone.chord);
+      if (level === 0) {
+        return;
+      }
+
+      const oscillator = context.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+
+      const partial = context.createGain();
+      partial.gain.value = level;
+
+      oscillator.connect(partial);
+      partial.connect(gain);
+      oscillator.start(at);
+      oscillator.stop(at + seconds);
+    });
   }
 
   private stopTicking(): void {
@@ -137,11 +200,13 @@ export class WebAudioGuidance implements GuidancePort {
   // --- Dauerton -------------------------------------------------------------
 
   /**
-   * Ein stehender Oszillator, dessen Hoehe und Panorama gleiten.
+   * Stehende Oszillatoren, deren Hoehe, Panorama und Akkord gleiten.
    *
    * Nicht bei jedem Bild neu aufgesetzt: Ein neuer Oszillator im Sekundentakt
    * knackte an jeder Naht und waere genau das Flackern, gegen das die
-   * Ankunfts-Hysterese gebaut ist.
+   * Ankunfts-Hysterese gebaut ist. Aus demselben Grund laufen Terz und Quinte
+   * **immer** mit und stehen ausserhalb des Kegels nur auf null: Sie an der
+   * Kegelgrenze zu starten hiesse, das Knacken an eine zweite Stelle zu holen.
    */
   private startOrGlideSteady(tone: GuidanceTone): void {
     const context = sharedAudioContext();
@@ -150,28 +215,42 @@ export class WebAudioGuidance implements GuidancePort {
     }
 
     const at = context.currentTime;
-    let steady = this.steady;
+    const steady = this.steady ?? this.startSteady(context, tone);
 
-    if (steady === null) {
+    steady.partials.forEach((partial, index) => {
+      const frequency = tone.frequencyHz * partial.ratio;
+      partial.oscillator.frequency.setTargetAtTime(frequency, at, GLIDE_SECONDS);
+      partial.gain.gain.setTargetAtTime(partialGain(index, tone.chord), at, GLIDE_SECONDS);
+    });
+    steady.panner?.pan.setTargetAtTime(tone.pan, at, GLIDE_SECONDS);
+  }
+
+  /** Setzt den stehenden Ton auf; das Gleiten macht der Aufrufer. */
+  private startSteady(context: AudioContext, tone: GuidanceTone): SteadyTone {
+    const at = context.currentTime;
+
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(PEAK_GAIN, at + ATTACK_SECONDS);
+    const panner = connect(context, gain, tone.pan);
+
+    const partials = GUIDANCE_CHORD_RATIOS.map((ratio, index) => {
       const oscillator = context.createOscillator();
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(tone.frequencyHz, at);
+      oscillator.frequency.setValueAtTime(tone.frequencyHz * ratio, at);
 
-      const gain = context.createGain();
-      gain.gain.setValueAtTime(0, at);
-      gain.gain.linearRampToValueAtTime(PEAK_GAIN, at + ATTACK_SECONDS);
+      const partial = context.createGain();
+      partial.gain.setValueAtTime(partialGain(index, tone.chord), at);
 
-      oscillator.connect(gain);
-      const panner = connect(context, gain, tone.pan);
+      oscillator.connect(partial);
+      partial.connect(gain);
       oscillator.start(at);
+      return { oscillator, gain: partial, ratio };
+    });
 
-      steady = { oscillator, gain, panner };
-      this.steady = steady;
-      return;
-    }
-
-    steady.oscillator.frequency.setTargetAtTime(tone.frequencyHz, at, GLIDE_SECONDS);
-    steady.panner?.pan.setTargetAtTime(tone.pan, at, GLIDE_SECONDS);
+    const steady: SteadyTone = { partials, gain, panner };
+    this.steady = steady;
+    return steady;
   }
 
   private stopSteady(): void {
@@ -191,7 +270,9 @@ export class WebAudioGuidance implements GuidancePort {
     steady.gain.gain.cancelScheduledValues(at);
     steady.gain.gain.setValueAtTime(steady.gain.gain.value, at);
     steady.gain.gain.linearRampToValueAtTime(0, at + RELEASE_SECONDS);
-    steady.oscillator.stop(at + RELEASE_SECONDS);
+    for (const partial of steady.partials) {
+      partial.oscillator.stop(at + RELEASE_SECONDS);
+    }
   }
 }
 

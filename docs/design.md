@@ -401,6 +401,10 @@ man sie anfasst. Man dreht sich, bis er am höchsten klingt.
   Höhe(x)   = 220 * 4^((180-|x|)/180)           eine Oktave je 90 Grad
   Panorama  = sin(x)                            x vorzeichenbehaftet, + = rechts
 
+  Akkord       innerhalb des Kegels: Grundton + große Terz (5/4) + Quinte (3/2)
+               außerhalb:            Grundton allein
+               Schwellen wie der Kegel — Standard 20° hinein, 25° hinaus
+
   Entfernung   <=25 m   50 m   100 m   200 m   400 m   800 m   >=1750 m
   Töne/Sek.    Dauer-   4,00    2,67    1,78    1,19    0,79      0,50
                ton
@@ -409,11 +413,42 @@ man sie anfasst. Man dreht sich, bis er am höchsten klingt.
   Tonlänge:   min(0,12 s, halbe Periode)
 ```
 
-**Die Tonhöhe gleitet stetig, exponentiell, ohne Zielmarkierung.** Das Gehör hört Tonhöhe
-logarithmisch; linear in Hertz läge „neben mir" schon fast bei „vor mir". Exponentiell
-treffen A3 / A4 / A5 die drei Anker exakt, und 5° Drehung ändern den Ton überall um zwei
-Drittel eines Halbtons. Eine zusätzliche Markierung bei „geradeaus" wäre der Zusatzkanal,
-den diese App wiederholt entfernt hat (§4.4, §6.5) — und sie flackerte an ihrer Grenze.
+**Die Tonhöhe gleitet stetig und exponentiell.** Das Gehör hört Tonhöhe logarithmisch;
+linear in Hertz läge „neben mir" schon fast bei „vor mir". Exponentiell treffen
+A3 / A4 / A5 die drei Anker exakt, und 5° Drehung ändern den Ton überall um zwei Drittel
+eines Halbtons.
+
+**Liegt das Ziel geradeaus, wird aus dem Ton ein Dur-Dreiklang.** Das Gleiten allein
+beantwortet „wärmer oder kälter", aber nicht „jetzt", und beim Gehen ist genau das die
+Frage: Ein Ton, den man nur im Vergleich zu sich selbst lesen kann, verlangt, dass man
+sich zum Ablesen dreht. *(Diese Stelle stand hier zuvor umgekehrt — eine Markierung bei
+„geradeaus" galt als der Zusatzkanal, den diese App wiederholt entfernt hat, §4.4, §6.5.
+Der Einwand ist auf zwei Wegen ausgeräumt, und beide waren die Bedingung dafür:)*
+
+- **Es ist kein zweiter Kanal, sondern eine Klangfarbe des ersten.** Terz und Quinte
+  stehen über **demselben** Grundton und gleiten mit ihm; sie sind deutlich leiser als er.
+  Innerhalb des Kegels lässt sich weiter nachjustieren — die Tonhöhe läuft ja weiter —,
+  und der Akkord gilt im Ticken wie im Dauerton. Was hinzukommt, ist eine Aussage, kein
+  Gerät: „jetzt stimmt die Richtung".
+- **Er flackert nicht, weil er die Hysterese des Kegels erbt.** Genau das war der zweite
+  Einwand, und es ist dieselbe Antwort wie in §4.1: hinein bei 20°, hinaus erst bei 25°.
+
+**„Geradeaus" heißt hier dasselbe wie „in Blickrichtung" auf der Orientierungsseite** — es
+ist der eingestellte Sichtkegel, mit seiner Hysterese, und er wächst mit der Einstellung
+mit (10° bis 60°, §4.1). Eine zweite, eigene Schwelle wäre eine zweite Antwort auf
+dieselbe Frage: Wer den Kegel weit stellt, meint das auf beiden Seiten. Wechselt die
+Einstellung mitten im Lauf, wird der gemerkte Zustand vergessen — sonst hielte die
+Hysterese des alten Kegels noch (wie beim Gütemonitor, §4.5).
+
+**Rein gestimmt (5/4 und 3/2), nicht temperiert.** Der Grundton gleitet ohnehin stufenlos,
+eine Klaviatur gibt es hier nicht — und rein gestimmt stehen die Teiltöne still zueinander,
+statt zu schweben. Ein Schweben wäre eine Bewegung, die nichts bedeutet.
+
+**Der Dreiklang bekommt keinen eigenen Schalter und keine Ansage.** Er hängt am
+Tonschalter, weil er derselbe Ton ist; und was er sagt, sagt die Peilzeile bereits in
+Worten („geradeaus"). Zwei Kanäle für dieselbe Nachricht sind das Muster, das §6.5 beim
+Ausblenden vermieden hat — hier ist der eine für die Hände am Gehen, der andere für den
+Finger auf der Zeile.
 
 **Das Panorama folgt dem Sinus der Abweichung, ohne Einstellung.** Rein additiv: Wer über
 den Gerätelautsprecher hört, bekommt Mono und fällt auf das Drehen zurück — es geht nichts
@@ -437,7 +472,8 @@ langsam. Daraus folgen zwei Dinge, die ohne sie zu Fehlern würden:
 Pause fällt weg —, und genau deshalb darf er nicht flackern.
 
 **Der Ton schweigt** bei veraltetem Standort, ohne gewähltes Ziel, außerhalb der
-Betriebsart „Ziel", bei stehendem Lauf und bei ausgeschaltetem Tonschalter. **Die
+Betriebsart „Ziel", bei stehendem Lauf und bei ausgeschaltetem Tonschalter — der
+Dreiklang mit ihm, er ist derselbe Ton. **Die
 Kompassgüte stoppt ihn nicht:** Der Ton ist keine stehende Anzeige, sondern eine
 fortlaufende Behauptung — aus einem alten Fix klänge er exakt so souverän wie aus einem
 gültigen (§4.6), während „ungenau" immer noch die beste verfügbare Angabe ist. Ein Ton,
@@ -999,3 +1035,4 @@ das steht in keinem Verhältnis.
 | 44 | Der Tonschalter überlebt den Neustart, der Anhalten-Knopf nicht | Ein hängender Freeze war **stumm** und hat einen ganzen Lauf gefressen (§4.3); ein hängender Tonschalter ist das Gegenteil von stumm und fällt sofort auf. Sein Knopf steht dort, wo er klingt — deshalb auch kein Eintrag in den Einstellungen (§4.7) |
 | 45 | Die Peilzeile läuft unter dem Finger weiter, entgegen der Fokusregel aus §4.3 | Nutzerentscheidung nach dem Praxistest. Die Regel schützt das Erswipen **vieler** Zeilen; hier gibt es genau eine, und der Finger liegt auf ihr, um die Richtung beim Drehen mitlaufen zu hören. Eine eingefrorene Peilung wäre dort keine Auskunft, sondern eine Behauptung von vorhin (§4.7) |
 | 46 | Keine Absenkung des Zieltons, während VoiceOver spricht | M5 gemessen: iOS legt beides nebeneinander, und der Nutzer nimmt es so an. Ducking wäre eine Zustandsmaschine über zwei Kanäle, von denen einer sich nicht abfragen lässt — und sie ließe den Ton verstummen, wenn ohnehin geredet wird (§4.7, §11) |
+| 47 | Dur-Dreiklang über dem Zielton, solange das Ziel im Sichtkegel liegt — Nicht-Ziel „Markierung bei geradeaus" aufgehoben | Nutzerforderung. Der ursprüngliche Einwand hatte zwei Teile, und beide sind ausgeräumt: Der Akkord ist **kein zweiter Kanal**, sondern eine Klangfarbe desselben gleitenden Tons (Terz und Quinte über demselben Grundton, leiser, mitgleitend — die Feinauskunft bleibt), und er flackert nicht, weil er die Hysterese des Kegels erbt. Die Schwelle ist der eingestellte Kegel selbst: „geradeaus" heißt auf beiden Seiten dasselbe (§4.1, §4.7) |

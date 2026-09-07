@@ -3,11 +3,14 @@ import {
   ArrivalState,
   GUIDANCE_FAST_HZ,
   GUIDANCE_SLOW_HZ,
+  OnTargetState,
+  guidanceChordHz,
   guidancePan,
   guidancePitchHz,
   guidanceRateHz,
   guidanceToneSeconds,
 } from './guidance.js';
+import { viewConeConfig } from './viewCone.js';
 
 describe('guidancePitchHz', () => {
   it('trifft die drei Anker exakt', () => {
@@ -121,5 +124,86 @@ describe('ArrivalState', () => {
     arrival.reset();
     expect(arrival.isArrived).toBe(false);
     expect(arrival.update(30)).toBe(false);
+  });
+});
+
+describe('guidanceChordHz', () => {
+  it('setzt Terz und Quinte rein ueber den Grundton', () => {
+    // A5 mit Cis6 und E6 - reine Verhaeltnisse, nicht temperiert.
+    const [root, third, fifth] = guidanceChordHz(880);
+
+    expect(root).toBeCloseTo(880, 6);
+    expect(third).toBeCloseTo(1100, 6);
+    expect(fifth).toBeCloseTo(1320, 6);
+  });
+
+  it('gleitet mit dem Grundton mit', () => {
+    // Innerhalb des Kegels laesst sich weiter nachjustieren: Der Akkord
+    // wandert mit der Tonhoehe, statt sie zu ersetzen.
+    const lower = guidanceChordHz(guidancePitchHz(15));
+    const straight = guidanceChordHz(guidancePitchHz(0));
+
+    lower.forEach((frequency, index) => {
+      expect(frequency).toBeLessThan(straight[index] ?? 0);
+    });
+  });
+});
+
+describe('OnTargetState', () => {
+  let onTarget: OnTargetState;
+
+  beforeEach(() => {
+    onTarget = new OnTargetState(viewConeConfig(20, 25));
+  });
+
+  it('schaltet bei genau 20 Grad ein', () => {
+    expect(onTarget.update(21)).toBe(false);
+    expect(onTarget.update(20)).toBe(true);
+  });
+
+  it('zaehlt nur den Betrag der Abweichung', () => {
+    // Die Seite traegt das Panorama; "geradeaus" ist links wie rechts dasselbe.
+    expect(onTarget.update(-20)).toBe(true);
+  });
+
+  it('bleibt zwischen den Schwellen eingeschaltet', () => {
+    onTarget.update(0);
+    // Ohne Hysterese flackerte der Akkord im Takt des Handzitterns.
+    expect(onTarget.update(23)).toBe(true);
+    expect(onTarget.update(25)).toBe(true);
+  });
+
+  it('schaltet erst jenseits des Austrittswinkels aus', () => {
+    onTarget.update(0);
+    expect(onTarget.update(26)).toBe(false);
+  });
+
+  it('bleibt unter 25 Grad aus, solange nie eingetreten wurde', () => {
+    expect(onTarget.update(24)).toBe(false);
+    expect(onTarget.update(21)).toBe(false);
+  });
+
+  it('waechst mit dem eingestellten Kegel mit', () => {
+    onTarget.setConfig(viewConeConfig(45));
+
+    expect(onTarget.update(40)).toBe(true);
+  });
+
+  it('verschiebt beim Wechsel des Kegels nur die Schwellen', () => {
+    onTarget.update(0);
+    onTarget.setConfig(viewConeConfig(10));
+
+    // Wie ViewCone.setConfig: Der Zustand wird hier nicht angefasst - das
+    // Vergessen gehoert dem, der die Einstellung aendert (GuidanceService).
+    expect(onTarget.isOnTarget).toBe(true);
+    expect(onTarget.update(16)).toBe(false);
+  });
+
+  it('vergisst den Zustand bei reset()', () => {
+    onTarget.update(0);
+    onTarget.reset();
+
+    expect(onTarget.isOnTarget).toBe(false);
+    expect(onTarget.update(23)).toBe(false);
   });
 });

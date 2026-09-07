@@ -11,11 +11,13 @@ import type { Coordinate } from '../domain/coordinate.js';
 import type { Location } from '../domain/location.js';
 import {
   ArrivalState,
+  OnTargetState,
   guidancePan,
   guidancePitchHz,
   guidanceRateHz,
   type GuidanceTone,
 } from '../domain/guidance.js';
+import { DEFAULT_VIEW_CONE, type ViewConeConfig } from '../domain/viewCone.js';
 import { measureLocation, type NavigationEntry } from './navigationService.js';
 
 export interface GuidanceSnapshot {
@@ -48,6 +50,28 @@ export class GuidanceService {
   private lastTarget: Location | null = null;
   /** Die Ankunft braucht Gedaechtnis - sonst kippt der Ton im Takt des GPS. */
   private readonly arrival = new ArrivalState();
+  /**
+   * "Geradeaus" braucht Gedaechtnis aus demselben Grund - hier ist es das
+   * Handzittern statt der GPS-Streuung.
+   */
+  private readonly onTarget: OnTargetState;
+
+  constructor(cone: ViewConeConfig = DEFAULT_VIEW_CONE) {
+    this.onTarget = new OnTargetState(cone);
+  }
+
+  /**
+   * Der Kegel aus den Einstellungen, wie ihn der NavigationService bekommt.
+   *
+   * Er entscheidet hier nicht, was in der Liste steht, sondern wann der
+   * Dreiklang klingt - dieselbe Frage, dieselbe Antwort (docs/design.md 4.7).
+   */
+  setCone(cone: ViewConeConfig): void {
+    this.onTarget.setConfig(cone);
+    // Wie beim Guetemonitor: Die Schwelle hat sich verschoben, also darf der
+    // gemerkte Zustand nicht aus der alten stammen.
+    this.onTarget.reset();
+  }
 
   get selectedId(): string | null {
     return this.targetId;
@@ -95,6 +119,10 @@ export class GuidanceService {
       pan: guidancePan(entry.offsetDeg),
       rateHz,
       continuous: this.arrival.update(entry.distanceMetres),
+      // Die exakte Abweichung, nicht die auf fuenf Grad gerundete der
+      // Peilzeile: Die Rundung ist gegen flackernde Beschriftungen gebaut, die
+      // Hysterese haelt den Akkord ohnehin ruhig.
+      chord: this.onTarget.update(entry.offsetDeg),
     };
 
     return { target, entry, tone };
@@ -113,8 +141,9 @@ export class GuidanceService {
   private forget(): void {
     this.lastEntry = null;
     this.lastTarget = null;
-    // Die Ankunft gehoert zum Ziel: Beim Wechsel waere sie eine Aussage ueber
-    // einen Ort, zu dem noch nie gemessen wurde.
+    // Ankunft und "geradeaus" gehoeren zum Ziel: Beim Wechsel waeren sie eine
+    // Aussage ueber einen Ort, zu dem noch nie gemessen wurde.
     this.arrival.reset();
+    this.onTarget.reset();
   }
 }

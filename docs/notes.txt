@@ -220,6 +220,15 @@ x  Navigationsseite erweitern (design.md 4.7, Entscheidungen 38-45)
     Ueberschrift, Zielrad mit ausgeblendeten Orten, gespeicherte Zielwahl ueber
     den Neustart, schweigender Kegel in "Ziel", Tonhoehe und Takt, Verstummen
     bei veraltetem Standort - alles abgenommen
+x  Akkord bei "geradeaus": Liegt das Ziel im Sichtkegel, wird aus dem Zielton ein
+   Dur-Dreiklang - Terz (5/4) und Quinte (3/2) leiser ueber demselben Grundton,
+   mitgleitend, im Ticken wie im Dauerton. Schwelle und Hysterese sind der
+   eingestellte Kegel selbst (Standard 20 rein / 25 raus), er wird beim
+   Umstellen der Einstellung vergessen. Kein eigener Schalter und keine
+   Ansage: derselbe Ton, derselbe Lautsprecher-Knopf. Damit ist das
+   Nicht-Ziel "Markierung bei geradeaus" aus design.md 4.7 aufgehoben - der
+   Einwand war "zweiter Kanal" und "flackert an der Grenze", und beides ist
+   ausgeraeumt (design.md 4.7, Entscheidung 47)
 x  M4 Panorama unter VoiceOver                              -> Stereo kommt durch
 x  M5 Ton waehrend der VoiceOver-Ansage                     -> man hoert beides,
    iOS daempft nichts; akzeptiert, kein Ducking (design.md 11, Entscheidung 46)
@@ -227,4 +236,9 @@ x  M5 Ton waehrend der VoiceOver-Ansage                     -> man hoert beides,
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
+-  Praxistest am Geraet: Ist der Dreiklang beim Gehen als "jetzt stimmt es" zu
+   hoeren, ohne die Feinauskunft der Tonhoehe zu verdecken? Sind Terz und Quinte
+   auf 0,45 des Grundtons richtig gepegelt - oder zu leise ueber den
+   Geraetelautsprecher, zu aufdringlich ueber Kopfhoerer? Und passt der Kegel als
+   Schwelle, oder ist er beim Gehen zu weit fuer "geradeaus"?
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
