@@ -418,8 +418,9 @@ den diese App wiederholt entfernt hat (§4.4, §6.5) — und sie flackerte an ih
 **Das Panorama folgt dem Sinus der Abweichung, ohne Einstellung.** Rein additiv: Wer über
 den Gerätelautsprecher hört, bekommt Mono und fällt auf das Drehen zurück — es geht nichts
 verloren, es kommt nur nichts dazu. Ein Schalter für etwas, das nie stört, wäre eine
-Station zu viel (§6). Ob iOS unter VoiceOver überhaupt Panorama durchreicht, ist offen
-(**M4**, §11).
+Station zu viel (§6). Dass iOS das Panorama unter VoiceOver durchreicht, ist **gemessen**
+(M4, §11) — über den Gerätelautsprecher kommt es trotzdem als Mono an, und genau dafür ist
+es additiv gedacht.
 
 **Der Takt ist logarithmisch, jede Verdopplung der Entfernung nimmt ein Drittel.** Zwischen
 50 m und 5 km liegen zwei Größenordnungen — linear wäre alles über 500 m ununterscheidbar
@@ -452,6 +453,11 @@ Er liest seinen neuen Namen selbst vor (§6.5).
 
 **Wie der Earcon ist auch dieser Ton bei Lautlos stumm** (M2, §11). Die Peilzeile trägt die
 Auskunft dann weiterhin.
+
+**Der Ton läuft weiter, während VoiceOver spricht** — iOS dämpft weder das eine noch das
+andere, man hört beides nebeneinander (M5, §11). Das bleibt so: Eine Absenkung während der
+Ansage wäre eine Zustandsmaschine über zwei Kanäle, deren einer sich nicht abfragen lässt,
+und der Ton schwiege ausgerechnet dann, wenn ohnehin geredet wird.
 
 **Das Kreisbild** zeigt den App-Pfeil fest nach oben, vier Marken und den Zielpunkt an der
 relativen Peilung, mit Name und Entfernung als Bildunterschrift darunter. Der Zielpunkt ist
@@ -916,9 +922,9 @@ Ein einziges Remote: **`github`** → `github.com/burnyWes/straight-line-navigat
 
 ---
 
-## 11. Offene Messfragen
+## 11. Messfragen
 
-Fünf Fragen, die durch Messen am Gerät zu beantworten sind, nicht durch Nachdenken. Die
+Fünf Fragen, die durch Messen am Gerät zu beantworten waren, nicht durch Nachdenken. Die
 Testseite liegt unter `spike/` und ist erreichbar unter
 `https://burnywes.github.io/straight-line-navigation/spike/`.
 
@@ -927,10 +933,11 @@ Testseite liegt unter `spike/` und ist erreichbar unter
 | **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei programmatischem `click()` die Taptic Engine aus? | **Nein** (2026-09-04) | Haptik ist auf diesem Weg nicht erreichbar. Ein-/Austritt wird ausschließlich über den Ton signalisiert. |
 | **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? | **Ja** (2026-09-04) | Vom Nutzer akzeptiert; das Verhalten bleibt so. Nach dem Wegfall der Ansage (§4.4) ist der Earcon der einzige Signalkanal — bei Lautlos gibt es kein Ein-/Austritts-Signal. |
 | **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | **teilweise** (2026-09-04): in Innenräumen zeigt die Nadel korrekt nach Norden; der Zahlenwert wurde nicht abgelesen | Entschärft — siehe §4.5. Die App meldet die Kompassgüte grundsätzlich, unabhängig davon, wie gut sie im Einzelfall ist. |
-| **M4** | Reicht iOS Web-Audio-Panorama unter VoiceOver durch, oder legt es auf Mono? | **offen** | Fällt es aus, klingt der Zielton in Mono. Rein additiv (§4.7): Man fällt auf das Drehen zurück, es geht nichts verloren. Der Kanal ist ein Port, die Logik bleibt unberührt. |
-| **M5** | Dämpft iOS den Zielton, während VoiceOver spricht — oder unterbricht er die Ansage? | **offen** | Läuft beides gleich laut nebeneinander, braucht der Ton eine Absenkung während der Ansage. Die Peilzeile ist die Rückfallebene, sie trägt dieselbe Auskunft in Worten. |
+| **M4** | Reicht iOS Web-Audio-Panorama unter VoiceOver durch, oder legt es auf Mono? | **Ja** (2026-09-07): Stereo kommt durch | Das Panorama trägt. Die Seite, auf der das Ziel liegt, ist damit auch ohne Drehen hörbar — sie bleibt trotzdem rein additiv (§4.7), weil über den Gerätelautsprecher weiterhin Mono ankommt. |
+| **M5** | Dämpft iOS den Zielton, während VoiceOver spricht — oder unterbricht er die Ansage? | **Weder noch** (2026-09-07): man hört beides nebeneinander | Vom Nutzer akzeptiert; es bleibt so. Eine Absenkung während der Ansage wird **nicht** gebaut: Sie wäre eine Zustandsmaschine über zwei Kanäle, deren einer (VoiceOver) sich nicht abfragen lässt — und der Ton schwiege dann ausgerechnet dann, wenn ohnehin geredet wird. |
 
-Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt** (2026-09-04).
+Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt** (2026-09-04). **Alle
+fünf Fragen sind beantwortet** (M4 und M5 am 2026-09-07); offen ist keine mehr.
 
 **Zur Haptik gibt es keinen weiteren Versuch.** Apple stellt die Taptic Engine dem Web
 nicht zur Verfügung: `navigator.vibrate` ist nicht implementiert, die Gamepad-Haptik
@@ -991,3 +998,4 @@ das steht in keinem Verhältnis.
 | 43 | Tonhöhe exponentiell über zwei Oktaven, Panorama nach dem Sinus, Takt logarithmisch mit Ankunfts-Hysterese | Das Gehör hört Tonhöhe logarithmisch, und zwischen 50 m und 5 km liegen zwei Größenordnungen — linear wäre in beiden Fällen die Hälfte der Spanne unbrauchbar. Die Hysterese verhindert, dass der Ton im Takt der GPS-Streuung zwischen Ticken und Dauerton kippt (§4.7) |
 | 44 | Der Tonschalter überlebt den Neustart, der Anhalten-Knopf nicht | Ein hängender Freeze war **stumm** und hat einen ganzen Lauf gefressen (§4.3); ein hängender Tonschalter ist das Gegenteil von stumm und fällt sofort auf. Sein Knopf steht dort, wo er klingt — deshalb auch kein Eintrag in den Einstellungen (§4.7) |
 | 45 | Die Peilzeile läuft unter dem Finger weiter, entgegen der Fokusregel aus §4.3 | Nutzerentscheidung nach dem Praxistest. Die Regel schützt das Erswipen **vieler** Zeilen; hier gibt es genau eine, und der Finger liegt auf ihr, um die Richtung beim Drehen mitlaufen zu hören. Eine eingefrorene Peilung wäre dort keine Auskunft, sondern eine Behauptung von vorhin (§4.7) |
+| 46 | Keine Absenkung des Zieltons, während VoiceOver spricht | M5 gemessen: iOS legt beides nebeneinander, und der Nutzer nimmt es so an. Ducking wäre eine Zustandsmaschine über zwei Kanäle, von denen einer sich nicht abfragen lässt — und sie ließe den Ton verstummen, wenn ohnehin geredet wird (§4.7, §11) |

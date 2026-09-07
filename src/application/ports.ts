@@ -85,10 +85,10 @@ export interface CuePort {
 /**
  * Der fortlaufende Zielton.
  *
- * Wie CuePort bewusst ein Port, und aus demselben Grund: Ob iOS unter
- * VoiceOver ueberhaupt Panorama durchreicht, ist offen (Messfrage M4 in
- * docs/design.md 11). Faellt es aus, klingt der Ton in Mono - ohne Aenderung
- * an der Stelle, die entscheidet, welcher Ton ueberhaupt gilt.
+ * Wie CuePort bewusst ein Port, und aus demselben Grund: Der Ton kann in Mono
+ * ankommen, ohne dass sich an der Stelle etwas aendert, die entscheidet, welcher
+ * Ton ueberhaupt gilt. Ueber Kopfhoerer traegt das Panorama - gemessen unter
+ * VoiceOver (M4 in docs/design.md 11) -, ueber den Geraetelautsprecher nicht.
  *
  * `play` wird in jedem Bild gerufen und muss deshalb **idempotent** sein: Es
  * meldet den gewuenschten Zustand, es startet nicht neu.

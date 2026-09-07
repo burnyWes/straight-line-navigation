@@ -220,12 +220,11 @@ x  Navigationsseite erweitern (design.md 4.7, Entscheidungen 38-45)
     Ueberschrift, Zielrad mit ausgeblendeten Orten, gespeicherte Zielwahl ueber
     den Neustart, schweigender Kegel in "Ziel", Tonhoehe und Takt, Verstummen
     bei veraltetem Standort - alles abgenommen
+x  M4 Panorama unter VoiceOver                              -> Stereo kommt durch
+x  M5 Ton waehrend der VoiceOver-Ansage                     -> man hoert beides,
+   iOS daempft nichts; akzeptiert, kein Ducking (design.md 11, Entscheidung 46)
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
--  M4 Praxistest: Liegt das Ziel rechts, kommt der Ton hoerbar von rechts -
-   oder legt iOS unter VoiceOver auf Mono? (design.md 11)
--  M5 Praxistest: Spricht VoiceOver, waehrend der Ton laeuft - daempft iOS ihn,
-   unterbricht er die Ansage, oder liegen beide nebeneinander? (design.md 11)
