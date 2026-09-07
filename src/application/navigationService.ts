@@ -130,7 +130,7 @@ export class NavigationService {
     }
 
     const measured = locations
-      .map((location) => this.measure(position, headingDeg, location))
+      .map((location) => measureLocation(position, headingDeg, location))
       .filter((entry) => this.withinRange(entry.distanceMetres));
 
     const byId = new Map(measured.map((entry) => [entry.location.id, entry]));
@@ -188,22 +188,6 @@ export class NavigationService {
     };
   }
 
-  private measure(
-    position: Coordinate,
-    headingDeg: number,
-    location: Location,
-  ): NavigationEntry {
-    const distanceMetres = greatCircleDistance(position, location.coordinate);
-    const bearingDeg = initialBearing(position, location.coordinate);
-    return {
-      location,
-      distanceMetres,
-      displayDistanceMetres: roundDisplayDistanceMetres(distanceMetres),
-      bearingDeg,
-      offsetDeg: signedAngularDifference(headingDeg, bearingDeg),
-    };
-  }
-
   private withinRange(distanceMetres: number): boolean {
     const max = this.settings.maxDistanceMetres;
     return max === null || distanceMetres <= max;
@@ -214,6 +198,29 @@ export class NavigationService {
       .map((id) => this.known.get(id))
       .filter((location): location is Location => location !== undefined);
   }
+}
+
+/**
+ * Entfernung, Peilung und Abweichung zu einem Ort.
+ *
+ * Frei und exportiert, nicht privat: Der Zielmodus braucht dieselbe Messung
+ * fuer genau einen Ort und soll die Peilung nicht ein zweites Mal rechnen
+ * (docs/design.md 4.7).
+ */
+export function measureLocation(
+  position: Coordinate,
+  headingDeg: number,
+  location: Location,
+): NavigationEntry {
+  const distanceMetres = greatCircleDistance(position, location.coordinate);
+  const bearingDeg = initialBearing(position, location.coordinate);
+  return {
+    location,
+    distanceMetres,
+    displayDistanceMetres: roundDisplayDistanceMetres(distanceMetres),
+    bearingDeg,
+    offsetDeg: signedAngularDifference(headingDeg, bearingDeg),
+  };
 }
 
 /** Weitestes Ziel zuerst; bei gleicher Entfernung alphabetisch, damit die Reihenfolge stabil ist. */

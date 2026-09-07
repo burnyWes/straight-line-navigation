@@ -7,11 +7,13 @@
 import './ui/styles.css';
 
 import { NavigationService } from './application/navigationService.js';
+import { GuidanceService } from './application/guidanceService.js';
 import { LocationService, type MergeResult } from './application/locationService.js';
 import { GroupService, type GroupMergeResult } from './application/groupService.js';
 import { toNavigationSettings, type AppSettings } from './application/settings.js';
 import { isPositionStale } from './application/positionFreshness.js';
 import { systemClock, type CuePort, type PositionFix, type Unsubscribe } from './application/ports.js';
+import type { GuidanceTone } from './domain/guidance.js';
 import { HeadingQualityMonitor } from './domain/headingQuality.js';
 
 import { StoredLocationRepository } from './adapters/storedLocationRepository.js';
@@ -23,6 +25,7 @@ import {
   requestHeadingPermission,
 } from './adapters/deviceOrientationHeadingProvider.js';
 import { WebAudioCue, silentCue } from './adapters/cues.js';
+import { WebAudioGuidance } from './adapters/guidanceTone.js';
 import { ScreenWakeLock } from './adapters/wakeLock.js';
 import { deserializeBackup, serializeBackup } from './adapters/backupSerialization.js';
 import { newId } from './adapters/ids.js';
@@ -31,6 +34,7 @@ import { registerServiceWorker } from './adapters/serviceWorker.js';
 import { Announcer } from './ui/announcer.js';
 import { Tabs } from './ui/tabs.js';
 import { NavigationView } from './ui/navigationView.js';
+import { TargetView } from './ui/targetView.js';
 import { LocationsView } from './ui/locationsView.js';
 import { GroupsView } from './ui/groupsView.js';
 import { SettingsView } from './ui/settingsView.js';
@@ -53,13 +57,26 @@ let settings: AppSettings = loadSettings(store);
 const locationService = new LocationService(repository, systemClock, newId);
 const groupService = new GroupService(groupRepository, newId);
 const navigationService = new NavigationService(toNavigationSettings(settings));
+// Ein Lauf, zwei Sichten: Der Kegel beantwortet "was ist da?", das Ziel "wo ist
+// **das**?" - beide aus denselben Messwerten (docs/design.md 4.7).
+const guidanceService = new GuidanceService();
 const qualityMonitor = new HeadingQualityMonitor(settings.coneHalfAngleDeg);
 const wakeLock = new ScreenWakeLock();
 
 const announcer = new Announcer();
 const audioCue = new WebAudioCue();
+// Beide Kanaele teilen sich einen AudioContext (adapters/audioContext.ts).
+const guidanceAudio = new WebAudioGuidance();
 
 function cuePort(): CuePort {
+  // In "Ziel" schweigt der Kegel. Zwei gleichzeitige Tonkanaele - ein Zweiklang
+  // bei jedem Ein- und Austritt neben der Zielauskunft - machten die Seite
+  // unbrauchbar. Gerechnet wird er weiter (navigationService.update laeuft
+  // unveraendert), damit seine Hysterese beim Zurueckwechseln keinen Schwall
+  // von Eintritts-Toenen ausloest (docs/design.md 4.7).
+  if (navigationView.currentMode === 'target') {
+    return silentCue;
+  }
   return settings.cues.earcon ? audioCue : silentCue;
 }
 
@@ -80,7 +97,19 @@ registerServiceWorker(() => running);
 
 // --- Oberflaeche ------------------------------------------------------------
 
-const navigationView = new NavigationView(announcer, {
+const targetView = new TargetView({
+  onSelectTarget: (id) => {
+    chooseTarget(id);
+  },
+  onSwitchMode: () => {
+    navigationView.setMode('orientation');
+  },
+  onToggleTone: (on) => {
+    toggleGuidanceTone(on);
+  },
+});
+
+const navigationView = new NavigationView(announcer, targetView, {
   onStart: () => {
     void startNavigation();
   },
@@ -93,6 +122,14 @@ const navigationView = new NavigationView(announcer, {
     } else {
       navigationService.unfreeze();
     }
+    dirty = true;
+  },
+  onModeChange: () => {
+    // Der Signalkanal haengt an der Betriebsart (siehe cuePort). Der Ton
+    // verstummt sofort: Ohne das liefe er auf der Orientierungsseite weiter -
+    // derselbe Fehlermodus, den ein haengender Freeze schon einmal gekostet
+    // hat (docs/design.md 4.3).
+    guidanceAudio.silence();
     dirty = true;
   },
 });
@@ -157,7 +194,7 @@ const locationsView = new LocationsView(announcer, {
         // in membersOf() unschaedlich (docs/design.md 6.6).
         locationService.remove(id);
         groupService.removeLocationEverywhere(id);
-        locationsView.render(locationService.all());
+        renderLocations();
         renderGroups();
         dirty = true;
         // Die Ansage liegt in der Ansicht: Nur sie kennt die offenen Dialoge
@@ -271,7 +308,7 @@ const groupsView = new GroupsView(announcer, {
         // ein neu gebauter Knopf naehme ihn mit.
         groupsView.applyGroupHidden(group);
         // Das Orte-Panel ist verdeckt - vollstaendiges Rendern unkritisch.
-        locationsView.render(locationService.all());
+        renderLocations();
         // Der Kegel rechnet im naechsten Bild mit der geaenderten Liste. Ein-
         // und Austritts-Toene klingen wie beim einzelnen Ort.
         dirty = true;
@@ -283,7 +320,7 @@ const groupsView = new GroupsView(announcer, {
         // damit sie den tatsaechlichen Stand zeigen statt den beabsichtigten.
         groupsView.reportStorageError(message);
         renderGroups();
-        locationsView.render(locationService.all());
+        renderLocations();
         dirty = true;
       },
     );
@@ -359,7 +396,7 @@ const settingsView = new SettingsView(settings, announcer, {
         // aller Orte.
         const result = locationService.merge(parsed.locations);
         const groupResult = groupService.merge(parsed.groups, result.idMapping);
-        locationsView.render(locationService.all());
+        renderLocations();
         renderGroups();
         dirty = true;
         settingsView.report(importSummary(result, groupResult, parsed));
@@ -400,7 +437,12 @@ root.append(
   announcer.element,
 );
 
-locationsView.render(locationService.all());
+// Das gewaehlte Ziel ueberlebt den Kaltstart; die Betriebsart nicht - die App
+// startet immer in "Orientierung" (docs/design.md 4.7).
+guidanceService.setTarget(settings.targetId);
+targetView.setToneState(settings.guidanceTone);
+
+renderLocations();
 renderGroups();
 
 const skipped = repository.skippedOnLoad();
@@ -493,6 +535,8 @@ function stopNavigation(): void {
   latestFix = null;
   latestHeading = null;
   navigationService.reset();
+  guidanceService.reset();
+  guidanceAudio.silence();
   qualityMonitor.reset();
   navigationView.markStopped();
   announcer.announce('Navigation beendet.');
@@ -524,6 +568,7 @@ function renderNavigation(): void {
   const fix = latestFix;
   const heading = latestHeading;
   if (fix === null || heading === null) {
+    applyGuidanceTone(null);
     return;
   }
 
@@ -533,12 +578,24 @@ function renderNavigation(): void {
   // einem Standort nennt, an dem der Nutzer laengst nicht mehr steht.
   if (isPositionStale(fix, systemClock.now().getTime())) {
     navigationView.render(navigationService.holdStale());
+    // Auch die Peilzeile haelt ihren letzten Stand, statt nichts zu zeigen:
+    // Wo sie zuletzt stimmte, ist mehr wert als eine leere Zeile - dass sie
+    // nicht mehr stimmt, sagt die Statuszeile (docs/design.md 4.6).
+    targetView.render(guidanceService.holdStale());
+    // Der Ton ist keine stehende Anzeige, sondern eine fortlaufende Behauptung:
+    // Aus einem alten Fix klaenge er exakt so souveraen wie aus einem
+    // gueltigen. Das Verstummen selbst ist die Nachricht (docs/design.md 4.6).
+    applyGuidanceTone(null);
     return;
   }
 
   // visible(), nicht all(): Ausgeblendete Orte erreichen den Kegel gar nicht
   // erst (docs/design.md 6.5).
   const snapshot = navigationService.update(fix.coordinate, heading, locationService.visible());
+  // all(), nicht visible(): Ausblenden ist eine Regel ueber den Kegel, nicht
+  // ueber den Willen - das geparkte Auto soll tagsueber nicht toenen und ist
+  // abends trotzdem das Ziel (docs/design.md 6.5).
+  const guidance = guidanceService.update(fix.coordinate, heading, locationService.all());
 
   const cue = cuePort();
   for (const location of snapshot.entered) {
@@ -549,6 +606,56 @@ function renderNavigation(): void {
   }
 
   navigationView.render(snapshot);
+  targetView.render(guidance);
+  applyGuidanceTone(guidance.tone);
+}
+
+/**
+ * Schaltet den Zielton.
+ *
+ * Er klingt nur, wenn **alles** zutrifft: Der Lauf laeuft, die Betriebsart ist
+ * "Ziel", der Schalter steht an, ein Ziel ist gewaehlt und der Standort ist
+ * gueltig. Die Kompassguete stoppt ihn ausdruecklich **nicht** - "ungenau" ist
+ * immer noch die beste verfuegbare Angabe, und ein Ton, der bei jedem
+ * Kompasswackeln aussetzt, waere unbrauchbar (docs/design.md 4.7).
+ *
+ * Eine Stelle statt vieler: Jede Bedingung, die anderswo entschiede, waere ein
+ * Weg, auf dem der Ton weiterlaeuft, ohne dass ihn jemand gewollt hat.
+ */
+function applyGuidanceTone(tone: GuidanceTone | null): void {
+  const wanted =
+    running && navigationView.currentMode === 'target' && settings.guidanceTone && tone !== null;
+  if (wanted && tone !== null) {
+    guidanceAudio.play(tone);
+  } else {
+    guidanceAudio.silence();
+  }
+}
+
+/**
+ * Uebernimmt den Tonschalter.
+ *
+ * Anders als das Anhalten der Liste ueberlebt er den Neustart: Ein haengender
+ * Freeze war **stumm** und hat einen ganzen Lauf gefressen (docs/design.md
+ * 4.3), ein haengender Tonschalter ist das Gegenteil von stumm.
+ */
+function toggleGuidanceTone(on: boolean): void {
+  settings = { ...settings, guidanceTone: on };
+  guardStorage(
+    () => {
+      saveSettings(store, settings);
+    },
+    (message) => {
+      settingsView.report(message);
+    },
+  );
+  settingsView.setSettings(settings);
+  // Der Knopf liest seinen neuen Namen selbst vor - keine zusaetzliche Ansage.
+  targetView.setToneState(on);
+  if (!on) {
+    guidanceAudio.silence();
+  }
+  dirty = true;
 }
 
 // Nach dem Zurueckschalten in die App ist die Bildschirmsperre verloren.
@@ -581,7 +688,7 @@ function handleSave(save: () => ReturnType<LocationService['saveCurrentPosition'
       if (result.ok) {
         // Erst rendern, dann melden: reportSaved fokussiert den Eintrag, und
         // das Rendern ersetzt genau diesen Knopf.
-        locationsView.render(locationService.all());
+        renderLocations();
         dirty = true;
         locationsView.reportSaved(result.location);
       } else {
@@ -592,6 +699,42 @@ function handleSave(save: () => ReturnType<LocationService['saveCurrentPosition'
       locationsView.reportStorageError(message);
     },
   );
+}
+
+/**
+ * Zieht alles nach, was die Ortsliste zeigt.
+ *
+ * Beide Ansichten zusammen, weil sie dieselbe Liste zeigen: Das Zielrad wird
+ * sonst leer oder veraltet - navigationView.render() kehrt bei stehendem Lauf
+ * sofort zurueck und fuellt es nie.
+ */
+function renderLocations(): void {
+  const all = locationService.all();
+  locationsView.render(all);
+  targetView.renderTargets(all, guidanceService.selectedId);
+}
+
+/**
+ * Uebernimmt die Zielwahl.
+ *
+ * Das Ziel ist eine Absicht und muss den Kaltstart einer PWA ueberleben, also
+ * wird es geschrieben. settingsView.setSettings() zieht die Kopie im
+ * Einstellungs-Panel nach - ohne das ueberschriebe der naechste Kegelwinkel die
+ * Zielwahl mit einem veralteten Stand.
+ */
+function chooseTarget(id: string | null): void {
+  guidanceService.setTarget(id);
+  settings = { ...settings, targetId: id };
+  guardStorage(
+    () => {
+      saveSettings(store, settings);
+    },
+    (message) => {
+      settingsView.report(message);
+    },
+  );
+  settingsView.setSettings(settings);
+  dirty = true;
 }
 
 /**

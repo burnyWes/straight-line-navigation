@@ -42,6 +42,11 @@ export function loadSettings(store: KeyValueStore, key = SETTINGS_KEY): AppSetti
       earcon: boolean(cueRecord['earcon'], DEFAULT_SETTINGS.cues.earcon),
     },
     lastBackupAt: typeof record['lastBackupAt'] === 'string' ? record['lastBackupAt'] : null,
+    // Die Kennung wird bewusst **nicht** gegen die Orte geprueft: Das ist Sache
+    // der Anwendungsschicht, und ein Speicher, der die Orte kennt, waere ein
+    // Aggregat zu viel. Ein geloeschtes Ziel faellt dort still auf "kein Ziel".
+    targetId: typeof record['targetId'] === 'string' ? record['targetId'] : null,
+    guidanceTone: boolean(record['guidanceTone'], DEFAULT_SETTINGS.guidanceTone),
   };
 }
 

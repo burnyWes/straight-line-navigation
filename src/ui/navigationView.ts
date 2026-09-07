@@ -5,16 +5,39 @@
 import {
   el,
   setText,
+  setHidden,
   icon,
   setButtonLabel,
   ICON_PLAY,
   ICON_STOP,
   ICON_PAUSE,
+  ICON_TARGET,
 } from './dom.js';
 import { formatDistance, formatEntryLabel } from './format.js';
 import type { Announcer } from './announcer.js';
+import type { TargetView } from './targetView.js';
 import type { NavigationEntry, NavigationSnapshot } from '../application/navigationService.js';
 import type { HeadingQuality } from '../domain/headingQuality.js';
+
+/**
+ * Zwei Betriebsarten eines Bereichs.
+ *
+ * Der Tab heisst weiterhin "Navigation" - er ist die meistgehoerte Station und
+ * wird nicht angefasst. Haetten Tab und Betriebsart denselben Namen, waere mit
+ * VoiceOver nicht zu unterscheiden, was gemeint ist (docs/design.md 4.7).
+ */
+export type NavigationMode = 'orientation' | 'target';
+
+/**
+ * Die h2 traegt den Namen der Betriebsart, nicht den des Bereichs.
+ *
+ * Sie sagte bisher dasselbe wie der Tab darueber und war damit ein Wisch ohne
+ * Aussage; jetzt ist sie die Bestaetigung des Wechsels.
+ */
+const MODE_HEADING: Record<NavigationMode, string> = {
+  orientation: 'Orientierung',
+  target: 'Ziel',
+};
 
 const QUALITY_TEXT: Record<HeadingQuality, string> = {
   gut: 'Kompass in Ordnung',
@@ -23,9 +46,28 @@ const QUALITY_TEXT: Record<HeadingQuality, string> = {
   unbekannt: 'Kompassguete unbekannt',
 };
 
-const STALE_STATUS = 'Standort veraltet. Die Liste ist angehalten.';
-const STALE_ANNOUNCEMENT =
-  'Standort veraltet. Die Entfernungen stammen von der letzten Messung und die Liste steht still.';
+/**
+ * Was der veraltete Standort in der jeweiligen Betriebsart bedeutet.
+ *
+ * In "Orientierung" steht die Liste still, in "Ziel" schweigt der Ton - zwei
+ * Saetze, weil es zwei verschiedene Nachrichten sind (docs/design.md 4.6).
+ */
+const STALE_STATUS: Record<NavigationMode, string> = {
+  orientation: 'Standort veraltet. Die Liste ist angehalten.',
+  target: 'Standort veraltet. Der Ton schweigt.',
+};
+
+const STALE_ANNOUNCEMENT: Record<NavigationMode, string> = {
+  orientation:
+    'Standort veraltet. Die Entfernungen stammen von der letzten Messung und die Liste steht still.',
+  target:
+    'Standort veraltet. Die Entfernung stammt von der letzten Messung und der Ton schweigt.',
+};
+
+const FRESH_ANNOUNCEMENT: Record<NavigationMode, string> = {
+  orientation: 'Standort wieder da. Die Liste laeuft.',
+  target: 'Standort wieder da. Der Ton laeuft.',
+};
 
 /**
  * Was in der Statuszeile steht, in der Reihenfolge der Dringlichkeit.
@@ -35,13 +77,23 @@ const STALE_ANNOUNCEMENT =
  * die Liste angehalten ist. Frueher schrieb der Render hier unbedingt
  * "Navigation laeuft." - und wischte damit jede Fehlermeldung im naechsten
  * Bild wieder weg.
+ *
+ * In "Ziel" faellt der Rang "Liste angehalten" weg: Dort steht die Liste immer,
+ * und eine Zeile, die nie etwas anderes sagt, ist keine Auskunft.
  */
-function statusText(snapshot: NavigationSnapshot, problem: string | null): string {
+function statusText(
+  snapshot: NavigationSnapshot,
+  problem: string | null,
+  mode: NavigationMode,
+): string {
   if (problem !== null) {
     return problem;
   }
   if (snapshot.positionStale) {
-    return STALE_STATUS;
+    return STALE_STATUS[mode];
+  }
+  if (mode === 'target') {
+    return 'Navigation laeuft.';
   }
   return snapshot.frozen ? 'Liste angehalten.' : 'Navigation laeuft.';
 }
@@ -56,14 +108,19 @@ export interface NavigationViewCallbacks {
   onStart(): void;
   onStop(): void;
   onFreezeChange(frozen: boolean): void;
+  /** Die Betriebsart hat gewechselt - Signalkanaele und Ton haengen daran. */
+  onModeChange(mode: NavigationMode): void;
 }
 
 export class NavigationView {
   readonly panel: HTMLElement;
 
+  private readonly heading: HTMLElement;
   private readonly startButton: HTMLButtonElement;
   private readonly stopButton: HTMLButtonElement;
   private readonly freezeButton: HTMLButtonElement;
+  /** Der Weg **hin** zur Zielseite; das Gegenstueck haelt die TargetView. */
+  private readonly targetModeButton: HTMLButtonElement;
   private readonly statusLine: HTMLElement;
   private readonly qualityLine: HTMLElement;
   private readonly emptyLine: HTMLElement;
@@ -75,7 +132,17 @@ export class NavigationView {
 
   private manualFreeze = false;
   private tabFreeze = false;
+  /**
+   * In "Ziel" haelt die Liste an - aus demselben Grund wie beim
+   * Bereichswechsel (docs/design.md Entscheidung 27): Sie wird dort weder
+   * gesehen noch erswiped, und beim Zurueckkommen soll sie nicht in voellig
+   * anderer Reihenfolge stehen. Der Kegel selbst rechnet weiter.
+   */
+  private modeFreeze = false;
   private running = false;
+  private mode: NavigationMode = 'orientation';
+  /** Ob die Kegel-Liste zuletzt etwas enthielt - Grundlage fuer die Leerzeile. */
+  private hasEntries = false;
   /**
    * Zuletzt gemeldete Stoerung je Kanal, oder null.
    *
@@ -91,8 +158,14 @@ export class NavigationView {
 
   constructor(
     private readonly announcer: Announcer,
+    private readonly targetView: TargetView,
     private readonly callbacks: NavigationViewCallbacks,
   ) {
+    // tabindex="-1", damit setMode() den Fokus hierher setzen kann: Nach dem
+    // Wechsel ist "Ziel, Ueberschrift" die Bestaetigung, und eine zusaetzliche
+    // Ansage waere derselbe doppelte Kanal, den docs/design.md 6.5 vermeidet.
+    this.heading = el('h2', { text: MODE_HEADING.orientation, tabindex: '-1' });
+
     // Start und Stopp stehen als Symbol rechts neben der Ueberschrift, nicht
     // mehr bildschirmbreit darunter: Sie werden einmal pro Weg gedrueckt, die
     // Liste dagegen dauernd erswiped - sie soll frueh im Wischweg beginnen.
@@ -128,7 +201,7 @@ export class NavigationView {
       'button',
       {
         type: 'button',
-        class: 'icon-button freeze',
+        class: 'icon-button floating floating-right',
         'aria-pressed': 'false',
         'aria-label': 'Liste anhalten',
         title: 'Liste anhalten',
@@ -157,24 +230,90 @@ export class NavigationView {
     // Orte hoeren, nicht jedes Mal zwei Zeilen Zustand davor. Gesagt wird
     // ohnehin nur der Wechsel; die Zeilen sind zum Nachschlagen da
     // (docs/design.md 4.6).
+    // Der Weg zur Zielseite. Zwei Knoten fuer einen Wechsel: Auf der
+    // Orientierungsseite gehoert er hinter den Anhalten-Knopf und **vor** die
+    // Liste, auf der Zielseite hinter das Bild - ein einzelner Knoten koennte
+    // nur an einer der beiden Stellen stehen (docs/design.md 4.7).
+    this.targetModeButton = el(
+      'button',
+      {
+        type: 'button',
+        class: 'icon-button floating floating-left',
+        'aria-label': 'Zum Ziel wechseln',
+        title: 'Zum Ziel wechseln',
+      },
+      [icon(ICON_TARGET)],
+    ) as HTMLButtonElement;
+    this.targetModeButton.addEventListener('click', () => {
+      this.setMode('target');
+    });
+
     this.foot = el('div', { class: 'panel-foot' }, [this.statusLine, this.qualityLine]);
 
+    // Eine DOM-Reihenfolge fuer beide Betriebsarten: Was zur anderen gehoert,
+    // ist verborgen und faellt damit auch aus dem Wischweg. In "Orientierung"
+    // bleibt der Weg genau der bisherige.
     this.panel = el('section', { class: 'panel panel-navigation' }, [
-      el('div', { class: 'panel-head' }, [
-        el('h2', { text: 'Navigation' }),
-        this.startButton,
-        this.stopButton,
-      ]),
+      el('div', { class: 'panel-head' }, [this.heading, this.startButton, this.stopButton]),
       this.freezeButton,
+      this.targetModeButton,
       this.emptyLine,
       this.list,
+      this.targetView.element,
+      this.targetView.modeButton,
+      this.targetView.toneButton,
       this.foot,
     ]);
 
-    this.freezeButton.hidden = true;
-    this.list.hidden = true;
-
+    this.applyMode();
     this.trackFootHeight();
+  }
+
+  /**
+   * Wechselt die Betriebsart.
+   *
+   * Ohne Ansage: Der Fokus springt auf die Ueberschrift, und "Ziel,
+   * Ueberschrift" ist die Bestaetigung. Die Betriebsart wird bewusst **nicht**
+   * gespeichert - die App startet immer in "Orientierung" (docs/design.md 4.7).
+   */
+  setMode(mode: NavigationMode): void {
+    if (mode === this.mode) {
+      return;
+    }
+    this.mode = mode;
+    this.modeFreeze = mode === 'target';
+    setText(this.heading, MODE_HEADING[mode]);
+    this.applyMode();
+    this.syncFreeze();
+    this.callbacks.onModeChange(mode);
+    this.heading.focus();
+  }
+
+  get currentMode(): NavigationMode {
+    return this.mode;
+  }
+
+  /**
+   * Haelt die Sichtbarkeit aller Bloecke an Betriebsart und Lauf.
+   *
+   * An einer Stelle und nicht verteilt: Sonst stuende in "Ziel" ein
+   * funktionsloser Anhalten-Knopf unten rechts, sobald der Lauf startet.
+   */
+  private applyMode(): void {
+    const target = this.mode === 'target';
+
+    setHidden(this.targetModeButton, target);
+    setHidden(this.targetView.modeButton, !target);
+    // Das Zielrad bleibt sichtbar, auch wenn nichts laeuft: Gewaehlt wird vor
+    // dem Start, nicht danach.
+    setHidden(this.targetView.element, !target);
+
+    // Der Anhalten-Knopf gehoert zur Liste, der Lautsprecher zum Ton: Beide
+    // nur dort, wo sie etwas bewirken, und beide nur bei laufender Navigation.
+    setHidden(this.freezeButton, target || !this.running);
+    setHidden(this.targetView.toneButton, !target || !this.running);
+    setHidden(this.list, target || !this.running);
+    setHidden(this.emptyLine, target || !this.running || this.hasEntries);
   }
 
   /**
@@ -210,10 +349,10 @@ export class NavigationView {
     this.running = true;
     this.clearProblems();
     this.resetFreeze();
-    this.startButton.hidden = true;
-    this.stopButton.hidden = false;
-    this.freezeButton.hidden = false;
-    this.list.hidden = false;
+    this.hasEntries = false;
+    setHidden(this.startButton, true);
+    setHidden(this.stopButton, false);
+    this.applyMode();
     setText(this.statusLine, 'Warte auf Standort und Kompass.');
   }
 
@@ -221,13 +360,13 @@ export class NavigationView {
     this.running = false;
     this.clearProblems();
     this.resetFreeze();
-    this.startButton.hidden = false;
-    this.stopButton.hidden = true;
-    this.freezeButton.hidden = true;
-    this.list.hidden = true;
+    this.hasEntries = false;
+    setHidden(this.startButton, false);
+    setHidden(this.stopButton, true);
     this.list.textContent = '';
     this.rows.clear();
-    this.emptyLine.hidden = true;
+    this.targetView.reset();
+    this.applyMode();
     setText(this.statusLine, 'Navigation beendet.');
     setText(this.qualityLine, '');
     // Fokus auf den Startknopf, damit er nicht ins Leere faellt.
@@ -305,7 +444,10 @@ export class NavigationView {
       return;
     }
 
-    setText(this.statusLine, statusText(snapshot, this.positionProblem ?? this.headingProblem));
+    setText(
+      this.statusLine,
+      statusText(snapshot, this.positionProblem ?? this.headingProblem, this.mode),
+    );
 
     // Der Wechsel auf "veraltet" ist die eigentliche Nachricht: Ab hier stimmen
     // die Zahlen nicht mehr. Wer nur die Liste erswiped, wuerde ihn sonst nicht
@@ -313,8 +455,15 @@ export class NavigationView {
     if (snapshot.positionStale !== this.stale) {
       this.stale = snapshot.positionStale;
       this.announcer.announce(
-        this.stale ? STALE_ANNOUNCEMENT : 'Standort wieder da. Die Liste laeuft.',
+        this.stale ? STALE_ANNOUNCEMENT[this.mode] : FRESH_ANNOUNCEMENT[this.mode],
       );
+    }
+
+    // In "Ziel" steht die Liste ohnehin und ist verborgen. Sie trotzdem
+    // fortzuschreiben kostete Arbeit an Knoten, die niemand liest - beim
+    // Zurueckwechseln zieht sie das naechste Bild nach.
+    if (this.mode === 'target') {
+      return;
     }
 
     const wanted = snapshot.entries.map((entry) => entry.location.id);
@@ -326,7 +475,8 @@ export class NavigationView {
 
     this.reorder(wanted);
 
-    this.emptyLine.hidden = snapshot.entries.length > 0;
+    this.hasEntries = snapshot.entries.length > 0;
+    setHidden(this.emptyLine, this.hasEntries);
   }
 
   /**
@@ -452,7 +602,7 @@ export class NavigationView {
   }
 
   private syncFreeze(): void {
-    this.callbacks.onFreezeChange(this.manualFreeze || this.tabFreeze);
+    this.callbacks.onFreezeChange(this.manualFreeze || this.tabFreeze || this.modeFreeze);
   }
 }
 

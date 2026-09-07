@@ -282,7 +282,21 @@ erneut; jede Wiederholung anzusagen macht die App unbenutzbar.
 keiner: Der Ort landet dauerhaft in der Liste und sieht danach aus wie jeder andere.
 
 **Die Statuszeile gehört dem Render.** Sie zeigt in dieser Reihenfolge: gemeldete
-Störung, veralteter Standort, angehaltene Liste, laufende Navigation. **Sie steht
+Störung, veralteter Standort, angehaltene Liste, laufende Navigation. **Die Wortlaute
+hängen an der Betriebsart** (§4.7) — was ein veralteter Standort bedeutet, ist in
+„Orientierung" etwas anderes als in „Ziel":
+
+| Rang | Bedingung | Orientierung | Ziel |
+|---|---|---|---|
+| 1 | gemeldete Störung | Text des Fehlers | Text des Fehlers |
+| 2 | Standort veraltet | „Standort veraltet. Die Liste ist angehalten." | „Standort veraltet. Der Ton schweigt." |
+| 3 | Liste angehalten | „Liste angehalten." | — entfällt |
+| 4 | sonst | „Navigation läuft." | „Navigation läuft." |
+
+Rang 3 entfällt in „Ziel", weil die Liste dort **immer** steht (§4.7) — eine Zeile, die
+nie etwas anderes sagt, ist keine Auskunft. Angesagt wird auch hier nur der Wechsel, und
+auch die Ansage nennt die jeweilige Folge: „…und die Liste steht still.“
+gegenüber „…und der Ton schweigt.“ **Sie steht
 zusammen mit der Kompassgüte am unteren Bildrand und bleibt beim Scrollen dort
 stehen** (`position: fixed`) — Gegenstück zur angehefteten Tab-Leiste oben
 *(Nutzerentscheidung)*. Im DOM steht sie **hinter** der Liste: VoiceOver wischt in
@@ -301,6 +315,143 @@ schrieb der Render unbedingt „Navigation läuft." und wischte damit jede
 Fehlermeldung im nächsten Bild wieder weg — der Fehler, der zu diesem Abschnitt
 geführt hat.)*
 
+### 4.7 Zielmodus
+
+Der Bereich „Navigation" hat **zwei Betriebsarten**. **Orientierung** ist die Kegel-Liste
+aus §4.1 bis §4.4 — was liegt gerade in Blickrichtung. **Ziel** ist die Gegenfrage: ein
+ausgewählter Ort, eine Peilzeile, ein Kreisbild und ein fortlaufender Ton.
+
+Der Unterschied ist nicht kosmetisch. Die Orientierungsseite beantwortet „was ist da?",
+die Zielseite beantwortet „wo ist **das**?" — und sie beantwortet es **ohne Sprache und
+ohne Wischen**, während beide Hände und die Aufmerksamkeit beim Gehen sind.
+
+**Der Tab heißt weiterhin „Navigation", die Betriebsarten heißen „Orientierung" und
+„Ziel".** Derselbe Name für Tab und Betriebsart wäre mit VoiceOver nicht zu
+unterscheiden — oben „Navigation, ausgewählt, Tab", unten „Zur Navigation wechseln,
+Button". Der Tab-Name ist die meistgehörte Station und wird nicht angefasst.
+
+**Die `h2` trägt den Namen der Betriebsart**, nicht den des Bereichs. Sie sagte bisher
+dasselbe wie der Tab darüber und war damit ein Wisch ohne Aussage; jetzt ist sie die
+Bestätigung des Wechsels: Der Fokus springt nach dem Umschalten auf sie, und „Ziel,
+Überschrift" ist die Rückmeldung. **Keine zusätzliche Ansage** — derselbe doppelte Kanal,
+den §6.5 beim Ausblenden schon vermieden hat.
+
+**Die Betriebsart wird nicht gespeichert; die App startet immer in „Orientierung".**
+Dieselbe Überlegung wie in §5 eine Ebene tiefer: Ein fester, bekannter Ausgangspunkt ist
+mit VoiceOver mehr wert als Kontinuität. Anders als das Ziel ist die Betriebsart keine
+Absicht, sondern eine Art hinzusehen, und der Wechsel ist ein Tipp.
+
+**Ein Lauf für beide Betriebsarten.** Zwei getrennte Läufe kosteten bei jedem Wechsel
+Sekunden, eine Kompass-Freigabe und eine Lücke bis zum ersten Fix. Der Kegel **rechnet in
+beiden Betriebsarten weiter**, aber sein **Signalkanal schweigt in „Ziel"**: Ein
+Zweiklang bei jedem Ein- und Austritt neben dem Zielton machte die Seite unbrauchbar.
+Pausierte der Kegel statt zu schweigen, feuerte er beim Zurückwechseln „eingetreten" für
+alles, was inzwischen in ihm liegt. Die **Liste** hält in „Ziel" an — aus demselben Grund
+wie beim Bereichswechsel (§4.3): Sie wird dort weder gesehen noch erswiped.
+
+**Der Wischweg der Zielseite:** Überschrift, Zielrad, Peilzeile, Kreisbild,
+Moduswechsel, Tonschalter, Fußzeile. Der Moduswechsel liegt als **zwei** Knoten im DOM —
+einer je Betriebsart, nie beide sichtbar. Sie tragen ohnehin verschiedene Namen und
+Symbole; ein einzelner Knoten könnte nur an einer der beiden richtigen Stellen stehen. Die
+Regel hinter dem Anhalten-Knopf war nie „Schalter nach vorn", sondern „nicht hinter eine
+lange Liste" — auf der Zielseite gibt es keine.
+
+**Der Anhalten-Knopf erscheint nur in „Orientierung", der Lautsprecher nur in „Ziel"**,
+beide nur bei laufender Navigation. Das Zielrad bleibt dagegen immer sichtbar: Gewählt
+wird vor dem Start, nicht danach.
+
+**Das Zielrad kennt alle Orte, auch ausgeblendete.** `hidden` ist eine Regel über den
+Kegel, nicht über den Willen (§6.5) — das geparkte Auto blendet man aus, damit es
+tagsüber nicht tönt, und will abends genau dorthin. **Die Wahl wird gespeichert**
+(`AppSettings.targetId`): Ein Ziel ist eine Absicht und muss den Kaltstart einer PWA
+überleben. Eine Kennung ohne Ort fällt still auf „kein Ziel" zurück, wie eine verwaiste
+Gruppenmitgliedschaft (§6.6). Ohne gespeicherte Orte entfällt das Rad, und an seiner
+Stelle steht der Grund — nicht Stille.
+
+**Die Peilzeile** ist ein `<button>` wie eine Listenzeile und liest „30 Grad rechts,
+1,2 Kilometer": **Richtung zuerst**, denn sie ist das, was sich ständig ändert; der Name
+steht eine Station darüber im Rad. Sie behält ihre Beschriftung, solange der Fokus auf ihr
+steht — dieselbe Zusage wie für eine Listenzeile (§4.3).
+
+**Die Richtung wird auf 5° gerundet, „geradeaus" bei 0, „genau hinter dir" ab 175°.** Die
+Rundung ist Ehrlichkeit: Dieselbe App erklärt ihre Richtungsangabe für „ungenau", sobald
+der gemeldete Fehler den halben Kegel übersteigt (§4.5) — bei Standardeinstellung also ab
+20°. Eine gradgenaue Zahl behauptete daneben eine Schärfe, die dieselbe App an anderer
+Stelle bestreitet. §4.2 rundet aus einem anderen Grund und liefert den Präzedenzfall: Eine
+laufende Zahl wird in Stufen gezeigt, nicht roh. Rechts und links sind hinter einem nicht
+handlungsleitend — man dreht sich ohnehin ganz herum —, deshalb dort ein eigener Wortlaut.
+
+**Der Zielton** ist der eigentliche Zweck der Seite: eine Auskunft, die läuft, ohne dass
+man sie anfasst. Man dreht sich, bis er am höchsten klingt.
+
+```
+  Abweichung   0°        45°       90°       135°      180°
+  vor mir  ----+---------+---------+---------+---------+---- hinter mir
+  Ton        880 Hz    622 Hz    440 Hz    311 Hz    220 Hz
+              (A5)                (A4)                (A3)
+  Panorama    Mitte    halb r.   rechts    halb r.    Mitte   (Vorzeichen = Seite)
+
+  Höhe(x)   = 220 * 4^((180-|x|)/180)           eine Oktave je 90 Grad
+  Panorama  = sin(x)                            x vorzeichenbehaftet, + = rechts
+
+  Entfernung   <=25 m   50 m   100 m   200 m   400 m   800 m   >=1750 m
+  Töne/Sek.    Dauer-   4,00    2,67    1,78    1,19    0,79      0,50
+               ton
+  Takt(d)   = 6 * (d/25)^log2(2/3),  gekappt auf 0,5 ... 6 Hz
+  Ankunft:    Dauerton bis 25 m einschließlich, Ticken erst wieder ab 35 m
+  Tonlänge:   min(0,12 s, halbe Periode)
+```
+
+**Die Tonhöhe gleitet stetig, exponentiell, ohne Zielmarkierung.** Das Gehör hört Tonhöhe
+logarithmisch; linear in Hertz läge „neben mir" schon fast bei „vor mir". Exponentiell
+treffen A3 / A4 / A5 die drei Anker exakt, und 5° Drehung ändern den Ton überall um zwei
+Drittel eines Halbtons. Eine zusätzliche Markierung bei „geradeaus" wäre der Zusatzkanal,
+den diese App wiederholt entfernt hat (§4.4, §6.5) — und sie flackerte an ihrer Grenze.
+
+**Das Panorama folgt dem Sinus der Abweichung, ohne Einstellung.** Rein additiv: Wer über
+den Gerätelautsprecher hört, bekommt Mono und fällt auf das Drehen zurück — es geht nichts
+verloren, es kommt nur nichts dazu. Ein Schalter für etwas, das nie stört, wäre eine
+Station zu viel (§6). Ob iOS unter VoiceOver überhaupt Panorama durchreicht, ist offen
+(**M4**, §11).
+
+**Der Takt ist logarithmisch, jede Verdopplung der Entfernung nimmt ein Drittel.** Zwischen
+50 m und 5 km liegen zwei Größenordnungen — linear wäre alles über 500 m ununterscheidbar
+langsam. Daraus folgen zwei Dinge, die ohne sie zu Fehlern würden:
+
+- **Die Ankunft braucht Hysterese** (bis 25 m hinein, ab 35 m hinaus). Sonst kippte der Ton
+  im Takt der GPS-Streuung zwischen Ticken und Dauerton — dasselbe Flackern, gegen das
+  §4.1 die 20/25-Hysterese des Kegels erfunden hat.
+- **Die Tonlänge schrumpft mit dem Takt.** Bei 6 Hz ist die Periode 167 ms; eine feste
+  Länge von 120 ms ließe 47 ms Pause, und das Ticken klänge schon fast wie der Dauerton,
+  den es ankündigen soll. Also `min(0,12 s, halbe Periode)`.
+
+**Der Dauerton ab 25 m ist die Ankunftsmeldung.** Der Übergang muss hörbar sein — die
+Pause fällt weg —, und genau deshalb darf er nicht flackern.
+
+**Der Ton schweigt** bei veraltetem Standort, ohne gewähltes Ziel, außerhalb der
+Betriebsart „Ziel", bei stehendem Lauf und bei ausgeschaltetem Tonschalter. **Die
+Kompassgüte stoppt ihn nicht:** Der Ton ist keine stehende Anzeige, sondern eine
+fortlaufende Behauptung — aus einem alten Fix klänge er exakt so souverän wie aus einem
+gültigen (§4.6), während „ungenau" immer noch die beste verfügbare Angabe ist. Ein Ton,
+der bei jedem Kompasswackeln aussetzte, wäre unbrauchbar.
+
+**Der Tonschalter wird gespeichert, ohne Eintrag in den Einstellungen.** Der Anhalten-Knopf
+wird bei jedem Start zurückgesetzt, weil ein hängender Freeze **stumm** war und einen
+ganzen Lauf gefressen hat (§4.3); ein hängender Tonschalter ist das Gegenteil von stumm.
+Sein Knopf steht dort, wo er klingt — der Earcon hat einen Eintrag in den Einstellungen,
+weil er sonst nirgends abschaltbar wäre. Der Knopf sagt, was der Tipp **bewirkt**
+(„Ton einschalten" / „Ton ausschalten"), ohne `aria-pressed` und ohne zusätzliche Ansage:
+Er liest seinen neuen Namen selbst vor (§6.5).
+
+**Wie der Earcon ist auch dieser Ton bei Lautlos stumm** (M2, §11). Die Peilzeile trägt die
+Auskunft dann weiterhin.
+
+**Das Kreisbild** zeigt den App-Pfeil fest nach oben, vier Marken und den Zielpunkt mit
+Name und Entfernung an der relativen Peilung. Der Pfeil ist die eigene Nase, nicht Norden —
+der Ring dreht sich unter ihm weg. Es ist `aria-hidden` wie jedes Symbol dieser App: Es
+trägt für VoiceOver nichts und ist für Mitschauende da. Vier Marken machen „30 Grad
+rechts" auf einen Blick ablesbar; eine Gradskala liest niemand.
+
 ---
 
 ## 5. Interaktionsmodell
@@ -313,12 +464,14 @@ davon abhängen, wie weit die Ortsliste gescrollt ist. Die Überschrift scrollt 
 
 | Tab | Inhalt |
 |---|---|
-| **Navigation** | Start/Stopp als Symbol im Kopf, Kegel-Liste, schwebender Anhalten-Schalter |
+| **Navigation** | Zwei Betriebsarten (§4.7): **Orientierung** mit Kegel-Liste und Anhalten-Schalter, **Ziel** mit Zielrad, Peilzeile, Kreisbild und Tonschalter. Start/Stopp als Symbol im Kopf gilt für beide |
 | **Orte** | Liste aller gespeicherten Locations, nur Namen; Anlegen über ein Plus im Kopf, Bearbeiten und Löschen über Dialoge |
 | **Gruppen** | Liste der Gruppen; Anlegen über ein Plus im Kopf, Mitglieder und Löschen über Dialoge (§6.6) |
 | **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Datum der letzten Sicherung; Sichern und Einlesen hinter dem Dialog „Daten speichern / laden" (§7) |
 
-- Die App startet **immer** auf „Navigation". *(Der vierte Tab kam mit den Gruppen
+- Die App startet **immer** auf „Navigation" — und dort **immer** in der Betriebsart
+  „Orientierung" (§4.7). Dieselbe Begründung eine Ebene tiefer: Ein fester, bekannter
+  Ausgangspunkt ist mit VoiceOver mehr wert als Kontinuität. *(Der vierte Tab kam mit den Gruppen
   dazu — statt zweier Knöpfe unter der Leiste im Orte-Panel: Ein Umschaltmechanismus
   statt zwei, und die Knöpfe lägen sonst bei **jedem** Besuch der Orte-Seite vor der
   Liste. Der vierte Tab kostet eine Station, aber nur einmal, und liegt dort, wo der
@@ -333,6 +486,9 @@ davon abhängen, wie weit die Ortsliste gescrollt ist. Die Überschrift scrollt 
 - **Der Anhalten-Schalter schwebt als Pausensymbol unten rechts** über dem Inhalt, im
   Gehen mit dem Daumen erreichbar. Im DOM steht er weiterhin **vor** der Liste:
   VoiceOver wischt in DOM-Reihenfolge, dahinter läge er hinter allen Einträgen.
+- **Der Moduswechsel schwebt unten links**, der Tonschalter der Zielseite unten rechts an
+  der Stelle des Anhalten-Knopfes (§4.7). Alle drei teilen Maße und Höhe über der
+  Fußleiste; sichtbar ist immer nur, was zur laufenden Betriebsart gehört.
 - Während der Navigation hält `navigator.wakeLock` den Bildschirm wach.
 
 ---
@@ -748,13 +904,13 @@ Ein einziges Remote: **`github`** → `github.com/burnyWes/straight-line-navigat
 | Adresssuche/Geocoding | Siehe §6.3 — nachrüstbar |
 | Hintergrundbetrieb bei gesperrtem Bildschirm | Auf einer PWA nicht möglich; Anwendungsfall verworfen |
 | Nachgebauter Bildschirmvorhang | VoiceOver-Bordmittel |
-| Entfernung als Tonhöhe/Klickrate kodiert | Reizvolle Erweiterung, kein Fundament — erst nach Praxiserfahrung |
+| ~~Entfernung als Tonhöhe/Klickrate kodiert~~ | **Aufgehoben.** Die Bedingung „erst nach Praxiserfahrung" ist eingetreten: Vier Praxistestrunden liegen hinter der App, das Fundament steht, der Nutzer hat die Erweiterung angefordert. Gebaut als Zielton, siehe §4.7 |
 
 ---
 
 ## 11. Offene Messfragen
 
-Drei Fragen, die durch Messen am Gerät zu beantworten sind, nicht durch Nachdenken. Die
+Fünf Fragen, die durch Messen am Gerät zu beantworten sind, nicht durch Nachdenken. Die
 Testseite liegt unter `spike/` und ist erreichbar unter
 `https://burnywes.github.io/straight-line-navigation/spike/`.
 
@@ -763,6 +919,8 @@ Testseite liegt unter `spike/` und ist erreichbar unter
 | **M1** | Löst `<input type="checkbox" switch>` (iOS 17.4+) bei programmatischem `click()` die Taptic Engine aus? | **Nein** (2026-09-04) | Haptik ist auf diesem Weg nicht erreichbar. Ein-/Austritt wird ausschließlich über den Ton signalisiert. |
 | **M2** | Schaltet der Lautlos-Schalter Web Audio stumm? | **Ja** (2026-09-04) | Vom Nutzer akzeptiert; das Verhalten bleibt so. Nach dem Wegfall der Ansage (§4.4) ist der Earcon der einzige Signalkanal — bei Lautlos gibt es kein Ein-/Austritts-Signal. |
 | **M3** | Wie verhält sich `webkitCompassAccuracy` **zwischen Häusern**, nicht am Fenster? | **teilweise** (2026-09-04): in Innenräumen zeigt die Nadel korrekt nach Norden; der Zahlenwert wurde nicht abgelesen | Entschärft — siehe §4.5. Die App meldet die Kompassgüte grundsätzlich, unabhängig davon, wie gut sie im Einzelfall ist. |
+| **M4** | Reicht iOS Web-Audio-Panorama unter VoiceOver durch, oder legt es auf Mono? | **offen** | Fällt es aus, klingt der Zielton in Mono. Rein additiv (§4.7): Man fällt auf das Drehen zurück, es geht nichts verloren. Der Kanal ist ein Port, die Logik bleibt unberührt. |
+| **M5** | Dämpft iOS den Zielton, während VoiceOver spricht — oder unterbricht er die Ansage? | **offen** | Läuft beides gleich laut nebeneinander, braucht der Ton eine Absenkung während der Ansage. Die Peilzeile ist die Rückfallebene, sie trägt dieselbe Auskunft in Worten. |
 
 Kompass- und GPS-Grundfunktion im Standalone-Modus: **bestätigt** (2026-09-04).
 
@@ -817,3 +975,10 @@ das steht in keinem Verhältnis.
 | 35 | Der zweite Dialogknopf heißt „Schließen"; nur die Löschen-Rückfrage behält „Abbrechen" | Nutzerentscheidung: Speichern, Umbenennen und Mitgliederpflege wirken sofort — „Abbrechen" danach klingt, als nehme es die letzte Handlung zurück. In der Rückfrage ist noch nichts geschehen, dort ist „Abbrechen" die richtige Bedeutung (§6.4) |
 | 36 | Abstand zwischen zwei Bedienpunkten auf 20 px, als ein Token; Tab-Leiste ausgenommen | Nutzerentscheidung nach dem Praxistest: Beim Erkunden mit dem Finger war 8 px keine Grenze, sondern eine Kante — der Finger überquerte sie ohne Pause. Die Leiste ist eine geschlossene Reihe; dort kostet Abstand nur Breite, die „Einstellungen" schon heute fehlt (§3) |
 | 37 | Sichern und Einlesen hinter dem Dialog „Daten speichern / laden"; Überschrift „Daten", das Datum bleibt im Panel | Nutzerentscheidung: Der Abschnitt war elf der zwanzig Stationen der Einstellungen und lag bei jedem Besuch im Weg. Der Dialog bleibt nach jeder Handlung offen, damit Erfolg und Fehler an derselben Stelle stehen; das Datum gehört nach draußen, weil es ungefragt gesehen werden soll (§7) |
+| 38 | Zwei Betriebsarten im Tab „Navigation", benannt „Orientierung" und „Ziel"; der Tab-Name bleibt, die `h2` trägt den Modus | Nutzerforderung. Derselbe Name für Tab und Betriebsart wäre mit VoiceOver nicht zu unterscheiden; die `h2` sagte bisher dasselbe wie der Tab darüber und war ein Wisch ohne Aussage — der Modusname repariert das nebenbei (§4.7) |
+| 39 | Die Betriebsart wird **nicht** gespeichert; das Ziel schon | §5 hält fest, dass die App immer auf „Navigation" startet — ein fester Ausgangspunkt ist mit VoiceOver mehr wert als Kontinuität, und das gilt eine Ebene tiefer genauso. Ein Ziel dagegen ist eine Absicht und muss den Kaltstart einer PWA überleben (§4.7) |
+| 40 | Ein Lauf für beide Betriebsarten; der Kegel schweigt in „Ziel", rechnet aber weiter | Zwei gleichzeitige Tonkanäle machten die Zielseite unbrauchbar, zwei getrennte Läufe kosteten bei jedem Wechsel eine Kompass-Freigabe und eine Lücke bis zum ersten Fix. Pausierte der Kegel, feuerte er beim Zurückwechseln „eingetreten" für alles, was inzwischen in ihm liegt (§4.7) |
+| 41 | Die Richtungsangabe wird auf 5° gerundet, ab 175° heißt sie „genau hinter dir" | Die App erklärt ihre eigene Richtung für „ungenau", sobald der Fehler den halben Kegel übersteigt (§4.5) — eine gradgenaue Zahl behauptete daneben eine Schärfe, die dieselbe App bestreitet. Rechts und links sind hinter einem nicht handlungsleitend (§4.7) |
+| 42 | Nicht-Ziel „Entfernung als Tonhöhe/Klickrate" aufgehoben und als Zielton gebaut | Die in §10 gesetzte Bedingung — „erst nach Praxiserfahrung" — ist eingetreten. Vier Praxistestrunden liegen hinter der App, das Fundament steht, und der Nutzer hat die Erweiterung angefordert (§4.7) |
+| 43 | Tonhöhe exponentiell über zwei Oktaven, Panorama nach dem Sinus, Takt logarithmisch mit Ankunfts-Hysterese | Das Gehör hört Tonhöhe logarithmisch, und zwischen 50 m und 5 km liegen zwei Größenordnungen — linear wäre in beiden Fällen die Hälfte der Spanne unbrauchbar. Die Hysterese verhindert, dass der Ton im Takt der GPS-Streuung zwischen Ticken und Dauerton kippt (§4.7) |
+| 44 | Der Tonschalter überlebt den Neustart, der Anhalten-Knopf nicht | Ein hängender Freeze war **stumm** und hat einen ganzen Lauf gefressen (§4.3); ein hängender Tonschalter ist das Gegenteil von stumm und fällt sofort auf. Sein Knopf steht dort, wo er klingt — deshalb auch kein Eintrag in den Einstellungen (§4.7) |

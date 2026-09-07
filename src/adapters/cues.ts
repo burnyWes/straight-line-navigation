@@ -11,6 +11,7 @@
  */
 
 import type { CuePort } from '../application/ports.js';
+import { sharedAudioContext, unlockAudio } from './audioContext.js';
 
 /** Aufsteigend = Eintritt, absteigend = Austritt. */
 const ENTER_TONES = [660, 990];
@@ -19,14 +20,16 @@ const NOTE_SECONDS = 0.12;
 const PEAK_GAIN = 0.25;
 
 export class WebAudioCue implements CuePort {
-  private context: AudioContext | null = null;
-
-  /** Muss aus einer echten Beruehrung heraus laufen, sonst bleibt der Context suspended. */
+  /**
+   * Der Context kommt von aussen und wird hier nicht geschlossen.
+   *
+   * Frueher erzeugte diese Klasse ihren eigenen und raeumte ihn in einem
+   * dispose() wieder ab. Seit der Zielton am selben Context haengt, waere das
+   * ein Kanal, der den anderen mit abschaltet - und dispose() hatte ohnehin nie
+   * einen Aufrufer.
+   */
   unlock(): void {
-    const context = this.ensureContext();
-    if (context !== null && context.state === 'suspended') {
-      void context.resume();
-    }
+    unlockAudio();
   }
 
   entered(): void {
@@ -37,20 +40,8 @@ export class WebAudioCue implements CuePort {
     this.play(EXIT_TONES);
   }
 
-  dispose(): void {
-    void this.context?.close();
-    this.context = null;
-  }
-
-  private ensureContext(): AudioContext | null {
-    if (this.context === null && typeof AudioContext === 'function') {
-      this.context = new AudioContext();
-    }
-    return this.context;
-  }
-
   private play(frequencies: readonly number[]): void {
-    const context = this.ensureContext();
+    const context = sharedAudioContext();
     if (context === null) {
       return;
     }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatBearingLabel,
   formatDirection,
   formatDistance,
   formatDeleteGroupWarning,
@@ -32,18 +33,41 @@ describe('formatDistance', () => {
 
 describe('formatDirection', () => {
   it('nennt kleine Abweichungen geradeaus', () => {
+    // Die Toleranz folgt aus der Rundung: bis 2,5 Grad wird nichts genannt.
     expect(formatDirection(0)).toBe('geradeaus');
-    expect(formatDirection(3)).toBe('geradeaus');
-    expect(formatDirection(-3)).toBe('geradeaus');
+    expect(formatDirection(2)).toBe('geradeaus');
+    expect(formatDirection(-2)).toBe('geradeaus');
   });
 
   it('unterscheidet rechts und links', () => {
-    expect(formatDirection(28)).toBe('28 Grad rechts');
-    expect(formatDirection(-12)).toBe('12 Grad links');
+    expect(formatDirection(28)).toBe('30 Grad rechts');
+    expect(formatDirection(-12)).toBe('10 Grad links');
+    expect(formatDirection(3)).toBe('5 Grad rechts');
+    expect(formatDirection(-3)).toBe('5 Grad links');
   });
 
-  it('rundet auf ganze Grad', () => {
-    expect(formatDirection(28.4)).toBe('28 Grad rechts');
+  it('rundet auf fuenf Grad', () => {
+    // Gradgenau behauptete eine Schaerfe, die dieselbe App bestreitet, sobald
+    // der Kompassfehler den halben Kegel uebersteigt (design.md 4.5).
+    expect(formatDirection(28.4)).toBe('30 Grad rechts');
+  });
+
+  it('nennt hinter einem keine Seite', () => {
+    // Rechts und links sind dort nicht mehr handlungsleitend - man dreht sich
+    // ohnehin ganz herum.
+    expect(formatDirection(180)).toBe('genau hinter dir');
+    expect(formatDirection(175)).toBe('genau hinter dir');
+    expect(formatDirection(-175)).toBe('genau hinter dir');
+    expect(formatDirection(170)).toBe('170 Grad rechts');
+  });
+});
+
+describe('formatBearingLabel', () => {
+  it('nennt die Richtung zuerst, dann die Entfernung', () => {
+    // Der Name steht eine Station darueber im Zielrad.
+    expect(formatBearingLabel(28, 1200)).toBe('30 Grad rechts, 1,2 Kilometer');
+    expect(formatBearingLabel(0, 500)).toBe('geradeaus, 500 Meter');
+    expect(formatBearingLabel(-178, 80)).toBe('genau hinter dir, 80 Meter');
   });
 });
 

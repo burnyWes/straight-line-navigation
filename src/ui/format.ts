@@ -16,9 +16,6 @@ const KILOMETRE_FORMAT = new Intl.NumberFormat('de-DE', {
   maximumFractionDigits: 1,
 });
 
-/** Ab dieser Abweichung gilt eine Richtung nicht mehr als "geradeaus". */
-export const STRAIGHT_AHEAD_TOLERANCE_DEG = 3;
-
 /** Erwartet die bereits gerundete Entfernung aus der Domaene. */
 export function formatDistance(displayMetres: number): string {
   if (displayMetres < 1000) {
@@ -27,13 +24,39 @@ export function formatDistance(displayMetres: number): string {
   return `${KILOMETRE_FORMAT.format(displayMetres / 1000)} Kilometer`;
 }
 
-/** Vorzeichenbehaftete Abweichung von der Blickrichtung; positiv = rechts. */
+/**
+ * Vorzeichenbehaftete Abweichung von der Blickrichtung; positiv = rechts.
+ *
+ * Auf fuenf Grad gerundet, und das ist Ehrlichkeit, keine Bequemlichkeit:
+ * Dieselbe App nennt ihre Richtungsangabe "ungenau", sobald der gemeldete
+ * Fehler den halben Kegel uebersteigt - bei Standardeinstellung also ab 20 Grad
+ * (docs/design.md 4.5). Eine gradgenaue Zahl behauptete daneben eine Schaerfe,
+ * die dieselbe App an anderer Stelle bestreitet. Die Toleranz fuer "geradeaus"
+ * folgt jetzt aus der Rundung: bis 2,5 Grad.
+ */
 export function formatDirection(offsetDeg: number): string {
-  const rounded = Math.round(offsetDeg);
-  if (Math.abs(rounded) <= STRAIGHT_AHEAD_TOLERANCE_DEG) {
+  const rounded = Math.round(offsetDeg / 5) * 5;
+  if (rounded === 0) {
     return 'geradeaus';
   }
+  // >= 175, nicht === 180: Rechts und links sind hinter einem nicht mehr
+  // handlungsleitend, und die Schwelle wird so fuer beide Vorzeichen gleich
+  // erreicht - Math.round rundet .5 stets nach oben.
+  if (Math.abs(rounded) >= 175) {
+    return 'genau hinter dir';
+  }
   return `${Math.abs(rounded)} Grad ${rounded > 0 ? 'rechts' : 'links'}`;
+}
+
+/**
+ * Beschriftung der Peilzeile: "30 Grad rechts, 1,2 Kilometer".
+ *
+ * Richtung zuerst und ohne Namen: Der Name steht eine Station darueber im
+ * Zielrad, die Richtung ist das, was sich staendig aendert und wofuer man
+ * hinhoert (docs/design.md 4.7).
+ */
+export function formatBearingLabel(offsetDeg: number, displayMetres: number): string {
+  return `${formatDirection(offsetDeg)}, ${formatDistance(displayMetres)}`;
 }
 
 /** Beschriftung einer Listenzeile: "Bahnhof, 1,2 Kilometer". */

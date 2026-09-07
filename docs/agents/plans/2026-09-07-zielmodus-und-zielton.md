@@ -482,21 +482,21 @@ schweigt in „Ziel".
 
 **Tasks**:
 
-- [ ] `src/application/settings.ts`: `AppSettings` um `targetId: string | null` und
+- [x] `src/application/settings.ts`: `AppSettings` um `targetId: string | null` und
       `guidanceTone: boolean` ergaenzen, beide in `DEFAULT_SETTINGS` (`null` / `false`).
       Kommentar: Das Ziel ist eine Absicht, kein Laufzustand — deshalb liegt es hier und
       nicht im Lauf. `guidanceTone` wird in dieser Phase nur mitgeschrieben; sein
       Schalter kommt in Phase 2. **Kein** Feld fuer die Betriebsart (Entscheidung 2).
-- [ ] `src/adapters/storedSettings.ts`: beide Felder fehlertolerant lesen —
+- [x] `src/adapters/storedSettings.ts`: beide Felder fehlertolerant lesen —
       `targetId` nur als `string`, sonst `null`; `guidanceTone` ueber den vorhandenen
       `boolean()`-Helfer (`storedSettings.ts:64`). Eine gespeicherte Kennung wird
       **nicht** gegen die Orte geprueft: Das ist Sache der Anwendungsschicht, und ein
       Speicher, der Orte kennt, waere ein Aggregat zu viel.
-- [ ] `src/adapters/storedSettings.test.ts` anlegen (existiert heute nicht): Ein Stand
+- [x] `src/adapters/storedSettings.test.ts` anlegen (existiert heute nicht): Ein Stand
       **ohne** die neuen Felder liest sich als `targetId: null` / `guidanceTone: false`;
       ein `targetId` mit falschem Typ faellt auf `null`; ein vollstaendiger Stand geht
       durch `saveSettings`/`loadSettings` unveraendert hindurch.
-- [ ] `src/ui/format.ts`: `formatDirection()` auf 5 Grad runden. Kommentar: Die Rundung
+- [x] `src/ui/format.ts`: `formatDirection()` auf 5 Grad runden. Kommentar: Die Rundung
       ist Ehrlichkeit — dieselbe App nennt ihre Richtung „ungenau", sobald der Fehler den
       halben Kegel uebersteigt (§4.5).
       ```ts
@@ -510,22 +510,22 @@ schweigt in „Ziel".
         return `${Math.abs(rounded)} Grad ${rounded > 0 ? 'rechts' : 'links'}`;
       }
       ```
-- [ ] `src/ui/format.ts`: `STRAIGHT_AHEAD_TOLERANCE_DEG` entfernen — nur in `format.ts`
+- [x] `src/ui/format.ts`: `STRAIGHT_AHEAD_TOLERANCE_DEG` entfernen — nur in `format.ts`
       selbst benutzt, die Toleranz von 2,5 Grad folgt jetzt aus der Rundung.
-- [ ] `src/ui/format.ts`: `formatBearingLabel(offsetDeg, displayMetres)` ergaenzen —
+- [x] `src/ui/format.ts`: `formatBearingLabel(offsetDeg, displayMetres)` ergaenzen —
       „30 Grad rechts, 1,2 Kilometer". Richtung zuerst, kein Name: Der steht eine
       Station darueber im Rad.
-- [ ] `src/ui/format.test.ts`: **fuenf** Assertions in drei `it`-Bloecken anpassen —
+- [x] `src/ui/format.test.ts`: **fuenf** Assertions in drei `it`-Bloecken anpassen —
       `formatDirection(3)` → „5 Grad rechts", `(-3)` → „5 Grad links", `(28)` →
       „30 Grad rechts", `(-12)` → „10 Grad links", `(28.4)` → „30 Grad rechts". Den Block
       `it('rundet auf ganze Grad')` in „rundet auf fuenf Grad" umbenennen. Faelle
       ergaenzen fuer 2 („geradeaus"), 175 und −175 („genau hinter dir") sowie
       `formatBearingLabel`.
-- [ ] `src/application/navigationService.ts`: `measure()` (`:191-205`) als freie,
+- [x] `src/application/navigationService.ts`: `measure()` (`:191-205`) als freie,
       exportierte Funktion `measureLocation(position, headingDeg, location):
       NavigationEntry` herausziehen; die Methode delegiert. Kein Verhalten aendert sich —
       die Zielseite soll die Peilung nicht ein zweites Mal rechnen.
-- [ ] `src/application/guidanceService.ts` anlegen: haelt `targetId`, loest gegen die
+- [x] `src/application/guidanceService.ts` anlegen: haelt `targetId`, loest gegen die
       uebergebene Ortsliste auf und liefert `GuidanceSnapshot`. Eine Kennung ohne Ort
       faellt still weg — dieselbe Regel wie bei verwaisten Gruppenmitgliedern (§6.6).
       `holdStale()` reicht den letzten Eintrag unveraendert weiter, wie
@@ -537,85 +537,85 @@ schweigt in „Ziel".
         readonly tone: GuidanceTone | null;   // Phase 2
       }
       ```
-- [ ] `src/application/guidanceService.test.ts`: Ziel aufloesen, geloeschtes Ziel faellt
+- [x] `src/application/guidanceService.test.ts`: Ziel aufloesen, geloeschtes Ziel faellt
       auf `null`, `holdStale()` haelt den letzten Eintrag, `reset()` vergisst ihn.
-- [ ] `src/ui/dom.ts`: `ICON_TARGET` (Fadenkreuz, „zum Ziel") und `ICON_LIST` („zur
+- [x] `src/ui/dom.ts`: `ICON_TARGET` (Fadenkreuz, „zum Ziel") und `ICON_LIST` („zur
       Orientierung") von Hand ergaenzen — Entscheidung 25.
-- [ ] `src/ui/targetView.ts` anlegen: Element mit Zielrad (`label` + `select` +
+- [x] `src/ui/targetView.ts` anlegen: Element mit Zielrad (`label` + `select` +
       Vorgabeoption „Ziel waehlen"), Hinweiszeile, Peilzeile als `button.entry`,
       Moduswechsel-Knopf. `render(snapshot)` schreibt nur Inhalte bestehender Knoten;
       die Peilzeile wird **nicht** neu beschriftet, solange `document.activeElement`
       auf ihr steht — dieselbe Regel und derselbe Kommentar wie in
       `navigationView.upsert()` (`:380-418`).
-- [ ] `src/ui/targetView.ts`: `renderTargets(locations, selectedId)` tauscht nur die
+- [x] `src/ui/targetView.ts`: `renderTargets(locations, selectedId)` tauscht nur die
       Optionen des bestehenden `select`, nie den Knoten — der Fokus steht nach der Wahl
       darauf (`groupsView.ts:227-229`). Ohne gespeicherte Orte entfaellt das Rad und an
       seiner Stelle steht „Noch keine Orte gespeichert.", genau wie in
       `groupsView.renderPicker()` (`:563-568`).
-- [ ] `src/ui/navigationView.ts`: `mode: 'orientation' | 'target'` einfuehren; `h2`
+- [x] `src/ui/navigationView.ts`: `mode: 'orientation' | 'target'` einfuehren; `h2`
       traegt den Modusnamen und bekommt `tabindex="-1"`; `setMode()` schaltet die
       Sichtbarkeit beider Bloecke, setzt den Fokus auf die `h2` und meldet den Wechsel
       per Callback nach aussen.
-- [ ] `src/ui/navigationView.ts`: zweiten Moduswechsel-Knopf fuer die Orientierungsseite
+- [x] `src/ui/navigationView.ts`: zweiten Moduswechsel-Knopf fuer die Orientierungsseite
       anlegen (nach dem Anhalten-Knopf, vor der Liste), `TargetView` als Kind einhaengen.
       Kommentar: zwei Knoten fuer einen Wechsel, weil ein einzelner nur an einer der
       beiden richtigen Stellen im Wischweg stehen koennte.
-- [ ] `src/ui/navigationView.ts`: `markRunning()` (`:209-218`) und `markStopped()`
+- [x] `src/ui/navigationView.ts`: `markRunning()` (`:209-218`) und `markStopped()`
       modusabhaengig machen — der Anhalten-Knopf erscheint nur in „Orientierung", der
       Lautsprecher nur in „Ziel", die Kegel-Liste nur in „Orientierung", die Peilzeile
       und das Kreisbild nur in „Ziel". Ohne das steht in „Ziel" ein funktionsloser
       Anhalten-Knopf unten rechts. Dieselbe Zuordnung greift beim Moduswechsel im
       laufenden Betrieb; das Zielrad **bleibt** immer sichtbar, damit vor dem Start
       gewaehlt werden kann.
-- [ ] `src/ui/navigationView.ts`: `modeFreeze` neben `tabFreeze` — in „Ziel" haelt die
+- [x] `src/ui/navigationView.ts`: `modeFreeze` neben `tabFreeze` — in „Ziel" haelt die
       Liste an, aus demselben Grund wie beim Bereichswechsel (Entscheidung 27).
       `syncFreeze()` oder-verknuepft alle drei Flaggen, `resetFreeze()` setzt weiterhin
       nur `manualFreeze` zurueck. `statusText()` bekommt den Modus und laesst in „Ziel"
       den Rang „Liste angehalten" aus.
-- [ ] `src/ui/styles.css`: `.freeze` zu `.floating` + `.floating-right` verallgemeinern
+- [x] `src/ui/styles.css`: `.freeze` zu `.floating` + `.floating-right` verallgemeinern
       und `.floating-left` mit `left: calc(16px + env(safe-area-inset-left))` ergaenzen —
       dieselben Masse, dieselbe Hoehe ueber der Fussleiste. Die Klasse an ihrem einzigen
       Verwendungsort mitziehen (`navigationView.ts:131`, `class: 'icon-button freeze'`).
       Klassen fuer Zielrad und Peilzeile ergaenzen.
-- [ ] `src/main.ts`: gemeinsamen Helfer `renderLocations()` einfuehren, der
+- [x] `src/main.ts`: gemeinsamen Helfer `renderLocations()` einfuehren, der
       `locationsView.render(locationService.all())` **und**
       `targetView.renderTargets(...)` zusammen ausfuehrt, und die acht bestehenden
       Aufrufstellen darauf umstellen (Speichern, Umbenennen, Loeschen, Ausblenden,
       Gruppen-Birne, Import, Fehlerpfad der Gruppen-Birne, Erstaufbau). Ohne das bleibt
       das Rad leer oder veraltet — `navigationView.render()` kehrt bei stehendem Lauf
       sofort zurueck (`navigationView.ts:304-306`) und fuellt es nie.
-- [ ] `src/main.ts`: `mode` verdrahten. In „Ziel" liefert `cuePort()` `silentCue`,
+- [x] `src/main.ts`: `mode` verdrahten. In „Ziel" liefert `cuePort()` `silentCue`,
       `navigationService.update()` laeuft weiter, `guidanceService.update()` kommt dazu;
       `navigationView.render()` bleibt in beiden Modi zustaendig fuer Status, Ansage und
       Kompassguete.
-- [ ] `src/main.ts`: im Stale-Zweig von `renderNavigation()` (`:534-537`) neben
+- [x] `src/main.ts`: im Stale-Zweig von `renderNavigation()` (`:534-537`) neben
       `navigationService.holdStale()` auch `guidanceService.holdStale()` aufrufen und an
       `targetView` reichen — sonst zeigt die Peilzeile bei ausgefallenem GPS gar nichts,
       statt ihren letzten Stand zu halten.
-- [ ] `src/main.ts`: Zielwahl speichern — `settings = { ...settings, targetId }`,
+- [x] `src/main.ts`: Zielwahl speichern — `settings = { ...settings, targetId }`,
       `saveSettings` in `guardStorage()`, **und** `settingsView.setSettings(settings)`
       nachziehen. Ohne das haelt die Einstellungsansicht eine veraltete Kopie und
       ueberschreibt die Zielwahl beim naechsten Kegelwinkel.
-- [ ] `src/main.ts`: beim Start `guidanceService.setTarget(settings.targetId)`.
-- [ ] `docs/design.md`: §4.7 „Zielmodus" anlegen (Betriebsarten und ihre Namen, warum
+- [x] `src/main.ts`: beim Start `guidanceService.setTarget(settings.targetId)`.
+- [x] `docs/design.md`: §4.7 „Zielmodus" anlegen (Betriebsarten und ihre Namen, warum
       der Modus **nicht** gespeichert wird, Zielrad, Peilzeile, Schweigen des Kegels);
       §4.6 um die modusabhaengige Rangfolge der Statuszeile ergaenzen; §5 um die zwei
       Betriebsarten ergaenzen; Entscheidungen 38–41 eintragen.
-- [ ] `docs/notes.txt`: die erledigten Teilpunkte des Items nach DONE ziehen.
+- [x] `docs/notes.txt`: die erledigten Teilpunkte des Items nach DONE ziehen.
 
 **Automated Verification**:
 
-- [ ] `npm test` laeuft gruen
-- [ ] `npm run build` laeuft durch (fuehrt `tsc --noEmit` mit aus)
-- [ ] `formatDirection(28)` ergibt „30 Grad rechts", `(2)` „geradeaus", `(175)` und
+- [x] `npm test` laeuft gruen
+- [x] `npm run build` laeuft durch (fuehrt `tsc --noEmit` mit aus)
+- [x] `formatDirection(28)` ergibt „30 Grad rechts", `(2)` „geradeaus", `(175)` und
       `(-175)` beide „genau hinter dir", `(-12)` „10 Grad links"
-- [ ] `formatBearingLabel(28, 1200)` ergibt „30 Grad rechts, 1,2 Kilometer"
-- [ ] `GuidanceService.update()` mit einer Kennung ohne passenden Ort liefert
+- [x] `formatBearingLabel(28, 1200)` ergibt „30 Grad rechts, 1,2 Kilometer"
+- [x] `GuidanceService.update()` mit einer Kennung ohne passenden Ort liefert
       `target: null` und `entry: null`, ohne zu werfen
-- [ ] `GuidanceService.holdStale()` liefert den zuletzt gerechneten Eintrag unveraendert
-- [ ] `measureLocation()` liefert dieselben Werte wie bisher — die bestehende
+- [x] `GuidanceService.holdStale()` liefert den zuletzt gerechneten Eintrag unveraendert
+- [x] `measureLocation()` liefert dieselben Werte wie bisher — die bestehende
       `navigationService.test.ts` bleibt unveraendert gruen
-- [ ] `loadSettings()` liest einen Stand ohne die neuen Felder als `targetId: null` und
+- [x] `loadSettings()` liest einen Stand ohne die neuen Felder als `targetId: null` und
       `guidanceTone: false`, einen mit falschem Typ in `targetId` ebenfalls als `null`
 
 **Manual Verification**:
@@ -644,7 +644,7 @@ Der eigentliche Zweck der Seite: eine Auskunft, die laeuft, ohne dass man sie an
 
 **Tasks**:
 
-- [ ] `src/domain/guidance.ts` anlegen: `GuidanceTone`, die drei Abbildungen und die
+- [x] `src/domain/guidance.ts` anlegen: `GuidanceTone`, die drei Abbildungen und die
       Konstanten. Jede mit dem Grund im Kommentar, nicht nur mit dem Wert.
       ```ts
       export const GUIDANCE_LOW_HZ = 220;    // A3, hinter mir
@@ -678,34 +678,34 @@ Der eigentliche Zweck der Seite: eine Auskunft, die laeuft, ohne dass man sie an
         return Math.min(GUIDANCE_TONE_SECONDS, 0.5 / rateHz);
       }
       ```
-- [ ] `src/domain/guidance.ts`: `ArrivalState` — gebaut wie `ViewCone`, mit `update()`
+- [x] `src/domain/guidance.ts`: `ArrivalState` — gebaut wie `ViewCone`, mit `update()`
       und `reset()`. Die Grenzen sind **einschliessend**: `distance <= 25` schaltet den
       Dauerton ein, `distance >= 35` wieder aus. Kommentar: Ohne Hysterese kippt der Ton
       im Takt der GPS-Streuung zwischen Ticken und Dauerton.
-- [ ] `src/domain/guidance.test.ts`: Anker 0/90/180 Grad ergeben exakt 880/440/220 Hz;
+- [x] `src/domain/guidance.test.ts`: Anker 0/90/180 Grad ergeben exakt 880/440/220 Hz;
       `guidancePitchHz(-90) === guidancePitchHz(90)`; Panorama ist vorzeichenrichtig, bei
       0 null und bei ±180 praktisch null; `guidanceRateHz(25) === 6`,
       `guidanceRateHz(1800) === 0.5`, `guidanceRateHz(200) / guidanceRateHz(100)` liegt
       bei 2/3; `guidanceToneSeconds(0.5) === 0.12` und `guidanceToneSeconds(6)` liegt bei
       0,083; `ArrivalState` schaltet bei genau 25 ein, bei 30 nicht aus, bei genau 35 aus.
-- [ ] `src/application/ports.ts`: `GuidancePort` mit `play(tone)` und `silence()`
+- [x] `src/application/ports.ts`: `GuidancePort` mit `play(tone)` und `silence()`
       ergaenzen. Kommentar in der Linie von `CuePort` (`:71-82`): Der Kanal ist ein Port,
       damit die offene Messfrage M4 die Logik nicht beruehrt.
-- [ ] `src/application/guidanceService.ts`: das Tonfeld aus Phase 1 fuellen — Hoehe,
+- [x] `src/application/guidanceService.ts`: das Tonfeld aus Phase 1 fuellen — Hoehe,
       Panorama, Takt und `continuous` aus `ArrivalState`. `reset()` setzt die Ankunft
       zurueck; ein Zielwechsel ebenso.
-- [ ] `src/application/guidanceService.test.ts`: Ton ist `null` ohne Ziel; die Ankunft
+- [x] `src/application/guidanceService.test.ts`: Ton ist `null` ohne Ziel; die Ankunft
       ueberlebt einen Zielwechsel **nicht**; `holdStale()` liefert weiterhin `tone: null`.
-- [ ] `src/adapters/audioContext.ts` anlegen: `sharedAudioContext()` erzeugt den Context
+- [x] `src/adapters/audioContext.ts` anlegen: `sharedAudioContext()` erzeugt den Context
       genau einmal, `unlockAudio()` nimmt ihn aus `suspended`. Kommentar: zwei Contexts
       auf iOS sind Verschwendung, und die Entsperrung muss aus einer echten Beruehrung
       kommen (`main.ts:427`).
-- [ ] `src/adapters/cues.ts`: `WebAudioCue` bezieht den Context aus `audioContext.ts`
+- [x] `src/adapters/cues.ts`: `WebAudioCue` bezieht den Context aus `audioContext.ts`
       statt ihn selbst zu erzeugen; `unlock()` delegiert. `dispose()` (`:40-43`) darf den
       Context **nicht** mehr schliessen — das raeumte sonst den Zielton mit ab. Die
       Methode hat heute keinen Aufrufer; entweder entfernen oder auf „nur die eigene
       Referenz loesen" umbauen.
-- [ ] `src/adapters/guidanceTone.ts` anlegen: `WebAudioGuidance implements GuidancePort`.
+- [x] `src/adapters/guidanceTone.ts` anlegen: `WebAudioGuidance implements GuidancePort`.
       - `play(tone)` merkt sich den zuletzt gemeldeten Ton und ist **idempotent** — es
         wird pro Bild gerufen und darf den laufenden Ton nicht neu starten.
       - Ticken: ein `setTimeout`-Zeitgeber; je Schlag ein Oszillator mit Huellkurve ueber
@@ -716,43 +716,43 @@ Der eigentliche Zweck der Seite: eine Auskunft, die laeuft, ohne dass man sie an
         `setTargetAtTime`, damit es beim Drehen nicht knackt.
       - `silence()` bricht den Zeitgeber ab und faehrt den Pegel herunter.
       - `silentGuidance` als Gegenstueck zu `silentCue`.
-- [ ] `src/ui/dom.ts`: `ICON_SPEAKER_OFF` und `ICON_SPEAKER_ON` ergaenzen — dieselbe
+- [x] `src/ui/dom.ts`: `ICON_SPEAKER_OFF` und `ICON_SPEAKER_ON` ergaenzen — dieselbe
       Silhouette plus Schallwellen, zusammengesetzt wie `ICON_BULB_ON` (`dom.ts:89-98`),
       damit der Wechsel als Zustand gelesen wird.
-- [ ] `src/ui/targetView.ts`: Lautsprecher-Knopf als `.floating .floating-right`, nach
+- [x] `src/ui/targetView.ts`: Lautsprecher-Knopf als `.floating .floating-right`, nach
       dem Moduswechsel im DOM. Beschriftung sagt, was der Tipp **bewirkt** („Ton
       einschalten" / „Ton ausschalten"), kein `aria-pressed`, **keine** zusaetzliche
       Ansage — der Knopf liest seinen neuen Namen selbst vor (§6.5).
-- [ ] `src/main.ts`: `WebAudioGuidance` verdrahten. Der Ton klingt nur, wenn **alles**
+- [x] `src/main.ts`: `WebAudioGuidance` verdrahten. Der Ton klingt nur, wenn **alles**
       zutrifft: Lauf laeuft, Betriebsart „Ziel", Schalter an, Ziel gewaehlt, Standort
       nicht veraltet. Sonst `silence()`.
-- [ ] `src/main.ts`: Tonschalter speichern wie die Zielwahl — `saveSettings` in
+- [x] `src/main.ts`: Tonschalter speichern wie die Zielwahl — `saveSettings` in
       `guardStorage()` **und** `settingsView.setSettings()` nachziehen.
-- [ ] `src/main.ts`: `stopNavigation()` und der Wechsel nach „Orientierung" rufen
+- [x] `src/main.ts`: `stopNavigation()` und der Wechsel nach „Orientierung" rufen
       `silence()` und `guidanceService.reset()`. Ohne das laeuft der Ton nach dem
       Beenden weiter — der Fehlermodus, den §4.3 beim Freeze schon einmal gekostet hat.
-- [ ] `src/ui/navigationView.ts`: die Wortlaute fuer „veraltet" im Zielmodus
+- [x] `src/ui/navigationView.ts`: die Wortlaute fuer „veraltet" im Zielmodus
       („…und der Ton schweigt." / „Standort wieder da. Der Ton laeuft.").
-- [ ] `docs/design.md`: §4.7 um den Ton ergaenzen (Abbildungen mit Werten und
+- [x] `docs/design.md`: §4.7 um den Ton ergaenzen (Abbildungen mit Werten und
       Begruendung, Schweigeregeln); **§10 anpassen** — die Zeile „Entfernung als
       Tonhoehe/Klickrate kodiert" wird gestrichen und durch einen Verweis auf §4.7
       ersetzt, mit der Begruendung, dass die dort gesetzte Bedingung („erst nach
       Praxiserfahrung") eingetreten ist; Entscheidungen 42–44; §11 auf **fuenf** Fragen
       erweitern (Einleitungssatz „Drei Fragen" mitziehen) mit **M4** (Panorama unter
       VoiceOver) und **M5** (daempft VoiceOver Web Audio, waehrend es spricht?).
-- [ ] `docs/notes.txt`: Item abschliessen, M4 und M5 als offene Praxistests eintragen.
+- [x] `docs/notes.txt`: Item abschliessen, M4 und M5 als offene Praxistests eintragen.
 
 **Automated Verification**:
 
-- [ ] `npm test` laeuft gruen
-- [ ] `npm run build` laeuft durch
-- [ ] `guidancePitchHz(0) === 880`, `(90) === 440`, `(180) === 220`,
+- [x] `npm test` laeuft gruen
+- [x] `npm run build` laeuft durch
+- [x] `guidancePitchHz(0) === 880`, `(90) === 440`, `(180) === 220`,
       `(-90) === guidancePitchHz(90)`
-- [ ] `guidancePan(0) === 0`, `(90) === 1`, `(-90) === -1`, `(180)` liegt bei 0
-- [ ] `guidanceRateHz(25) === 6`, `(1800) === 0.5`, `(200) / (100)` liegt bei 2/3
-- [ ] `guidanceToneSeconds(0.5) === 0.12`, `guidanceToneSeconds(6)` liegt bei 0,083
-- [ ] `ArrivalState`: 25 m schaltet ein, 30 m bleibt eingeschaltet, 35 m schaltet aus
-- [ ] `GuidanceService` liefert `tone: null` ohne Ziel und nach `holdStale()`
+- [x] `guidancePan(0) === 0`, `(90) === 1`, `(-90) === -1`, `(180)` liegt bei 0
+- [x] `guidanceRateHz(25) === 6`, `(1800) === 0.5`, `(200) / (100)` liegt bei 2/3
+- [x] `guidanceToneSeconds(0.5) === 0.12`, `guidanceToneSeconds(6)` liegt bei 0,083
+- [x] `ArrivalState`: 25 m schaltet ein, 30 m bleibt eingeschaltet, 35 m schaltet aus
+- [x] `GuidanceService` liefert `tone: null` ohne Ziel und nach `holdStale()`
 
 **Manual Verification**:
 
@@ -786,11 +786,11 @@ haengt an ihr; deshalb steht sie zuletzt.
 
 **Tasks**:
 
-- [ ] `src/ui/dom.ts`: `ICON_ARROW` ergaenzen — die vier Punkte des App-Symbols aus
+- [x] `src/ui/dom.ts`: `ICON_ARROW` ergaenzen — die vier Punkte des App-Symbols aus
       `tools/make-icons.mjs:24-29`, aufs 24er-Raster gerechnet:
       `'M12 5.34 18.3 18.66 12 14.88 5.7 18.66Z'`. Kommentar mit dem Verweis auf den
       Generator, damit beide beim naechsten Mal zusammen geaendert werden.
-- [ ] `src/ui/dial.ts` anlegen: `dialPoint(offsetDeg)` als **reine, exportierte
+- [x] `src/ui/dial.ts` anlegen: `dialPoint(offsetDeg)` als **reine, exportierte
       Funktion** — sie ist der einzige rechnende Teil des Bildes und gehoert damit unter
       Test.
       ```ts
@@ -799,31 +799,31 @@ haengt an ihr; deshalb steht sie zuletzt.
         return { x: 100 + 80 * Math.sin(rad), y: 100 - 80 * Math.cos(rad) };
       }
       ```
-- [ ] `src/ui/dial.test.ts` anlegen: `dialPoint(0)` ergibt (100, 20) — oben;
+- [x] `src/ui/dial.test.ts` anlegen: `dialPoint(0)` ergibt (100, 20) — oben;
       `(90)` (180, 100) — rechts; `(180)` (100, 180) — unten; `(-90)` (20, 100) — links.
-- [ ] `src/ui/dial.ts`: `Dial` mit `element: SVGSVGElement`, `viewBox="0 0 200 200"`.
+- [x] `src/ui/dial.ts`: `Dial` mit `element: SVGSVGElement`, `viewBox="0 0 200 200"`.
       Ring (Mittelpunkt 100/100, r=80), vier Marken und der Pfeil werden **einmal**
       angelegt; `render(offsetDeg | null, name, displayMetres)` bewegt nur den Zielpunkt
       und schreibt die Beschriftung. Die Beschriftung steht rechts vom Punkt, wenn
       `sin(θ) >= 0`, sonst links (`text-anchor`). Pfeil:
       `<g transform="translate(100,100) scale(2.5) translate(-12,-12)">`.
-- [ ] `src/ui/dial.ts`: ohne Ziel bleiben Punkt und Beschriftung `hidden` — nur Ring,
+- [x] `src/ui/dial.ts`: ohne Ziel bleiben Punkt und Beschriftung `hidden` — nur Ring,
       Marken und Pfeil stehen da.
-- [ ] `src/ui/targetView.ts`: `Dial` zwischen Peilzeile und Moduswechsel einhaengen,
+- [x] `src/ui/targetView.ts`: `Dial` zwischen Peilzeile und Moduswechsel einhaengen,
       `aria-hidden="true"` und `focusable="false"` wie in `icon()` (`dom.ts:52-66`).
-- [ ] `src/ui/styles.css`: `.dial` — `display: block`, `width: min(100%, 260px)`,
+- [x] `src/ui/styles.css`: `.dial` — `display: block`, `width: min(100%, 260px)`,
       `margin: var(--abstand) auto`; Ring und Marken in `var(--line)`, der Zielpunkt in
       `var(--accent)`, die Beschriftung in `var(--fg)`. Unterhalb des Bildes so viel
       Platz lassen, dass die beiden 64-px-Knoepfe bei
       `bottom: calc(var(--foot-height) + 16px)` den Ring nicht ueberdecken.
-- [ ] `docs/design.md`: §4.7 um das Kreisbild ergaenzen (rein visuell, `aria-hidden`,
+- [x] `docs/design.md`: §4.7 um das Kreisbild ergaenzen (rein visuell, `aria-hidden`,
       Pfeil ist die Nase und nicht Norden).
 
 **Automated Verification**:
 
-- [ ] `npm test` laeuft gruen
-- [ ] `npm run build` laeuft durch
-- [ ] `dialPoint(0)` = (100, 20), `dialPoint(90)` = (180, 100), `dialPoint(180)` =
+- [x] `npm test` laeuft gruen
+- [x] `npm run build` laeuft durch
+- [x] `dialPoint(0)` = (100, 20), `dialPoint(90)` = (180, 100), `dialPoint(180)` =
       (100, 180), `dialPoint(-90)` = (20, 100)
 
 **Manual Verification**:
@@ -842,7 +842,49 @@ haengt an ihr; deshalb steht sie zuletzt.
 
 ## Implementation Notes
 
-During implementation, document user feedback, problems, and decisions here.
+Vier Abweichungen vom Plan, jeweils mit dem Grund:
+
+1. **Die Beschriftung des Kreisbildes steht mittig unter dem Ring, nicht am Punkt**
+   (Phase 3). Der Plan sah sie rechts bzw. links neben dem Zielpunkt vor
+   (`text-anchor` nach `sin(θ)`). So gebaut und am laufenden Bild angesehen: Bei
+   „15 Grad links" schnitt der Bildrand das „1," von „1,2 Kilometer" ab — die
+   Regel schiebt die Beschriftung nach **aussen**, und dort ist kein Platz.
+   Nach innen gerueckt kreuzte sie stattdessen bei waagerechter Peilung den
+   Pfeil, der mit 60 Einheiten Hoehe auf dieser Achse keinen Platz laesst. Die
+   Richtung traegt ohnehin der Punkt auf dem Ring; Name und Entfernung sind die
+   Bildunterschrift dazu. Der viewBox ist dafuer 200×240 statt 200×200. Das
+   Abnahmekriterium „ohne aus dem Bild zu laufen" ist damit bauartbedingt
+   erfuellt.
+
+2. **Kein `silentGuidance`** (Phase 2). Als Gegenstueck zu `silentCue` gedacht,
+   waere es hier eine Falle: `silentCue` ist ein Kanal, den man **statt** des
+   lauten waehlt, aber ein `silentGuidance.silence()` raeumt einen bereits
+   laufenden Web-Audio-Ton nicht ab — der Ton liefe weiter, waehrend der Code
+   „stumm" aussieht. Stattdessen entscheidet eine einzige Stelle
+   (`applyGuidanceTone` in `main.ts`), ob der Ton klingt, und ruft am selben
+   Kanal `play()` oder `silence()`. Der Null-Fall ist ohnehin abgedeckt:
+   `sharedAudioContext()` liefert ohne Web Audio `null`, und `WebAudioGuidance`
+   ist dann von selbst ein No-Op.
+
+3. **Die modusabhaengigen Wortlaute fuer „veraltet" stehen schon seit Phase 1**
+   im Code, nicht erst seit Phase 2. Sie haengen an derselben `Record`-Tabelle
+   wie die Statuszeile, die Phase 1 ohnehin modusabhaengig macht; sie eine Phase
+   lang anders zu formulieren und danach zu ersetzen waere Aufwand fuer einen
+   Zwischenstand, den niemand sieht.
+
+4. **`setHidden()` in `dom.ts` ergaenzt** — ein Waechter wie `setText()`. Die
+   Betriebsarten schalten in jedem Bild ein halbes Dutzend Knoten; jedes
+   Schreiben am DOM kann VoiceOver dazu bringen, die Umgebung neu zu lesen.
+
+**Am Rechner geprueft** (Chrome, mit gefaelschtem Standort und Kompass): Der
+Moduswechsel schaltet in beide Richtungen, die `h2` traegt den Modusnamen und
+bekommt den Fokus, das Rad enthaelt auch den ausgeblendeten Ort, die gespeicherte
+Zielwahl steht nach dem Neuladen wieder da, die Peilzeile liest „90 Grad rechts,
+1,2 Kilometer" bzw. „genau hinter dir, 830 Meter", die schwebenden Knoepfe sind je
+Betriebsart die richtigen, der Tonschalter schreibt `guidanceTone` in den
+Speicher, und die fuenf neuen Symbole sind auf 26 bzw. 64 Pixeln lesbar. Das
+ersetzt **nicht** die Abnahme am Geraet mit VoiceOver — Ansagen, Wischweg, Ton
+und die Messfragen M4/M5 sind dort offen.
 
 ---
 

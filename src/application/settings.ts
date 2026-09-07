@@ -16,6 +16,24 @@ export interface AppSettings {
   readonly cues: CueChannels;
   /** ISO-8601 der letzten Sicherung, oder null. */
   readonly lastBackupAt: string | null;
+  /**
+   * Kennung des gewaehlten Ziels, oder null.
+   *
+   * Das Ziel ist eine Absicht, kein Laufzustand - deshalb liegt es hier und
+   * nicht im Lauf. Es ueberlebt damit den Kaltstart einer PWA; die Betriebsart
+   * dagegen wird bewusst **nicht** gespeichert, die App startet immer in
+   * "Orientierung" (docs/design.md 4.7).
+   */
+  readonly targetId: string | null;
+  /**
+   * Laeuft der Zielton?
+   *
+   * Anders als das Anhalten der Liste ueberlebt dieser Schalter den Neustart:
+   * Ein haengender Freeze war **stumm** und hat einen ganzen Lauf gefressen
+   * (4.3), ein haengender Tonschalter ist das Gegenteil von stumm. Sein Knopf
+   * steht dort, wo er klingt - deshalb kein Eintrag in den Einstellungen.
+   */
+  readonly guidanceTone: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -23,6 +41,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   maxDistanceMetres: null,
   cues: { earcon: true },
   lastBackupAt: null,
+  targetId: null,
+  guidanceTone: false,
 };
 
 /** Auswahl fuer die Einstellungen; null bedeutet unbegrenzt. */

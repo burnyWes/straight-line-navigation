@@ -191,16 +191,32 @@ x  Deploy-Workflow auf node24-Actions gehoben (checkout v7, setup-node v7,
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
-- Navigationsseite erweitern
-  - unten links einen Button Orientierung/Navigation
-  - Orientierung ist die heutige Seite
-  - Navigation wird die neue Seite
-  - Auf Navigationsseite ganz oben ein Dropdown in dem man einen existierenden Ort auswählen kann.
-  - In der Mitte einen Pfeil der nach oben zeigt (gleiches Symbol, wie auf  App-Icon)
-  - Drumrum ein Kreis auf dem in korrekter Richtung der ausgewählte Ort mit Entfernung angezeigt wrid.
-  - Der Fixier-Button von der Orientierungsseite unten rechts wird ersetzt durch einen Button mit Lautsprecher-Symbol
-  (Audio-Navigation aktivieren/deaktivieren)
-  - Bei aktivierter Audio-Navigation werden Töne abgespielt
-    - Tonhöhe = Richtung (tief = hinter mmir, hmittel = neben mir, hoch = vor mir)
-    - Frequenz = Entfernung
+-  M4 Praxistest: Liegt das Ziel rechts, kommt der Ton hoerbar von rechts -
+   oder legt iOS unter VoiceOver auf Mono? (design.md 11)
+-  M5 Praxistest: Spricht VoiceOver, waehrend der Ton laeuft - daempft iOS ihn,
+   unterbricht er die Ansage, oder liegen beide nebeneinander? (design.md 11)
+/ Navigationsseite erweitern (design.md 4.7, Entscheidungen 38-41)
+  x Zwei Betriebsarten im Tab Navigation: Orientierung (die heutige Kegel-Liste)
+    und Ziel (neu). Ein schwebender Knopf unten links wechselt und benennt, was
+    der Tipp bewirkt; die h2 traegt den Modusnamen, der Fokus landet nach dem
+    Wechsel auf ihr. Die Betriebsart wird nicht gespeichert, die App startet
+    immer in Orientierung
+  x Zielrad ganz oben mit allen gespeicherten Orten, auch ausgeblendeten;
+    Vorgabeoption "Ziel waehlen". Ohne Orte entfaellt das Rad und an seiner
+    Stelle steht der Grund. Die Wahl liegt in AppSettings.targetId und
+    ueberlebt den Neustart; ein geloeschter Ort faellt still auf "kein Ziel"
+  x Peilzeile als button.entry: "30 Grad rechts, 1,2 Kilometer" - Richtung
+    zuerst, auf 5 Grad gerundet, "genau hinter dir" ab 175 Grad. Sie behaelt
+    ihre Beschriftung, solange der Fokus auf ihr steht
+  x In "Ziel" schweigt der Kegel-Earcon, rechnet aber weiter - beim
+    Zurueckwechseln folgt deshalb kein Schwall von Eintritts-Toenen. Der
+    Anhalten-Knopf erscheint nur in Orientierung
+  x Zielton: Tonhoehe 220-880 Hz exponentiell ueber 0-180 Grad Abweichung
+    (eine Oktave je 90 Grad), Panorama nach dem Sinus, Takt 6 Hz bei 25 m bis
+    0,5 Hz ab rund 1750 m, Tonlaenge min(0,12 s, halbe Periode). Dauerton ab
+    25 m abwaerts, Ruecksprung aufs Ticken erst ab 35 m. Er schweigt bei
+    veraltetem Standort, ohne Ziel, ausserhalb "Ziel" und bei stehendem Lauf -
+    die Kompassguete stoppt ihn nicht. Lautsprecher-Knopf unten rechts, sein
+    Zustand ueberlebt den Neustart (design.md 4.7, Entscheidungen 42-44)
+  - Kreisbild mit Pfeil (App-Symbol) und dem Zielpunkt auf dem Ring
 

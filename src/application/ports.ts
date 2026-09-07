@@ -9,6 +9,7 @@
  */
 
 import type { Coordinate } from '../domain/coordinate.js';
+import type { GuidanceTone } from '../domain/guidance.js';
 import type { Group } from '../domain/group.js';
 import type { Location } from '../domain/location.js';
 
@@ -79,6 +80,22 @@ export interface GroupRepository {
 export interface CuePort {
   entered(location: Location): void;
   left(location: Location): void;
+}
+
+/**
+ * Der fortlaufende Zielton.
+ *
+ * Wie CuePort bewusst ein Port, und aus demselben Grund: Ob iOS unter
+ * VoiceOver ueberhaupt Panorama durchreicht, ist offen (Messfrage M4 in
+ * docs/design.md 11). Faellt es aus, klingt der Ton in Mono - ohne Aenderung
+ * an der Stelle, die entscheidet, welcher Ton ueberhaupt gilt.
+ *
+ * `play` wird in jedem Bild gerufen und muss deshalb **idempotent** sein: Es
+ * meldet den gewuenschten Zustand, es startet nicht neu.
+ */
+export interface GuidancePort {
+  play(tone: GuidanceTone): void;
+  silence(): void;
 }
 
 export interface Clock {

@@ -236,19 +236,69 @@ button[aria-pressed='true']:focus-visible {
 }
 
 /*
- * Schwebt rechts unten ueber dem Inhalt, damit der Daumen ihn ohne Suchen
- * trifft - dicht ueber der Statusleiste, nicht auf ihr. Im DOM steht er
- * weiterhin vor der Liste (siehe navigationView.ts).
+ * Schwebt unten ueber dem Inhalt, damit der Daumen ihn ohne Suchen trifft -
+ * dicht ueber der Statusleiste, nicht auf ihr. Im DOM stehen diese Knoepfe
+ * unabhaengig davon dort, wo sie in den Wischweg gehoeren (navigationView.ts).
+ *
+ * Frueher hiess die Regel .freeze und galt nur fuer den Anhalten-Knopf. Mit dem
+ * Zielmodus sind es drei; die Masse sind unveraendert, nur die Seite ist jetzt
+ * eine eigene Klasse.
  */
-.freeze {
+.floating {
   position: fixed;
-  right: calc(16px + env(safe-area-inset-right));
   bottom: calc(var(--foot-height, 104px) + 16px);
   z-index: 20;
   width: 64px;
   height: 64px;
   border-radius: 50%;
   box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+}
+
+.floating-right {
+  right: calc(16px + env(safe-area-inset-right));
+}
+
+.floating-left {
+  left: calc(16px + env(safe-area-inset-left));
+}
+
+/*
+ * Zielseite.
+ *
+ * Bewusst fast leer: Das Rad ist ein select wie im Gruppen-Dialog, die
+ * Peilzeile ein button.entry wie eine Listenzeile. Beide bringen Rahmen,
+ * Trefferflaeche und Abstand schon mit - eine eigene Regel waere eine zweite
+ * Wahrheit ueber dieselbe Sache.
+ */
+.target-bearing {
+  /* Volle Breite wie eine Listenzeile, aber ohne die Liste darum herum. */
+  width: 100%;
+}
+
+/*
+ * Das Kreisbild (ui/dial.ts).
+ *
+ * Rein visuell und aria-hidden. Der untere Rand ist kein Zierabstand: Die
+ * beiden schwebenden Knoepfe stehen bei calc(--foot-height + 16px) und sind
+ * 64 px hoch - ohne den Platz laegen sie auf dem Ring.
+ */
+.dial {
+  display: block;
+  /* Der viewBox ist 200 x 240 - die Hoehe folgt dem Verhaeltnis von selbst. */
+  width: min(100%, 260px);
+  margin: var(--abstand) auto calc(var(--abstand) + 88px);
+  color: var(--line);
+}
+
+/* Der Zielpunkt traegt die Akzentfarbe, die Beschriftung die Textfarbe. */
+.dial-point {
+  fill: var(--accent);
+}
+
+.dial-label {
+  fill: var(--fg);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /*
