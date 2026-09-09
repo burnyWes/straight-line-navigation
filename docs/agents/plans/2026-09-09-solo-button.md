@@ -5,7 +5,7 @@ branch: main
 story: SLN-006
 topic: "Solo-Knopf: nur diesen Ort, nur diese Gruppe"
 tags: [plan, ui, locationsView, groupsView, locationService, settings, solo]
-status: ready
+status: done
 ---
 
 # PLAN: SLN-006 — Solo-Knopf auf der Orte- und der Gruppen-Seite
@@ -771,29 +771,29 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
 - [x] `npm run build` — laeuft durch.
 
 **Manual Verification**:
-- [ ] Mit VoiceOver ueber die Orte-Liste wischen: Je Ort kommen drei Stationen —
+- [x] Mit VoiceOver ueber die Orte-Liste wischen: Je Ort kommen drei Stationen —
       `"Bahnhof, Button"`, `"Alle außer Bahnhof ausblenden, Button"`,
       `"Bahnhof ausblenden, Button"`.
-- [ ] Einen Ort einzeln ausblenden, dann Solo bei einem anderen tippen: Der Knopf liest
+- [x] Einen Ort einzeln ausblenden, dann Solo bei einem anderen tippen: Der Knopf liest
       sich als `"Vorherige Auswahl zurückholen"` neu vor, danach kommt
       `"6 von 7 Orten sind ausgeblendet."`, und der Fokus steht weiter auf dem Knopf.
-- [ ] Erneut tippen: Der Ausgangsstand ist zurueck — der einzeln ausgeblendete Ort ist
+- [x] Erneut tippen: Der Ausgangsstand ist zurueck — der einzeln ausgeblendete Ort ist
       **noch immer dunkel**, alle anderen hell. Ansage
       `"1 von 7 Orten ist ausgeblendet."`, im Singular richtig.
-- [ ] Solo auf A, dann direkt Solo auf B, dann zweiter Druck auf B: Der Ausgangsstand ist
+- [x] Solo auf A, dann direkt Solo auf B, dann zweiter Druck auf B: Der Ausgangsstand ist
       zurueck, nicht das A-Solo.
-- [ ] Solo auf einen Ort tippen, der **selbst** ausgeblendet ist: Er wird hell, alle
+- [x] Solo auf einen Ort tippen, der **selbst** ausgeblendet ist: Er wird hell, alle
       anderen dunkel.
-- [ ] Waehrend eines Solos einen einzelnen Ort ueber seine Birne einblenden, dann den
+- [x] Waehrend eines Solos einen einzelnen Ort ueber seine Birne einblenden, dann den
       Solo-Knopf der vorher solo geschalteten Zeile suchen: Er heisst wieder
       `"Alle außer … ausblenden"` — der gemerkte Stand ist verfallen.
-- [ ] App vom Home-Bildschirm neu starten, waehrend ein Solo laeuft: Der Knopf heisst
+- [x] App vom Home-Bildschirm neu starten, waehrend ein Solo laeuft: Der Knopf heisst
       weiter `"Vorherige Auswahl zurückholen"`, und ein Druck bringt den Ursprung zurueck.
-- [ ] Waehrend eines Solos einen neuen Ort speichern, dann zweiter Druck auf die
+- [x] Waehrend eines Solos einen neuen Ort speichern, dann zweiter Druck auf die
       Solo-Zeile: Der neue Ort bleibt sichtbar, der Rest kommt wie gemerkt zurueck.
-- [ ] Navigation starten und waehrend eines Laufs Solo tippen, wenn mehrere Ziele im Kegel
+- [x] Navigation starten und waehrend eines Laufs Solo tippen, wenn mehrere Ziele im Kegel
       liegen: Die absteigenden Zweiklaenge klingen, die Liste wird kuerzer.
-- [ ] Zwei Symbole ansehen: Sind die Ringe auf 26 Pixeln von den Scheiben zu
+- [x] Zwei Symbole ansehen: Sind die Ringe auf 26 Pixeln von den Scheiben zu
       unterscheiden, und ist die Solo-Zeile beim Ueberfliegen zu finden?
 
 ### Phase 3: Der Knopf auf der Gruppen-Seite
@@ -930,28 +930,40 @@ nach.
 - [x] `npm run build` — laeuft durch.
 
 **Manual Verification**:
-- [ ] Mit VoiceOver ueber die Gruppen-Liste wischen: Nicht leere Gruppen haben drei
+- [x] Mit VoiceOver ueber die Gruppen-Liste wischen: Nicht leere Gruppen haben drei
       Stationen, leere Gruppen weiterhin **eine**.
-- [ ] Eine Gruppe mit einem einzeln ausgeblendeten Mitglied solo schalten: **Alle**
+- [x] Eine Gruppe mit einem einzeln ausgeblendeten Mitglied solo schalten: **Alle**
       Mitglieder sind hell, der Eintragsknopf sagt `"Kiez, 4 Orte"` ohne den Zusatz, und
       alle Nichtmitglieder sind dunkel.
-- [ ] Zweiter Druck auf dieselbe Gruppe: Das einzeln ausgeblendete Mitglied ist **wieder
+- [x] Zweiter Druck auf dieselbe Gruppe: Das einzeln ausgeblendete Mitglied ist **wieder
       dunkel**, der Zusatz `", 1 ausgeblendet"` ist zurueck, die uebrigen Orte sind hell.
-- [ ] Nach einem Gruppen-Solo auf die Orte-Seite wechseln: Die Birnen und die
+- [x] Nach einem Gruppen-Solo auf die Orte-Seite wechseln: Die Birnen und die
       Hinweiszeile dort zeigen denselben Stand.
-- [ ] Solo auf eine Gruppe, dann Solo auf einen einzelnen Ort, dann zweiter Druck auf
+- [x] Solo auf eine Gruppe, dann Solo auf einen einzelnen Ort, dann zweiter Druck auf
       diesen Ort: Der Ursprung ist zurueck, nicht das Gruppen-Solo.
-- [ ] Waehrend eines Gruppen-Solos die Gruppen-Birne einer anderen Gruppe tippen, dann die
+- [x] Waehrend eines Gruppen-Solos die Gruppen-Birne einer anderen Gruppe tippen, dann die
       solo geschaltete Zeile suchen: Der gemerkte Stand ist verfallen, der Knopf heisst
       wieder `"Alle außer … ausblenden"`.
-- [ ] Die solo geschaltete Gruppe loeschen: Die Orte behalten ihre Sichtbarkeit, und kein
+- [x] Die solo geschaltete Gruppe loeschen: Die Orte behalten ihre Sichtbarkeit, und kein
       Knopf verspricht danach noch ein Zurueckholen.
-- [ ] Sicherung erstellen und wieder einlesen: Die Orte kommen mit ihrer Sichtbarkeit
+- [x] Sicherung erstellen und wieder einlesen: Die Orte kommen mit ihrer Sichtbarkeit
       zurueck; ein Solo-Zustand steht erwartungsgemaess **nicht** in der Datei.
 
 ## Implementation Notes
 
-During implementation, document user feedback, problems, and decisions here.
+Zwei kleine Abweichungen vom Plantext, jeweils mit dem Grund:
+
+1. **Der Kommentar an `formatGroupEntryLabel` nennt beide Nachbarknoepfe.** Der Plan
+   verlangte nur, „zwei Stationen" auf drei zu berichtigen; im Satz stand aber „mit der
+   Glühbirne", und das waere nach der Berichtigung falsch geblieben. Jetzt heisst es
+   „mit Solo und Glühbirne ohnehin schon drei Stationen" — derselbe Satz steht so auch
+   in `design.md` 6.6.
+2. **Die drei Praxistestfragen tragen in `docs/notes.txt` das Praefix `-`, nicht `p`.**
+   Die Legende der Datei kennt kein `p`; `-` ist dort „todo".
+
+Beide Phasen sind am Geraet abgenommen worden (2026-09-09): alle achtzehn manuellen
+Punkte gehen durch. Die drei Praxistestfragen in `docs/notes.txt` bleiben offen — sie
+fragen nach dem Gebrauch ueber Tage, nicht nach der Abnahme.
 
 ## References
 
