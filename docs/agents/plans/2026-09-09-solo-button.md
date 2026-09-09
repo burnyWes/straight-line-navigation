@@ -321,7 +321,7 @@ Die Zustandsmaschine, das Feld in den Einstellungen und der Schreibzugriff auf e
 Schlag. Ohne jede Aenderung an der Oberflaeche — vollstaendig ueber Vitest nachweisbar.
 
 **Tasks**:
-- [ ] `src/application/solo.ts` anlegen: Typen und die reine Regel.
+- [x] `src/application/solo.ts` anlegen: Typen und die reine Regel.
   ```ts
   export type SoloKind = 'location' | 'group';
 
@@ -371,14 +371,14 @@ Schlag. Ohne jede Aenderung an der Oberflaeche — vollstaendig ueber Vitest nac
     };
   }
   ```
-- [ ] `src/application/solo.test.ts` anlegen. Faelle: erster Tipp merkt den aktuellen
+- [x] `src/application/solo.test.ts` anlegen. Faelle: erster Tipp merkt den aktuellen
       Stand und blendet alles andere aus; ein Ort, der selbst ausgeblendet war, wird durch
       sein Solo sichtbar; Solo wandert und laesst `hiddenBefore` unberuehrt; zweiter Tipp
       auf dieselbe Zeile stellt `hiddenBefore` her und liefert `solo: null`; gleiche
       Kennung bei **anderer** Art (`location` gegen `group`) zaehlt **nicht** als
       dieselbe Zeile; mehrere Mitglieder in `keep` bleiben alle hell; leeres `keep`
       aendert nichts.
-- [ ] `src/application/settings.ts`: Feld ergaenzen und im Standard belegen.
+- [x] `src/application/settings.ts`: Feld ergaenzen und im Standard belegen.
   ```ts
   import type { SoloState } from './solo.js';
 
@@ -400,7 +400,7 @@ Schlag. Ohne jede Aenderung an der Oberflaeche — vollstaendig ueber Vitest nac
     solo: null,
   };
   ```
-- [ ] `src/adapters/storedSettings.ts`: `solo` tolerant lesen. Der Typ kommt aus der
+- [x] `src/adapters/storedSettings.ts`: `solo` tolerant lesen. Der Typ kommt aus der
       Anwendungsschicht — `import type { SoloState } from '../application/solo.js';`
   ```ts
   solo: toSolo(record['solo']),
@@ -432,11 +432,11 @@ Schlag. Ohne jede Aenderung an der Oberflaeche — vollstaendig ueber Vitest nac
     };
   }
   ```
-- [ ] `src/adapters/storedSettings.test.ts`: Rundlauf mit gesetztem Solo; ein Dokument
+- [x] `src/adapters/storedSettings.test.ts`: Rundlauf mit gesetztem Solo; ein Dokument
       **ohne** das Feld liest sich als `null`; `kind: "gruppe"`, fehlendes
       `hiddenBefore` und `hiddenBefore: "x"` liefern jeweils `null`; Nicht-Zeichenketten
       in `hiddenBefore` fallen weg, ohne den Rest zu verwerfen.
-- [ ] `src/application/locationService.ts`: die beiden Methoden.
+- [x] `src/application/locationService.ts`: die beiden Methoden.
   ```ts
   /** Kennungen der gerade ausgeblendeten Orte - Grundlage des Schnappschusses. */
   hiddenIds(): readonly string[] {
@@ -463,18 +463,18 @@ Schlag. Ohne jede Aenderung an der Oberflaeche — vollstaendig ueber Vitest nac
     );
   }
   ```
-- [ ] `src/application/locationService.test.ts`: `hiddenIds()` nennt nur die
+- [x] `src/application/locationService.test.ts`: `hiddenIds()` nennt nur die
       ausgeblendeten; `setHiddenIds()` blendet aus **und** ein, ruehrt die uebrigen Felder
       nicht an, laesst die Speicherreihenfolge stehen, schreibt genau **einmal**
       (`replaceAll`, nicht `save`) und ignoriert unbekannte Kennungen in der Liste;
       `setHiddenIds([])` blendet alles ein.
 
 **Automated Verification**:
-- [ ] `npm test` — alle Suiten gruen, inklusive `solo.test.ts` und der neuen Faelle in
+- [x] `npm test` — alle Suiten gruen, inklusive `solo.test.ts` und der neuen Faelle in
       `storedSettings.test.ts` und `locationService.test.ts`.
-- [ ] `npm run typecheck` — fehlerfrei. Das Feld ist nicht optional; von Hand gebaut wird
+- [x] `npm run typecheck` — fehlerfrei. Das Feld ist nicht optional; von Hand gebaut wird
       `AppSettings` nur in `DEFAULT_SETTINGS`, alles andere geht ueber Spread.
-- [ ] `npm run build` — laeuft durch.
+- [x] `npm run build` — laeuft durch.
 
 ### Phase 2: Der Knopf auf der Orte-Seite
 
@@ -484,7 +484,7 @@ Die dritte Station je Ortszeile, das Symbolpaar, die Ansage und die Verdrahtung 
 Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
 
 **Tasks**:
-- [ ] `src/ui/dom.ts`: Zwei Symbolpfade ergaenzen, von Hand geschrieben wie die uebrigen
+- [x] `src/ui/dom.ts`: Zwei Symbolpfade ergaenzen, von Hand geschrieben wie die uebrigen
       (`design.md` Entscheidung 25). Drei Kreise auf einer Linie, Radius 3,2, Mitten bei
       x = 4,5 / 12 / 19,5. Die Ringe entstehen aus zwei gegenlaeufigen Boegen — dieselbe
       Nonzero-Technik wie beim Muelleimer und beim Fadenkreuz.
@@ -513,7 +513,7 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     `${ICON_SOLO_ONE} M2.8 12a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0` +
     'M17.8 12a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0';
   ```
-- [ ] `src/ui/dom.ts`: `setButtonLabel()` schreibt nur, wenn sich der Name geaendert hat —
+- [x] `src/ui/dom.ts`: `setButtonLabel()` schreibt nur, wenn sich der Name geaendert hat —
       dieselbe Begruendung wie bei `setText()`. Solo zieht in einem Tipp bis zu dreissig
       Zeilen mit je zwei Symbolknoepfen nach; ohne den Riegel wuerde jedes Mal jedes SVG
       neu gebaut. Sicher, weil es **keine** Aufrufstelle gibt, an der der Name gleich
@@ -529,7 +529,7 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     // …
   }
   ```
-- [ ] `src/ui/format.ts`: Die Hinweiszeile bekommt einen eigenen Formatierer — mit
+- [x] `src/ui/format.ts`: Die Hinweiszeile bekommt einen eigenen Formatierer — mit
       Singular, den sie heute falsch hat — und die Ansage einen daneben.
   ```ts
   /** Text der stillen Hinweiszeile; leer, wenn nichts ausgeblendet ist. */
@@ -552,15 +552,15 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     return hidden === 0 ? 'Alle Orte sind eingeblendet.' : formatHiddenHint(hidden, total);
   }
   ```
-- [ ] `src/ui/format.test.ts`: `formatHiddenHint` — leer bei 0, `"ist"` bei 1, `"sind"`
+- [x] `src/ui/format.test.ts`: `formatHiddenHint` — leer bei 0, `"ist"` bei 1, `"sind"`
       bei 2; `formatSoloAnnouncement` — `"Alle Orte sind eingeblendet."` bei 0, sonst
       derselbe Satz wie die Hinweiszeile.
-- [ ] `src/ui/locationsView.ts`: Rueckruf ergaenzen — `onToggleSolo(id: string): void`.
+- [x] `src/ui/locationsView.ts`: Rueckruf ergaenzen — `onToggleSolo(id: string): void`.
       Kein zweiter Parameter: Ob geschaltet oder zurueckgeholt wird, entscheidet
       `tapSolo()` aus dem gespeicherten Stand, nicht die Ansicht.
-- [ ] `src/ui/locationsView.ts`: `Row` um `readonly solo: HTMLButtonElement` erweitern,
+- [x] `src/ui/locationsView.ts`: `Row` um `readonly solo: HTMLButtonElement` erweitern,
       Feld `private soloId: string | null = null;` ergaenzen.
-- [ ] `src/ui/locationsView.ts`: `render(locations, soloId)` nimmt die Kennung entgegen,
+- [x] `src/ui/locationsView.ts`: `render(locations, soloId)` nimmt die Kennung entgegen,
       merkt sie und baut die Zeile mit drei Knoepfen.
   ```ts
   const solo = el('button', { type: 'button', class: 'icon-button' }) as HTMLButtonElement;
@@ -571,7 +571,7 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
   // erst den Ort nennt und dann, was mit ihm zu tun ist.
   return el('li', {}, [el('div', { class: 'entry-row' }, [entry, solo, toggle])]) as HTMLLIElement;
   ```
-- [ ] `src/ui/locationsView.ts`: `dressSolo(row)` — eine Stelle, die den Zustand aufs Bild
+- [x] `src/ui/locationsView.ts`: `dressSolo(row)` — eine Stelle, die den Zustand aufs Bild
       bringt, gerufen von `buildRow()` **und** `applySolo()`, wie `dressToggle()` es
       vormacht.
   ```ts
@@ -584,7 +584,7 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     );
   }
   ```
-- [ ] `src/ui/locationsView.ts`: `setSolo(soloId)` — zieht **nur** die Solo-Knoepfe nach,
+- [x] `src/ui/locationsView.ts`: `setSolo(soloId)` — zieht **nur** die Solo-Knoepfe nach,
       ohne Ansage. Gebraucht wird das, wenn der gemerkte Stand **verfaellt**: Dann aendert
       sich keine Sichtbarkeit, aber die vorher solo geschaltete Zeile darf nicht weiter
       `"Vorherige Auswahl zurückholen"` heissen — und sie ist in der Regel eine **andere**
@@ -597,7 +597,7 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     }
   }
   ```
-- [ ] `src/ui/locationsView.ts`: `applySolo(locations, soloId)` — zieht **alle** Zeilen
+- [x] `src/ui/locationsView.ts`: `applySolo(locations, soloId)` — zieht **alle** Zeilen
       nach und sagt den Umfang an. Kein `render()`, kein Knotenwechsel: Der Fokus steht
       auf dem Solo-Knopf.
   ```ts
@@ -620,9 +620,9 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     );
   }
   ```
-- [ ] `src/ui/locationsView.ts`: `renderHiddenHint()` benutzt `formatHiddenHint()`; der
+- [x] `src/ui/locationsView.ts`: `renderHiddenHint()` benutzt `formatHiddenHint()`; der
       Satz wird nicht mehr an Ort und Stelle gebaut.
-- [ ] `src/main.ts`: Drei Hilfen ergaenzen.
+- [x] `src/main.ts`: Drei Hilfen ergaenzen.
   ```ts
   function soloIdFor(kind: SoloKind): string | null {
     return settings.solo?.kind === kind ? settings.solo.id : null;
@@ -699,9 +699,9 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     );
   }
   ```
-- [ ] `src/main.ts`: `renderLocations()` reicht die Kennung durch —
+- [x] `src/main.ts`: `renderLocations()` reicht die Kennung durch —
       `locationsView.render(all, soloIdFor('location'))`.
-- [ ] `src/main.ts`: `onToggleSolo` der Orte-Ansicht verdrahten.
+- [x] `src/main.ts`: `onToggleSolo` der Orte-Ansicht verdrahten.
   ```ts
   onToggleSolo: (id) => {
     toggleSolo(
@@ -720,7 +720,7 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     );
   },
   ```
-- [ ] `src/main.ts`: In `onToggleHidden` das Solo verfallen lassen — **vor**
+- [x] `src/main.ts`: In `onToggleHidden` das Solo verfallen lassen — **vor**
       `locationService.setHidden()`, innerhalb desselben `guardStorage()`. Die Reihenfolge
       ist der Punkt: Scheitert das Schreiben der Einstellungen, ist der Ort noch nicht
       geschaltet, und der Kommentar „Der Knopf bleibt im alten Zustand" im Fehlerzweig
@@ -748,13 +748,13 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
     );
   },
   ```
-- [ ] `src/main.ts`: In `onRemove` (Ort) das Solo vergessen, wenn es auf genau diesen Ort
+- [x] `src/main.ts`: In `onRemove` (Ort) das Solo vergessen, wenn es auf genau diesen Ort
       zeigt — **vor** `renderLocations()`, damit der Neuaufbau schon `soloIdFor()` mit
       `null` sieht:
       `if (settings.solo?.kind === 'location' && settings.solo.id === id) { forgetSolo(); }`
       Ein eigenes `setSolo()` braucht es hier nicht: `renderLocations()` baut die Liste
       ohnehin vollstaendig neu.
-- [ ] `docs/design.md`: Abschnitt **6.5** um einen Block „Solo" ergaenzen — was der Knopf
+- [x] `docs/design.md`: Abschnitt **6.5** um einen Block „Solo" ergaenzen — was der Knopf
       tut, warum der zweite Druck den Stand von vorher herstellt statt alles einzublenden,
       warum „Solo laeuft" gespeichert und nicht abgeleitet wird (mit dem Fall „neuer Ort
       waehrend des Solo"), warum das Solo den Kaltstart ueberlebt und beim Start nicht
@@ -765,10 +765,10 @@ Verfallsregeln. Danach ist Solo fuer Orte vollstaendig benutzbar.
       ueber den zweiten, unbeschrifteten Knopf rechts der Zeile um den dritten ergaenzen.
 
 **Automated Verification**:
-- [ ] `npm test` — alle Suiten gruen, inklusive der neuen Faelle in `format.test.ts`.
-- [ ] `npm run typecheck` — fehlerfrei; insbesondere der neue Rueckruf in
+- [x] `npm test` — alle Suiten gruen, inklusive der neuen Faelle in `format.test.ts`.
+- [x] `npm run typecheck` — fehlerfrei; insbesondere der neue Rueckruf in
       `LocationsViewCallbacks` und die geaenderte Signatur von `render()`.
-- [ ] `npm run build` — laeuft durch.
+- [x] `npm run build` — laeuft durch.
 
 **Manual Verification**:
 - [ ] Mit VoiceOver ueber die Orte-Liste wischen: Je Ort kommen drei Stationen —
@@ -805,10 +805,10 @@ aufgeloesten Mitglieder. Danach ist die Story vollstaendig, und die Dokumentatio
 nach.
 
 **Tasks**:
-- [ ] `src/ui/groupsView.ts`: Rueckruf ergaenzen — `onToggleSolo(groupId: string): void`;
+- [x] `src/ui/groupsView.ts`: Rueckruf ergaenzen — `onToggleSolo(groupId: string): void`;
       `Row` um `readonly solo: HTMLButtonElement | null` erweitern; Feld
       `private soloId: string | null = null;`.
-- [ ] `src/ui/groupsView.ts`: `render(groups, locations, soloId)` merkt die Kennung.
+- [x] `src/ui/groupsView.ts`: `render(groups, locations, soloId)` merkt die Kennung.
       `buildRow()` legt den Solo-Knopf nach derselben Regel an wie die Birne — **nur** bei
       Mitgliedern.
   ```ts
@@ -826,7 +826,7 @@ nach.
   const children = [entry, ...(solo === null ? [] : [solo]), ...(toggle === null ? [] : [toggle])];
   return el('li', {}, [el('div', { class: 'entry-row' }, children)]) as HTMLLIElement;
   ```
-- [ ] `src/ui/groupsView.ts`: `dressSolo(row)` nach dem Vorbild der Orte-Ansicht; aus
+- [x] `src/ui/groupsView.ts`: `dressSolo(row)` nach dem Vorbild der Orte-Ansicht; aus
       `dressRow()` mitgerufen, damit es nur eine Stelle gibt, die eine Zeile aufs Bild
       bringt.
   ```ts
@@ -842,7 +842,7 @@ nach.
     );
   }
   ```
-- [ ] `src/ui/groupsView.ts`: `setSolo(soloId)` — setzt die Kennung und zieht die Zeilen
+- [x] `src/ui/groupsView.ts`: `setSolo(soloId)` — setzt die Kennung und zieht die Zeilen
       ueber `dressRow()` nach, ohne Ansage. Gebraucht wird das, wenn der gemerkte Stand
       **verfaellt**: `applyGroupHidden()` ruehrt zwar alle Zeilen an, weiss aber nichts
       von der neuen Solo-Kennung.
@@ -854,7 +854,7 @@ nach.
     }
   }
   ```
-- [ ] `src/ui/groupsView.ts`: `applySolo(locations, soloId)` — zieht **alle** Zeilen nach
+- [x] `src/ui/groupsView.ts`: `applySolo(locations, soloId)` — zieht **alle** Zeilen nach
       (die Zahlen im Eintragsknopf aendern sich ueberall mit, ein Ort darf in mehreren
       Gruppen stehen) und sagt den Umfang an. Wie `applyGroupHidden()` nur Inhalte, nie
       Knoten.
@@ -872,9 +872,9 @@ nach.
     );
   }
   ```
-- [ ] `src/main.ts`: `renderGroups()` reicht die Kennung durch —
+- [x] `src/main.ts`: `renderGroups()` reicht die Kennung durch —
       `groupsView.render(groupService.all(), locationService.all(), soloIdFor('group'))`.
-- [ ] `src/main.ts`: `onToggleSolo` der Gruppen-Ansicht verdrahten. Die Mitglieder werden
+- [x] `src/main.ts`: `onToggleSolo` der Gruppen-Ansicht verdrahten. Die Mitglieder werden
       **vor** dem Schreiben aufgeloest, gegen die heutigen Orte.
   ```ts
   onToggleSolo: (groupId) => {
@@ -897,14 +897,14 @@ nach.
     );
   },
   ```
-- [ ] `src/main.ts`: In `onToggleGroupHidden` `forgetSolo()` rufen — **vor** der Schleife
+- [x] `src/main.ts`: In `onToggleGroupHidden` `forgetSolo()` rufen — **vor** der Schleife
       ueber `setHidden()`, aus demselben Grund wie bei der einzelnen Birne —, und nach
       `applyGroupHidden()` zusaetzlich `groupsView.setSolo(null)`. Der Fehlerzweig dort
       zeichnet ohnehin schon beide Ansichten vollstaendig neu und braucht nichts.
-- [ ] `src/main.ts`: Im `onRemove` der Gruppen das Solo vergessen, wenn es auf genau diese
+- [x] `src/main.ts`: Im `onRemove` der Gruppen das Solo vergessen, wenn es auf genau diese
       Gruppe zeigt — vor `renderGroups()`. Ein `setSolo()` ist hier unnoetig: Die Liste
       wird vollstaendig neu gebaut.
-- [ ] `docs/design.md`: Abschnitt **6.6** um einen Block zum Solo an der Gruppe ergaenzen —
+- [x] `docs/design.md`: Abschnitt **6.6** um einen Block zum Solo an der Gruppe ergaenzen —
       dass er wie die Birne nur an nicht leeren Gruppen steht, dass er **alle** Mitglieder
       hell macht, auch einzeln ausgeblendete, und dass der in 6.6 eingestandene Preis der
       Gruppen-Birne („Einblenden hebt eine einzeln gesetzte Ausblendung auf") hier
@@ -914,20 +914,20 @@ nach.
       Satz „Die Gruppenzeile hat mit der Glühbirne ohnehin schon zwei Stationen"
       (`design.md:746`) wird zu drei — und derselbe Satz steht als Kommentar an
       `formatGroupEntryLabel` in `src/ui/format.ts`; er wird mit berichtigt.
-- [ ] `docs/design.md`: Entscheidungsprotokoll um **Nr. 48** ergaenzen — Solo-Knopf als
+- [x] `docs/design.md`: Entscheidungsprotokoll um **Nr. 48** ergaenzen — Solo-Knopf als
       dritte Station je Zeile; der zweite Druck stellt den Stand von vorher her; „Solo
       laeuft" wird gespeichert, die Sichtbarkeit bleibt allein am Ort.
-- [ ] `docs/notes.txt`: `- Solo-Button` nach DONE verschieben, auf `x` setzen und in zwei
+- [x] `docs/notes.txt`: `- Solo-Button` nach DONE verschieben, auf `x` setzen und in zwei
       Saetzen beschreiben. Drei Praxistestfragen in die TODO-Liste: Faellt die dritte
       Station je Zeile im Gebrauch auf, nachdem die zweite es nicht tat? Ist das
       Punkte-Symbol auf 26 Pixeln als „einer von dreien" lesbar? Stoert die zusaetzliche
       Ansage nach dem Knopfnamen, oder traegt sie?
 
 **Automated Verification**:
-- [ ] `npm test` — alle Suiten gruen.
-- [ ] `npm run typecheck` — fehlerfrei; insbesondere die geaenderte Signatur von
+- [x] `npm test` — alle Suiten gruen.
+- [x] `npm run typecheck` — fehlerfrei; insbesondere die geaenderte Signatur von
       `groupsView.render()` und der neue Rueckruf.
-- [ ] `npm run build` — laeuft durch.
+- [x] `npm run build` — laeuft durch.
 
 **Manual Verification**:
 - [ ] Mit VoiceOver ueber die Gruppen-Liste wischen: Nicht leere Gruppen haben drei

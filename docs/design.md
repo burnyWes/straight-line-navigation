@@ -600,8 +600,9 @@ dass der Rest der App es merkt.
 ### 6.4 Verwalten: Liste und Dialoge
 
 Die Ortsliste zeigt **nur den Namen** — der Eintrag selbst ist ein Button und wird von
-VoiceOver als „Bahnhof, Button" angesagt, ohne Zusatz. Rechts daneben steht ein zweiter,
-unbeschrifteter Knopf zum Ausblenden (§6.5); alles Weitere liegt hinter dem Eintrag:
+VoiceOver als „Bahnhof, Button" angesagt, ohne Zusatz. Rechts daneben stehen zwei
+unbeschriftete Knöpfe: Solo und Ausblenden (§6.5); alles Weitere liegt hinter dem
+Eintrag:
 
 - **Ein Tipp auf den Eintrag** öffnet einen modalen Dialog mit Anlagedatum und
   Genauigkeit, dem Namensfeld, „Namen speichern", „Löschen" und „Schließen". Die
@@ -637,8 +638,8 @@ wäre Löschen — und das ist ohne Backend endgültig (§7).
 
 **Geschaltet wird in der Liste, nicht im Dialog:** rechts an jeder Zeile ein Knopf mit
 Glühbirnen-Symbol, leuchtend für sichtbar, dunkel für ausgeblendet. Der Preis ist bekannt
-und bewusst gezahlt: Die Orte-Seite hat damit **zwei VoiceOver-Stationen je Ort** statt
-einer. Ausblenden ist eine Reihenhandlung („heute nur die drei im Kiez"); über den
+und bewusst gezahlt: Die Orte-Seite hat damit **drei VoiceOver-Stationen je Ort** statt
+einer — die dritte kommt vom Solo-Knopf weiter unten. Ausblenden ist eine Reihenhandlung („heute nur die drei im Kiez"); über den
 Bearbeiten-Dialog wären das pro Ort zwei Tipps und eine Ebene tiefer. Der Knopf steht im
 DOM **hinter** dem Namen — wer tippt statt weiterzuwischen, hört ihn nie.
 
@@ -660,6 +661,69 @@ sie bei jedem Umschalten mit. Sie existiert, weil ein stillschweigend gefilterte
 einer Audio-App nicht bemerkbar ist; dieselbe Sorge lässt die Maximalentfernung
 standardmäßig unbegrenzt (§4.2). In die Statuszeile der Navigation gehört das **nicht**:
 Die hat eine feste Rangfolge und meldet nur, was gerade passiert (§4.6).
+
+#### Solo: alles andere ausblenden, mit Weg zurück
+
+**Zwischen Namen und Glühbirne steht ein dritter Knopf.** Ein Tipp blendet **alles
+andere** aus — der Ort selbst wird dabei hell, auch wenn er vorher dunkel war. Ein
+zweiter Tipp auf dieselbe Zeile holt zurück, was vorher galt. Derselbe Knopf sitzt an
+jeder nicht leeren Gruppenzeile (§6.6); er verschont dort **alle** Mitglieder.
+
+**Der zweite Druck stellt den Stand von vorher her, nicht „alles hell".** Ein dauerhaft
+ausgeblendeter Ort — die Baustelle, die nie interessiert — soll nicht bei jedem
+Solo-Ausstieg zurückkommen. Dazu merkt sich die App beim Übergang „kein Solo" nach
+„Solo" einen **Schnappschuss**: die Kennungen der in diesem Moment ausgeblendeten Orte.
+Läuft schon ein Solo, **wandert** es auf die neue Zeile, und der Schnappschuss bleibt der
+erste. Würde jeder Tipp neu schnappen, merkte sich die App beim Sprung von Kiez zu Arbeit
+einen Solo-Zustand als Rückkehrpunkt, und der Weg in den Alltag würde mit jedem Sprung
+einen Druck länger.
+
+**„Solo läuft" wird gespeichert, nicht abgeleitet** — Kennung und Art dazu. Die Ableitung
+(„dieser Ort ist hell, alle anderen dunkel") bricht am häufigsten Fall überhaupt: Wer im
+Kiez unterwegs ist, speichert dort einen neuen Ort, und neue Orte sind sichtbar. Danach
+sähe die Ableitung „kein Solo", der nächste Tipp schriebe den Solo-Zustand als
+Schnappschuss, und der Weg zurück wäre verloren. Das widerspricht §6.6 nicht: Dort ging
+es um die **Sichtbarkeit**, und die bleibt allein am Feld `hidden`. Ein Schnappschuss ist
+die Erinnerung an eine vergangene Welt und aus der gegenwärtigen prinzipiell nicht
+ableitbar.
+
+**Der gemerkte Stand verfällt, sobald jemand sonst an der Sichtbarkeit dreht:** bei der
+einzelnen Glühbirne, bei der Gruppen-Glühbirne und beim Löschen der solo geschalteten
+Zeile. Wer eine Birne tippt, sagt damit: So will ich es haben. Er **bleibt** dagegen bei
+einem neuen Ort, beim Import und beim Löschen einer anderen Zeile — deren Kennung fällt
+beim Zurückholen still weg. Verfällt er, heißt der Knopf der vorher solo geschalteten
+Zeile sofort wieder „Alle außer … ausblenden", auch wenn die Birne, die ihn verfallen
+ließ, in einer anderen Zeile stand.
+
+**Der Solo-Zustand liegt in den Einstellungen und überlebt den Kaltstart**, wie das
+gewählte Ziel (§4.7): Der Kaltstart mitten im Solo ist der Normalfall, nicht die
+Ausnahme — iOS wirft die App aus dem Speicher, und „heute nur der Kiez" dauert Stunden.
+Beim Start wird das Solo ausdrücklich **nicht** aufgelöst; das blendete beim Öffnen Orte
+ein, die gestern bewusst weggeschaltet wurden. In der Sicherung steht er nicht — sie
+kennt die Einstellungen nicht (§7).
+
+**Der Knopf heißt „Alle außer Bahnhof ausblenden"** bzw. „Vorherige Auswahl
+zurückholen". Er sagt die **Handlung**, nicht das Ergebnis („Nur Bahnhof anzeigen") und
+nicht den Funktionsnamen („Bahnhof solo schalten") — in der Vokabel, die die Seite
+ohnehin führt. Und er klingt an der ersten Silbe anders als sein Nachbar „Bahnhof
+ausblenden"; der gefährlichste Fehlgriff wäre, die Birne zu treffen statt Solo. Der
+Rückweg-Name nennt den Ort nicht: Es gibt in der ganzen Liste immer nur **einen** solchen
+Knopf, und der Name der Zeile steht eine Station davor. Das Symbol sind drei Punkte in
+einer Reihe, von denen im Solo nur der mittlere gefüllt bleibt — wie bei der Birne zeigt
+das Symbol den Zustand und der Name die Wirkung.
+
+**Hier gibt es — anders als bei der Birne — eine Ansage:** „6 von 7 Orten sind
+ausgeblendet." bzw. „Alle Orte sind eingeblendet." Die Begründung der Birne („dieselbe
+Information ein zweites Mal") trägt nicht: Der Knopfname sagt nichts darüber, dass sechs
+**andere** Zeilen dunkel geworden sind. Genau dafür wurde die stille Hinweiszeile
+erfunden, und auf der Gruppen-Seite gibt es sie gar nicht. Zwei Ansagen nach einem Tipp
+sind gewollt: der Knopfname durch den Fokus, der Umfang durch die Live-Region.
+
+**Geschaltet wird in einem einzigen Schreibzugriff** über die ganze Ortsliste — ganz oder
+gar nicht. Anders als der Reihenschalter der Gruppen-Birne (§6.6) kennt Solo deshalb
+keinen Halbstand. Erst die Orte, dann die Einstellungen: Der große Schreibzugriff
+scheitert zuerst, und dann ist nichts passiert. Nachgezogen wird in der sichtbaren
+Ansicht nur der **Inhalt** bestehender Zeilen — der Fokus steht auf dem Solo-Knopf (§9).
 
 **Für „heute nur die drei im Kiez" gibt es den Weg über eine Gruppe** (§6.6): Dieselbe
 Glühbirne sitzt dort an der Gruppenzeile und schaltet alle ihre Orte auf einen Schlag.
@@ -743,8 +807,8 @@ selbst neu vorliest — anders als bei der Glühbirne, wo genau das die Bestäti
 
 **Der Eintragsknopf nennt den Umfang:** „Kiez, 4 Orte", bei ausgeblendeten Mitgliedern
 „Kiez, 4 Orte, 1 ausgeblendet". Die Zahlen stehen im Knopfnamen und nicht in einer
-eigenen Zeile: Die Gruppenzeile hat mit der Glühbirne ohnehin schon zwei Stationen, und
-ein Rückwärtswisch auf den Knopf ist der Weg zur Zahl. Der Zusatz erscheint nur, wenn
+eigenen Zeile: Die Gruppenzeile hat mit Solo und Glühbirne ohnehin schon drei Stationen,
+und ein Rückwärtswisch auf den Knopf ist der Weg zur Zahl. Der Zusatz erscheint nur, wenn
 mindestens einer ausgeblendet ist.
 
 **Ein Ort darf in mehreren Gruppen stehen**; wird er gelöscht, verschwindet er aus allen.
@@ -762,6 +826,26 @@ argumentiert. `LocationService.visible()` und der `NavigationService` bleiben da
 unberührt; die Navigation weiß von Gruppen nichts, und ein Ort in zwei Gruppen erzeugt
 keinen Konflikt. Der Preis ist bewusst gezahlt: Einblenden über die Gruppe hebt auch eine
 einzeln gesetzte Ausblendung auf.
+
+**Der Solo-Knopf steht an jeder nicht leeren Gruppenzeile**, zwischen Eintragsknopf und
+Birne, nach genau derselben Regel wie diese: Eine leere Gruppe bekommt ihn nicht — ein
+Tipp dort blendete alles aus und ließe nichts übrig. Er macht **alle** Mitglieder hell,
+auch einzeln ausgeblendete, und blendet alle Nichtmitglieder aus. „Nur der Kiez" ist eine
+Aussage über die **ganze** Gruppe; ein Kiez mit einem Loch darin wäre genau das stille
+Filtern, gegen das §6.5 die Hinweiszeile eingeführt hat. Dieselbe Regel fährt die
+Gruppen-Birne schon.
+
+**Der oben eingestandene Preis fällt bei Solo nicht an.** Wo die Birne beim Einblenden
+eine einzeln gesetzte Ausblendung endgültig aufhebt, merkt sich Solo den Stand von vorher
+und stellt ihn beim zweiten Druck wieder her (§6.5). Der Griff ist damit **umkehrbar** —
+das ist der eigentliche Zugewinn gegenüber dem Reihenschalter daneben.
+
+**Solo schaltet die Orte in einem einzigen Schreibzugriff** über die ganze Liste und
+kennt deshalb keinen Halbstand. Der Reihenschalter der Birne daneben schreibt N Orte
+einzeln und kann bei jedem davon brechen; dann ist ein Teil geschaltet, und beide
+Ansichten werden vollständig neu gezeichnet, damit sie den tatsächlichen Stand zeigen
+statt den beabsichtigten. Solo braucht das nicht: Scheitert sein Schreibzugriff, ist
+nichts passiert.
 
 **Die Birne ist zweistufig, obwohl es drei Fälle gäbe.** Sie leuchtet, sobald
 **mindestens ein** Mitglied sichtbar ist — dann blendet ein Tipp aus; erst wenn alle dunkel
@@ -1040,3 +1124,4 @@ das steht in keinem Verhältnis.
 | 45 | Die Peilzeile läuft unter dem Finger weiter, entgegen der Fokusregel aus §4.3 | Nutzerentscheidung nach dem Praxistest. Die Regel schützt das Erswipen **vieler** Zeilen; hier gibt es genau eine, und der Finger liegt auf ihr, um die Richtung beim Drehen mitlaufen zu hören. Eine eingefrorene Peilung wäre dort keine Auskunft, sondern eine Behauptung von vorhin (§4.7) |
 | 46 | Keine Absenkung des Zieltons, während VoiceOver spricht | M5 gemessen: iOS legt beides nebeneinander, und der Nutzer nimmt es so an. Ducking wäre eine Zustandsmaschine über zwei Kanäle, von denen einer sich nicht abfragen lässt — und sie ließe den Ton verstummen, wenn ohnehin geredet wird (§4.7, §11) |
 | 47 | Dur-Dreiklang über dem Zielton, solange das Ziel im Sichtkegel liegt — Nicht-Ziel „Markierung bei geradeaus" aufgehoben | Nutzerforderung. Der ursprüngliche Einwand hatte zwei Teile, und beide sind ausgeräumt: Der Akkord ist **kein zweiter Kanal**, sondern eine Klangfarbe desselben gleitenden Tons (Terz und Quinte über demselben Grundton, leiser, mitgleitend — die Feinauskunft bleibt), und er flackert nicht, weil er die Hysterese des Kegels erbt. Die Schwelle ist der eingestellte Kegel selbst: „geradeaus" heißt auf beiden Seiten dasselbe (§4.1, §4.7) |
+| 48 | Solo-Knopf als dritte Station je Zeile, an Orten und nicht leeren Gruppen; der zweite Druck stellt den Stand von vorher her; „Solo läuft" wird gespeichert, die Sichtbarkeit bleibt allein am Ort | Ausblenden war bisher pro Zeile ein Griff — „heute nur der Kiez" kostete eine Reihe davon. Der gemerkte Schnappschuss macht den Griff als erste Funktion der App **umkehrbar** und lässt einen dauerhaft dunklen Ort dunkel; „alles hell" wäre bequemer und falsch. Abgeleitet werden kann er nicht: Ein neuer Ort während des Solos ist sichtbar, und die Ableitung sähe danach „kein Solo" — der Weg zurück wäre still verloren. Er überlebt den Kaltstart wie das Ziel (§39), denn ein hängendes Solo wäre stumm (§4.3, §6.5, §6.6) |

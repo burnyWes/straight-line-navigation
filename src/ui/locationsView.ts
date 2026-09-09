@@ -16,6 +16,8 @@ import {
   ICON_PLUS,
   ICON_BULB_ON,
   ICON_BULB_OFF,
+  ICON_SOLO_ONE,
+  ICON_SOLO_ALL,
 } from './dom.js';
 import { ModalDialog } from './dialog.js';
 import type { Announcer } from './announcer.js';
@@ -23,8 +25,10 @@ import type { Location } from '../domain/location.js';
 import type { CoordinateParseFailure } from '../domain/coordinateParser.js';
 import {
   formatGroupMembership,
+  formatHiddenHint,
   formatLocationDetails,
   formatSaveConfirmation,
+  formatSoloAnnouncement,
 } from './format.js';
 
 /** Gruende, aus denen ein Ort nicht angelegt werden kann. */
@@ -50,6 +54,13 @@ export interface LocationsViewCallbacks {
   onRename(id: string, name: string): void;
   onRemove(id: string): void;
   onToggleHidden(id: string, hidden: boolean): void;
+  /**
+   * Ein Tipp auf den Solo-Knopf dieses Ortes.
+   *
+   * Kein zweiter Parameter: Ob geschaltet oder zurueckgeholt wird, entscheidet
+   * der gespeicherte Stand, nicht die Ansicht.
+   */
+  onToggleSolo(id: string): void;
   suggestName(): string;
   /**
    * Namen der Gruppen, in denen dieser Ort steht - alphabetisch.
@@ -64,13 +75,14 @@ export interface LocationsViewCallbacks {
 /**
  * Eine Zeile der Liste.
  *
- * Beide Knoepfe werden festgehalten, nicht nur der Namensknopf: Das Umschalten
- * aendert genau eine Zeile, statt die Liste neu zu bauen. Ein neu gebauter
- * Knopf naehme den Fokus mit, und der steht beim Umschalten genau darauf
- * (docs/design.md 9).
+ * Alle drei Knoepfe werden festgehalten, nicht nur der Namensknopf: Das
+ * Umschalten aendert nur den Inhalt bestehender Zeilen, statt die Liste neu zu
+ * bauen. Ein neu gebauter Knopf naehme den Fokus mit, und der steht beim
+ * Umschalten genau darauf (docs/design.md 9).
  */
 interface Row {
   readonly entry: HTMLButtonElement;
+  readonly solo: HTMLButtonElement;
   readonly toggle: HTMLButtonElement;
   location: Location;
 }
@@ -103,6 +115,8 @@ export class LocationsView {
 
   /** Ort, der gerade im Bearbeiten-Dialog steht. */
   private editing: Location | null = null;
+  /** Kennung der solo geschalteten Zeile, oder null. */
+  private soloId: string | null = null;
 
   constructor(
     private readonly announcer: Announcer,
@@ -333,7 +347,8 @@ export class LocationsView {
     this.report(message);
   }
 
-  render(locations: readonly Location[]): void {
+  render(locations: readonly Location[], soloId: string | null): void {
+    this.soloId = soloId;
     this.list.textContent = '';
     this.rows.clear();
     this.emptyLine.hidden = locations.length > 0;
@@ -361,6 +376,48 @@ export class LocationsView {
     this.renderHiddenHint();
   }
 
+  /**
+   * Zieht alle Zeilen nach, nachdem ein Solo geschaltet oder zurueckgeholt wurde.
+   *
+   * Kein render(), kein Knotenwechsel: Der Fokus steht auf dem Solo-Knopf.
+   */
+  applySolo(locations: readonly Location[], soloId: string | null): void {
+    for (const location of locations) {
+      const row = this.rows.get(location.id);
+      if (row === undefined) {
+        continue;
+      }
+      row.location = location;
+      this.dressToggle(row);
+    }
+    // Danach, nicht davor: dressSolo liest den Namen aus row.location.
+    this.setSolo(soloId);
+    this.renderHiddenHint();
+    // Der Knopf liest seinen neuen Namen selbst vor - aber nicht, dass sechs
+    // andere Zeilen dunkel geworden sind (docs/design.md 6.5).
+    this.announcer.announce(
+      formatSoloAnnouncement(
+        locations.filter((location) => location.hidden).length,
+        locations.length,
+      ),
+    );
+  }
+
+  /**
+   * Zieht nur die Solo-Knoepfe nach, ohne Ansage.
+   *
+   * Gebraucht, wenn der gemerkte Stand **verfaellt**: Dann aendert sich keine
+   * Sichtbarkeit, aber die vorher solo geschaltete Zeile darf nicht weiter
+   * "Vorherige Auswahl zurueckholen" heissen - und sie ist in der Regel eine
+   * andere als die, deren Birne gerade getippt wurde.
+   */
+  setSolo(soloId: string | null): void {
+    this.soloId = soloId;
+    for (const row of this.rows.values()) {
+      this.dressSolo(row);
+    }
+  }
+
   private buildRow(location: Location): HTMLLIElement {
     // Nur der Name, kein Zusatz: VoiceOver soll den Eintrag als Knopf mit genau
     // diesem Namen ansagen. Alles Weitere steht im Dialog dahinter.
@@ -384,13 +441,21 @@ export class LocationsView {
       }
     });
 
-    const row: Row = { entry, toggle, location };
+    const solo = el('button', { type: 'button', class: 'icon-button' }) as HTMLButtonElement;
+    solo.addEventListener('click', () => {
+      this.callbacks.onToggleSolo(location.id);
+    });
+
+    const row: Row = { entry, solo, toggle, location };
     this.dressToggle(row);
+    this.dressSolo(row);
     this.rows.set(location.id, row);
 
-    // Name links, Gluehbirne rechts - im DOM in dieser Reihenfolge, damit der
-    // Wischweg erst den Ort nennt und dann, was mit ihm zu tun ist.
-    return el('li', {}, [el('div', { class: 'entry-row' }, [entry, toggle])]) as HTMLLIElement;
+    // Name, Solo, Gluehbirne - in dieser Reihenfolge im DOM, damit der Wischweg
+    // erst den Ort nennt und dann, was mit ihm zu tun ist.
+    return el('li', {}, [
+      el('div', { class: 'entry-row' }, [entry, solo, toggle]),
+    ]) as HTMLLIElement;
   }
 
   /**
@@ -410,15 +475,28 @@ export class LocationsView {
     row.toggle.classList.toggle('bulb-off', hidden);
   }
 
+  /**
+   * Der Knopf sagt die Handlung, das Symbol den Zustand.
+   *
+   * Dieselbe Konvention wie beim Nachbarknopf in derselben Zeile. Der
+   * Rueckweg-Name nennt den Ort nicht: Es gibt in der ganzen Liste immer nur
+   * **einen** solchen Knopf, und der Name der Zeile steht eine Station davor.
+   */
+  private dressSolo(row: Row): void {
+    const isSolo = this.soloId === row.location.id;
+    setButtonLabel(
+      row.solo,
+      isSolo ? 'Vorherige Auswahl zurückholen' : `Alle außer ${row.location.name} ausblenden`,
+      isSolo ? ICON_SOLO_ONE : ICON_SOLO_ALL,
+    );
+  }
+
   /** Sagt, dass etwas fehlt - sonst waere die kuerzere Kegel-Liste nicht erklaerbar. */
   private renderHiddenHint(): void {
     const total = this.rows.size;
     const hidden = [...this.rows.values()].filter((row) => row.location.hidden).length;
 
-    setText(
-      this.hiddenHint,
-      hidden === 0 ? '' : `${hidden} von ${total} Orten sind ausgeblendet.`,
-    );
+    setText(this.hiddenHint, formatHiddenHint(hidden, total));
     // Bei null Ausgeblendeten gar nicht erst im Wischweg liegen.
     this.hiddenHint.hidden = hidden === 0;
   }

@@ -64,9 +64,60 @@ describe('loadSettings', () => {
       lastBackupAt: '2026-09-04T12:00:00.000Z',
       targetId: 'ort-1',
       guidanceTone: true,
+      solo: { kind: 'group', id: 'kiez', hiddenBefore: ['ort-2', 'ort-3'] },
     };
 
     saveSettings(store, settings);
     expect(loadSettings(store)).toEqual(settings);
+  });
+
+  it('liest einen Stand ohne das Solo-Feld als "kein Solo"', () => {
+    const store = new FakeStore();
+    store.seed({
+      coneHalfAngleDeg: 20,
+      maxDistanceMetres: null,
+      cues: { earcon: true },
+      lastBackupAt: null,
+      targetId: null,
+      guidanceTone: false,
+    });
+
+    expect(loadSettings(store).solo).toBeNull();
+  });
+
+  it('verwirft ein Solo mit unbekannter Art', () => {
+    const store = new FakeStore();
+    store.seed({ ...DEFAULT_SETTINGS, solo: { kind: 'gruppe', id: 'x', hiddenBefore: [] } });
+
+    expect(loadSettings(store).solo).toBeNull();
+  });
+
+  it('verwirft ein Solo ohne hiddenBefore', () => {
+    // Lieber den Weg zurueck verlieren als eine falsche Welt herstellen.
+    const store = new FakeStore();
+    store.seed({ ...DEFAULT_SETTINGS, solo: { kind: 'location', id: 'x' } });
+
+    expect(loadSettings(store).solo).toBeNull();
+  });
+
+  it('verwirft ein Solo, dessen hiddenBefore keine Liste ist', () => {
+    const store = new FakeStore();
+    store.seed({ ...DEFAULT_SETTINGS, solo: { kind: 'location', id: 'x', hiddenBefore: 'x' } });
+
+    expect(loadSettings(store).solo).toBeNull();
+  });
+
+  it('wirft Nicht-Zeichenketten aus hiddenBefore, ohne den Rest zu verwerfen', () => {
+    const store = new FakeStore();
+    store.seed({
+      ...DEFAULT_SETTINGS,
+      solo: { kind: 'location', id: 'x', hiddenBefore: ['a', 7, null, 'b'] },
+    });
+
+    expect(loadSettings(store).solo).toEqual({
+      kind: 'location',
+      id: 'x',
+      hiddenBefore: ['a', 'b'],
+    });
   });
 });

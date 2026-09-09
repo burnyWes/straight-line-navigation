@@ -17,12 +17,18 @@ import {
   ICON_TRASH,
   ICON_BULB_ON,
   ICON_BULB_OFF,
+  ICON_SOLO_ONE,
+  ICON_SOLO_ALL,
 } from './dom.js';
 import { ModalDialog } from './dialog.js';
 import type { Announcer } from './announcer.js';
 import type { Group } from '../domain/group.js';
 import type { Location } from '../domain/location.js';
-import { formatDeleteGroupWarning, formatGroupEntryLabel } from './format.js';
+import {
+  formatDeleteGroupWarning,
+  formatGroupEntryLabel,
+  formatSoloAnnouncement,
+} from './format.js';
 
 /** Gruende, aus denen eine Gruppe nicht angelegt oder umbenannt werden kann. */
 export type GroupFailure = 'name-required' | 'name-taken';
@@ -46,6 +52,13 @@ export interface GroupsViewCallbacks {
    */
   onToggleGroupHidden(groupId: string, hidden: boolean): void;
   /**
+   * Ein Tipp auf den Solo-Knopf dieser Gruppe.
+   *
+   * Kein zweiter Parameter: Ob geschaltet oder zurueckgeholt wird, entscheidet
+   * der gespeicherte Stand, nicht die Ansicht.
+   */
+  onToggleSolo(groupId: string): void;
+  /**
    * Loest die Mitglieder auf.
    *
    * Als Rueckruf und nicht als Filter in der Ansicht: Die Regel "immer gegen
@@ -59,15 +72,16 @@ export interface GroupsViewCallbacks {
 /**
  * Eine Zeile der Liste.
  *
- * Beide Knoepfe werden festgehalten, nicht nur der Eintragsknopf: Das
- * Umschalten aendert genau eine Zeile, statt die Liste neu zu bauen. Ein neu
- * gebauter Knopf naehme den Fokus mit, und der steht beim Umschalten genau
+ * Alle Knoepfe werden festgehalten, nicht nur der Eintragsknopf: Das Umschalten
+ * aendert nur den Inhalt bestehender Zeilen, statt die Liste neu zu bauen. Ein
+ * neu gebauter Knopf naehme den Fokus mit, und der steht beim Umschalten genau
  * darauf (docs/design.md 9).
  *
- * Leere Gruppen haben keine Birne - kein toter Knopf im Wischweg.
+ * Leere Gruppen haben weder Birne noch Solo - kein toter Knopf im Wischweg.
  */
 interface Row {
   readonly entry: HTMLButtonElement;
+  readonly solo: HTMLButtonElement | null;
   readonly toggle: HTMLButtonElement | null;
   group: Group;
   /** Stand beim letzten Zeichnen: Zahl der Mitglieder und wie viele davon dunkel. */
@@ -113,6 +127,8 @@ export class GroupsView {
   private locations: readonly Location[] = [];
   /** Position des zuletzt entfernten Mitglieds, damit der Fokus nachruecken kann. */
   private removedIndex = 0;
+  /** Kennung der solo geschalteten Gruppe, oder null. */
+  private soloId: string | null = null;
 
   constructor(
     private readonly announcer: Announcer,
@@ -317,8 +333,13 @@ export class GroupsView {
    * Braucht die Orte, weil der Eintragsknopf ihren Umfang nennt: "Kiez, 4
    * Orte, 1 ausgeblendet".
    */
-  render(groups: readonly Group[], locations: readonly Location[]): void {
+  render(
+    groups: readonly Group[],
+    locations: readonly Location[],
+    soloId: string | null,
+  ): void {
     this.locations = locations;
+    this.soloId = soloId;
     this.list.textContent = '';
     this.rows.clear();
     this.emptyLine.hidden = groups.length > 0;
@@ -440,6 +461,43 @@ export class GroupsView {
     }
   }
 
+  /**
+   * Zieht alle Zeilen nach, nachdem ein Solo geschaltet oder zurueckgeholt wurde.
+   *
+   * **Alle**, nicht nur die getippte: Ein Ort darf in mehreren Gruppen stehen,
+   * und die Zahlen im Eintragsknopf aendern sich ueberall mit. Wie
+   * applyGroupHidden() nur Inhalte, nie Knoten - der Fokus steht auf dem
+   * Solo-Knopf (docs/design.md 9).
+   */
+  applySolo(locations: readonly Location[], soloId: string | null): void {
+    this.soloId = soloId;
+    this.locations = locations;
+    for (const row of this.rows.values()) {
+      row.members = this.callbacks.membersOf(row.group);
+      // dressRow ruft dressSolo mit - die Kennung steht schon.
+      this.dressRow(row);
+    }
+    this.announcer.announce(
+      formatSoloAnnouncement(
+        locations.filter((location) => location.hidden).length,
+        locations.length,
+      ),
+    );
+  }
+
+  /**
+   * Zieht nur die Solo-Knoepfe nach, ohne Ansage.
+   *
+   * Gebraucht, wenn der gemerkte Stand **verfaellt**: applyGroupHidden() ruehrt
+   * zwar alle Zeilen an, weiss aber nichts von der neuen Solo-Kennung.
+   */
+  setSolo(soloId: string | null): void {
+    this.soloId = soloId;
+    for (const row of this.rows.values()) {
+      this.dressSolo(row);
+    }
+  }
+
   /** Kein Schreibfehler wird geschluckt - ohne Backend gibt es keine zweite Kopie. */
   reportStorageError(message: string): void {
     this.report(message);
@@ -471,15 +529,29 @@ export class GroupsView {
       }
     });
 
-    const row: Row = { entry, toggle, group, members };
+    // Wie die Birne: Eine leere Gruppe bekommt keinen Solo-Knopf. Ein Tipp dort
+    // blendete alles aus und liesse nichts uebrig - der einzige Fall, in dem
+    // Solo etwas kaputt macht.
+    const solo =
+      members.length === 0
+        ? null
+        : (el('button', { type: 'button', class: 'icon-button' }) as HTMLButtonElement);
+    solo?.addEventListener('click', () => {
+      this.callbacks.onToggleSolo(group.id);
+    });
+
+    const row: Row = { entry, solo, toggle, group, members };
     this.dressRow(row);
     this.rows.set(group.id, row);
 
-    // Name links, Gluehbirne rechts - im DOM in dieser Reihenfolge, damit der
-    // Wischweg erst die Gruppe nennt und dann, was mit ihr zu tun ist.
-    return el('li', {}, [
-      el('div', { class: 'entry-row' }, toggle === null ? [entry] : [entry, toggle]),
-    ]) as HTMLLIElement;
+    // Name, Solo, Gluehbirne - im DOM in dieser Reihenfolge, damit der Wischweg
+    // erst die Gruppe nennt und dann, was mit ihr zu tun ist.
+    const children = [
+      entry,
+      ...(solo === null ? [] : [solo]),
+      ...(toggle === null ? [] : [toggle]),
+    ];
+    return el('li', {}, [el('div', { class: 'entry-row' }, children)]) as HTMLLIElement;
   }
 
   /**
@@ -500,6 +572,8 @@ export class GroupsView {
       ),
     );
 
+    this.dressSolo(row);
+
     if (row.toggle === null) {
       return;
     }
@@ -510,6 +584,25 @@ export class GroupsView {
       visible ? ICON_BULB_ON : ICON_BULB_OFF,
     );
     row.toggle.classList.toggle('bulb-off', !visible);
+  }
+
+  /**
+   * Der Knopf sagt die Handlung, das Symbol den Zustand.
+   *
+   * Dieselbe Konvention wie beim Nachbarknopf in derselben Zeile. Der
+   * Rueckweg-Name nennt die Gruppe nicht: Es gibt in der ganzen Liste immer nur
+   * **einen** solchen Knopf, und der Name der Zeile steht eine Station davor.
+   */
+  private dressSolo(row: Row): void {
+    if (row.solo === null) {
+      return;
+    }
+    const isSolo = this.soloId === row.group.id;
+    setButtonLabel(
+      row.solo,
+      isSolo ? 'Vorherige Auswahl zurückholen' : `Alle außer ${row.group.name} ausblenden`,
+      isSolo ? ICON_SOLO_ONE : ICON_SOLO_ALL,
+    );
   }
 
   private openCreate(): void {

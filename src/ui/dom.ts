@@ -78,8 +78,21 @@ export function icon(path: string): SVGSVGElement {
   return svg;
 }
 
-/** Name und Symbol gehoeren zusammen - sonst zeigt der Knopf etwas anderes, als er heisst. */
+/**
+ * Name und Symbol gehoeren zusammen - sonst zeigt der Knopf etwas anderes, als
+ * er heisst.
+ *
+ * Geschrieben wird nur bei geaendertem Namen, aus demselben Grund wie bei
+ * setText(): Solo zieht in einem Tipp bis zu dreissig Zeilen mit je zwei
+ * Symbolknoepfen nach, und ohne den Riegel wuerde dabei jedes SVG neu gebaut.
+ * Sicher, weil es keine Aufrufstelle gibt, an der der Name gleich bleibt und
+ * nur der Symbolpfad wechselt: Ueberall haengen Name und Symbol an derselben
+ * Bedingung.
+ */
 export function setButtonLabel(button: HTMLButtonElement, label: string, path: string): void {
+  if (button.getAttribute('aria-label') === label) {
+    return;
+  }
   button.setAttribute('aria-label', label);
   button.setAttribute('title', label);
   button.replaceChildren(icon(path));
@@ -172,3 +185,27 @@ export const ICON_SPEAKER_ON =
  * mit - sonst zeigt das Kreisbild einen anderen Pfeil als der Home-Bildschirm.
  */
 export const ICON_ARROW = 'M12 5.34 18.3 18.66 12 14.88 5.7 18.66Z';
+
+/**
+ * Drei Punkte, nur der mittlere gefuellt: Diese Zeile ist solo geschaltet.
+ *
+ * Ein Bild der Sache selbst - viele Orte, einer bleibt. Die Ringe sind mit
+ * 1,5 px die feinste Linie der App; ob sie auf 26 Pixeln traegt, steht als
+ * Praxistestfrage in docs/notes.txt, so wie es die Gluehbirne war.
+ */
+export const ICON_SOLO_ONE =
+  'M1.3 12a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M2.8 12a1.7 1.7 0 1 1 3.4 0a1.7 1.7 0 1 1-3.4 0' +
+  'M8.8 12a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0' +
+  'M16.3 12a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M17.8 12a1.7 1.7 0 1 1 3.4 0a1.7 1.7 0 1 1-3.4 0';
+
+/**
+ * Dieselben drei Punkte, alle gefuellt: Diese Zeile ist nicht solo.
+ *
+ * Bewusst aus ICON_SOLO_ONE zusammengesetzt, wie Birne und Lautsprecher: Die
+ * Silhouette muss in beiden Zustaenden dieselbe sein, sonst liest sich der
+ * Wechsel als anderes Symbol statt als anderer Zustand. Die beiden Scheiben
+ * laufen mit den Aussenkreisen, stopfen deren Loecher also zu.
+ */
+export const ICON_SOLO_ALL =
+  `${ICON_SOLO_ONE} M2.8 12a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0` +
+  'M17.8 12a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0';

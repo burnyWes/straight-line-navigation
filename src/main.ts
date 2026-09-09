@@ -11,6 +11,7 @@ import { GuidanceService } from './application/guidanceService.js';
 import { LocationService, type MergeResult } from './application/locationService.js';
 import { GroupService, type GroupMergeResult } from './application/groupService.js';
 import { coneFor, toNavigationSettings, type AppSettings } from './application/settings.js';
+import { tapSolo, type SoloKind } from './application/solo.js';
 import { isPositionStale } from './application/positionFreshness.js';
 import { systemClock, type CuePort, type PositionFix, type Unsubscribe } from './application/ports.js';
 import type { GuidanceTone } from './domain/guidance.js';
@@ -168,6 +169,9 @@ const locationsView = new LocationsView(announcer, {
   onToggleHidden: (id, hidden) => {
     guardStorage(
       () => {
+        // Erst vergessen, dann schalten: Scheitert das Vergessen, ist der Ort
+        // noch unveraendert - und der Knopf bleibt wirklich im alten Zustand.
+        forgetSolo();
         const updated = locationService.setHidden(id, hidden);
         if (updated === null) {
           return;
@@ -175,6 +179,9 @@ const locationsView = new LocationsView(announcer, {
         // Nur die eine Zeile nachziehen: Der Fokus steht auf dem Knopf, und
         // ein neu gebauter naehme ihn mit.
         locationsView.applyHidden(updated);
+        // Die vorher solo geschaltete Zeile ist meist eine andere als diese;
+        // applyHidden() ruehrt nur die eine getippte an.
+        locationsView.setSolo(null);
         // Die Gruppenzeilen nennen, wie viele ihrer Orte ausgeblendet sind -
         // die Zahl haengt an genau dieser Aenderung.
         renderGroups();
@@ -188,9 +195,30 @@ const locationsView = new LocationsView(announcer, {
       },
     );
   },
+  onToggleSolo: (id) => {
+    toggleSolo(
+      { kind: 'location', id },
+      [id],
+      () => {
+        // Nur die Inhalte nachziehen: Der Fokus steht auf dem Solo-Knopf.
+        locationsView.applySolo(locationService.all(), soloIdFor('location'));
+        // Die Gruppenzeilen nennen, wie viele ihrer Orte ausgeblendet sind -
+        // ihr Panel ist verdeckt, vollstaendiges Zeichnen also unkritisch.
+        renderGroups();
+      },
+      (message) => {
+        locationsView.reportStorageError(message);
+      },
+    );
+  },
   onRemove: (id) => {
     guardStorage(
       () => {
+        // Zeigt das Solo auf genau diesen Ort, ist der Weg zurueck mit ihm weg.
+        // Vor renderLocations(), damit der Neuaufbau schon null sieht.
+        if (settings.solo?.kind === 'location' && settings.solo.id === id) {
+          forgetSolo();
+        }
         // Erst den Ort loeschen, dann aufraeumen: Schlaegt das Aufraeumen fehl,
         // bleibt eine verwaiste Kennung zurueck - und die ist durch das Filtern
         // in membersOf() unschaedlich (docs/design.md 6.6).
@@ -248,6 +276,11 @@ const groupsView = new GroupsView(announcer, {
   onRemove: (id) => {
     guardStorage(
       () => {
+        // Zeigt das Solo auf genau diese Gruppe, ist der Weg zurueck mit ihr
+        // weg. Vor renderGroups(), damit der Neuaufbau schon null sieht.
+        if (settings.solo?.kind === 'group' && settings.solo.id === id) {
+          forgetSolo();
+        }
         // Die Orte bleiben - auch ihre Sichtbarkeit. Ein Loeschen, das nebenbei
         // dreissig Orte in den Kegel zurueckholte, waere die Ueberraschung,
         // gegen die docs/design.md 6.5 argumentiert.
@@ -301,6 +334,10 @@ const groupsView = new GroupsView(announcer, {
         if (group === null) {
           return;
         }
+        // Erst vergessen, dann schalten - wie bei der einzelnen Birne: Wer eine
+        // Birne tippt, sagt damit "so will ich es haben", und der Stand von vor
+        // dem Solo ist danach nicht mehr der normale.
+        forgetSolo();
         // Reihenschalter: Die Gruppe besitzt keinen Zustand, sie schreibt
         // nur den der Mitglieder (docs/design.md 6.6).
         for (const member of groupService.membersOf(group, locationService.all())) {
@@ -309,6 +346,9 @@ const groupsView = new GroupsView(announcer, {
         // Nur die eine Zeile nachziehen: Der Fokus steht auf der Birne, und
         // ein neu gebauter Knopf naehme ihn mit.
         groupsView.applyGroupHidden(group);
+        // Die vorher solo geschaltete Zeile ist meist eine andere als diese, und
+        // applyGroupHidden() weiss nichts von der neuen Solo-Kennung.
+        groupsView.setSolo(null);
         // Das Orte-Panel ist verdeckt - vollstaendiges Rendern unkritisch.
         renderLocations();
         // Der Kegel rechnet im naechsten Bild mit der geaenderten Liste. Ein-
@@ -324,6 +364,28 @@ const groupsView = new GroupsView(announcer, {
         renderGroups();
         renderLocations();
         dirty = true;
+      },
+    );
+  },
+  onToggleSolo: (groupId) => {
+    const group = groupService.byId(groupId);
+    if (group === null) {
+      return;
+    }
+    // Die Mitglieder werden **vor** dem Schreiben aufgeloest, gegen die
+    // heutigen Orte. Der Gruppendienst kennt den Ortsdienst damit weiterhin
+    // nicht (docs/design.md 6.6).
+    const members = groupService.membersOf(group, locationService.all());
+    toggleSolo(
+      { kind: 'group', id: groupId },
+      members.map((member) => member.id),
+      () => {
+        groupsView.applySolo(locationService.all(), soloIdFor('group'));
+        // Das Orte-Panel ist verdeckt - vollstaendiges Zeichnen unkritisch.
+        renderLocations();
+      },
+      (message) => {
+        groupsView.reportStorageError(message);
       },
     );
   },
@@ -714,8 +776,84 @@ function handleSave(save: () => ReturnType<LocationService['saveCurrentPosition'
  */
 function renderLocations(): void {
   const all = locationService.all();
-  locationsView.render(all);
+  locationsView.render(all, soloIdFor('location'));
   targetView.renderTargets(all, guidanceService.selectedId);
+}
+
+/** Kennung der solo geschalteten Zeile dieser Art, oder null. */
+function soloIdFor(kind: SoloKind): string | null {
+  return settings.solo?.kind === kind ? settings.solo.id : null;
+}
+
+/**
+ * Der gemerkte Stand gilt nur, solange niemand sonst an der Sichtbarkeit dreht.
+ *
+ * Wer eine Birne tippt, sagt damit: So will ich es haben. Der Stand von vor
+ * dem Solo ist danach nicht mehr "mein normaler Stand".
+ *
+ * Ruft der Aufrufer danach nicht ohnehin vollstaendig neu, muss er die
+ * Solo-Knoepfe seiner Ansicht ueber setSolo(null) nachziehen: Die vorher solo
+ * geschaltete Zeile ist meist eine **andere** als die getippte und hiesse
+ * sonst weiter "Vorherige Auswahl zurueckholen".
+ */
+function forgetSolo(): void {
+  if (settings.solo === null) {
+    return;
+  }
+  settings = { ...settings, solo: null };
+  saveSettings(store, settings);
+  settingsView.setSettings(settings);
+}
+
+/**
+ * Ein Tipp auf einen Solo-Knopf - fuer einen Ort wie fuer eine Gruppe.
+ *
+ * `keep` sind die Orte, die hell bleiben: bei einem Ort er selbst, bei einer
+ * Gruppe ihre aufgeloesten Mitglieder. Der Gruppendienst kennt den Ortsdienst
+ * damit weiterhin nicht (docs/design.md 6.6).
+ */
+function toggleSolo(
+  target: { kind: SoloKind; id: string },
+  keep: readonly string[],
+  apply: () => void,
+  report: (message: string) => void,
+): void {
+  // Nichts zu verschonen: Die Ansichten lassen den Knopf dort gar nicht erst
+  // zu. Hier steht der Riegel ein zweites Mal - und zwar VOR guardStorage,
+  // damit ein Nichts nicht zwei Schreibzugriffe und eine Ansage kostet.
+  if (keep.length === 0) {
+    return;
+  }
+  const result = tapSolo({
+    current: settings.solo,
+    target,
+    allIds: locationService.all().map((location) => location.id),
+    hiddenNow: locationService.hiddenIds(),
+    keep,
+  });
+  guardStorage(
+    () => {
+      // Erst die Orte: Der grosse Schreibzugriff scheitert zuerst, und dann
+      // ist nichts passiert. Er ist ein einziges setItem - ganz oder gar
+      // nicht, anders als der Reihenschalter der Gruppen-Birne.
+      locationService.setHiddenIds(result.hiddenAfter);
+      settings = { ...settings, solo: result.solo };
+      saveSettings(store, settings);
+      settingsView.setSettings(settings);
+      apply();
+      // Der Kegel rechnet im naechsten Bild mit der geaenderten Liste. Ein-
+      // und Austritts-Toene klingen wie beim einzelnen Ort.
+      dirty = true;
+    },
+    (message) => {
+      // Ehrlich bleiben: Was tatsaechlich geschrieben wurde, weiss nur der
+      // Speicher. Beide Ansichten werden deshalb vollstaendig neu gezeichnet.
+      report(message);
+      renderLocations();
+      renderGroups();
+      dirty = true;
+    },
+  );
 }
 
 /**
@@ -750,7 +888,7 @@ function chooseTarget(id: string | null): void {
  * ueber applyGroupHidden() nach.
  */
 function renderGroups(): void {
-  groupsView.render(groupService.all(), locationService.all());
+  groupsView.render(groupService.all(), locationService.all(), soloIdFor('group'));
 }
 
 function exportContent(): string {

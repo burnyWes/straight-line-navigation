@@ -108,7 +108,7 @@ export function formatLocationDetails(
  * Beschriftung einer Gruppenzeile: "Kiez, 4 Orte, 1 ausgeblendet".
  *
  * Die Zahlen stehen im Knopfnamen und nicht in einer eigenen Zeile: Die
- * Gruppenzeile hat mit der Gluehbirne ohnehin schon zwei Stationen
+ * Gruppenzeile hat mit Solo und Gluehbirne ohnehin schon drei Stationen
  * (docs/design.md 6.6), und ein Rueckwaertswisch auf den Knopf ist der Weg
  * zur Zahl, nachdem umgeschaltet wurde.
  *
@@ -167,4 +167,24 @@ export function formatDeleteGroupWarning(total: number, hidden: number): string 
       ? 'Einer davon ist ausgeblendet und bleibt es'
       : `${hidden} davon sind ausgeblendet und bleiben es`;
   return `${bleiben} ${dunkel} - einblenden geht einzeln auf der Orte-Seite.`;
+}
+
+/** Text der stillen Hinweiszeile; leer, wenn nichts ausgeblendet ist. */
+export function formatHiddenHint(hidden: number, total: number): string {
+  if (hidden === 0) {
+    return '';
+  }
+  return `${hidden} von ${total} Orten ${hidden === 1 ? 'ist' : 'sind'} ausgeblendet.`;
+}
+
+/**
+ * Ansage nach einem Solo-Tipp.
+ *
+ * Der Knopfname sagt, was der Tipp getan hat; diese Zeile sagt, **wie viel**
+ * davon betroffen war - die einzige Information, die der Name nicht traegt
+ * (docs/design.md 6.5). Ohne Ausgeblendete ohne Zahl: "Alle 1 Orte" waere
+ * ein Satz, den man nicht schreiben will.
+ */
+export function formatSoloAnnouncement(hidden: number, total: number): string {
+  return hidden === 0 ? 'Alle Orte sind eingeblendet.' : formatHiddenHint(hidden, total);
 }

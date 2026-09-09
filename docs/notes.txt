@@ -237,10 +237,23 @@ x  M5 Ton waehrend der VoiceOver-Ansage                     -> man hoert beides,
    iOS daempft nichts; akzeptiert, kein Ducking (design.md 11, Entscheidung 46)
 x  Umlaute: UI-sichtbare Strings tragen jetzt echte Umlaute und ss, der
    Quelltext (Kommentare, Testnamen, DOM-Kennungen) bleibt ASCII
+x  Solo-Button: Zwischen Namensknopf und Gluehbirne steht in jeder Ortszeile und
+   jeder nicht leeren Gruppenzeile ein dritter Knopf; ein Tipp blendet alles
+   andere aus, bei einer Gruppe bleiben alle Mitglieder hell - auch einzeln
+   ausgeblendete. Ein zweiter Tipp auf dieselbe Zeile holt den Stand zurueck,
+   der vor dem Solo galt; dieser Schnappschuss liegt in den Einstellungen,
+   ueberlebt den Kaltstart und verfaellt, sobald eine Gluehbirne getippt oder
+   die solo geschaltete Zeile geloescht wird (design.md 6.5, 6.6,
+   Entscheidung 48)
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
-- Solo-Button
 - Navigation-Tracking überdenken
+-  Praxistest: Faellt die dritte Station je Zeile im Gebrauch auf, nachdem die
+   zweite es nicht tat?
+-  Praxistest: Ist das Punkte-Symbol auf 26 Pixeln als "einer von dreien"
+   lesbar - tragen die Ringe mit 1,5 px Wandstaerke?
+-  Praxistest: Stoert die zusaetzliche Ansage nach dem Knopfnamen beim Solo,
+   oder traegt sie?

@@ -116,6 +116,31 @@ export class LocationService {
     return next;
   }
 
+  /** Kennungen der gerade ausgeblendeten Orte - Grundlage des Schnappschusses. */
+  hiddenIds(): readonly string[] {
+    return this.all()
+      .filter((location) => location.hidden)
+      .map((location) => location.id);
+  }
+
+  /**
+   * Setzt die Sichtbarkeit aller Orte auf einen Schlag.
+   *
+   * Ein einziger Schreibzugriff, ganz oder gar nicht - anders als der
+   * Reihenschalter der Gruppen-Birne, der bei N Orten N mal scheitern kann
+   * (docs/design.md 6.6). Geschrieben wird ueber die Speicherreihenfolge, nicht
+   * ueber die sortierte Sicht: Sortiert wird beim Lesen.
+   */
+  setHiddenIds(ids: readonly string[]): void {
+    const hidden = new Set(ids);
+    this.repository.replaceAll(
+      this.repository.all().map((location) => {
+        const next = hidden.has(location.id);
+        return location.hidden === next ? location : createLocation({ ...location, hidden: next });
+      }),
+    );
+  }
+
   remove(id: string): void {
     this.repository.remove(id);
   }

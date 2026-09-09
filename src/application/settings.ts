@@ -4,6 +4,7 @@
 
 import { viewConeConfig, type ViewConeConfig } from '../domain/viewCone.js';
 import type { NavigationSettings } from './navigationService.js';
+import type { SoloState } from './solo.js';
 
 export interface CueChannels {
   /** Earcon ueber Web Audio - bei Lautlos stumm (gemessen). */
@@ -34,6 +35,15 @@ export interface AppSettings {
    * steht dort, wo er klingt - deshalb kein Eintrag in den Einstellungen.
    */
   readonly guidanceTone: boolean;
+  /**
+   * Laeuft ein Solo, und wie war es vorher?
+   *
+   * Liegt hier und nicht am Ort: Ein Schnappschuss ist keine Aussage ueber
+   * die Gegenwart, sondern die Erinnerung an eine vergangene Welt - und
+   * damit nichts, was sich aus `hidden` ableiten liesse. Die Sichtbarkeit
+   * selbst bleibt allein am Ort (docs/design.md 6.6).
+   */
+  readonly solo: SoloState | null;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -43,6 +53,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lastBackupAt: null,
   targetId: null,
   guidanceTone: false,
+  solo: null,
 };
 
 /** Auswahl fuer die Einstellungen; null bedeutet unbegrenzt. */

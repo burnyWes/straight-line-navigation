@@ -6,6 +6,7 @@
  */
 
 import { DEFAULT_SETTINGS, type AppSettings } from '../application/settings.js';
+import type { SoloState } from '../application/solo.js';
 import type { KeyValueStore } from './storedLocationRepository.js';
 
 export const SETTINGS_KEY = 'straight-line-navigation.settings';
@@ -47,6 +48,7 @@ export function loadSettings(store: KeyValueStore, key = SETTINGS_KEY): AppSetti
     // Aggregat zu viel. Ein geloeschtes Ziel faellt dort still auf "kein Ziel".
     targetId: typeof record['targetId'] === 'string' ? record['targetId'] : null,
     guidanceTone: boolean(record['guidanceTone'], DEFAULT_SETTINGS.guidanceTone),
+    solo: toSolo(record['solo']),
   };
 }
 
@@ -68,4 +70,31 @@ function nullableNumber(value: unknown): number | null {
 
 function boolean(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;
+}
+
+/**
+ * Halb Gelesenes wird zu "kein Solo".
+ *
+ * Lieber den Weg zurueck verlieren als eine falsche Welt herstellen: Ohne
+ * `hiddenBefore` wuesste der zweite Druck nicht, wohin.
+ */
+function toSolo(value: unknown): SoloState | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const kind = record['kind'];
+  const id = record['id'];
+  const before = record['hiddenBefore'];
+  if ((kind !== 'location' && kind !== 'group') || typeof id !== 'string') {
+    return null;
+  }
+  if (!Array.isArray(before)) {
+    return null;
+  }
+  return {
+    kind,
+    id,
+    hiddenBefore: before.filter((entry): entry is string => typeof entry === 'string'),
+  };
 }

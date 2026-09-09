@@ -7,8 +7,10 @@ import {
   formatEntryLabel,
   formatGroupEntryLabel,
   formatGroupMembership,
+  formatHiddenHint,
   formatLocationDetails,
   formatSaveConfirmation,
+  formatSoloAnnouncement,
 } from './format.js';
 
 describe('formatDistance', () => {
@@ -186,5 +188,33 @@ describe('formatDeleteGroupWarning', () => {
       'Die Gruppe wird entfernt, die 4 Orte darin bleiben gespeichert. ' +
         'Einer davon ist ausgeblendet und bleibt es - einblenden geht einzeln auf der Orte-Seite.',
     );
+  });
+});
+
+describe('formatHiddenHint', () => {
+  it('bleibt leer, wenn nichts ausgeblendet ist', () => {
+    expect(formatHiddenHint(0, 7)).toBe('');
+  });
+
+  it('ist im Singular richtig', () => {
+    expect(formatHiddenHint(1, 7)).toBe('1 von 7 Orten ist ausgeblendet.');
+  });
+
+  it('nennt im Plural "sind"', () => {
+    expect(formatHiddenHint(2, 7)).toBe('2 von 7 Orten sind ausgeblendet.');
+    expect(formatHiddenHint(6, 7)).toBe('6 von 7 Orten sind ausgeblendet.');
+  });
+});
+
+describe('formatSoloAnnouncement', () => {
+  it('sagt ohne Zahl an, wenn alles hell ist', () => {
+    // "Alle 1 Orte sind eingeblendet" waere ein Satz, den man nicht schreibt.
+    expect(formatSoloAnnouncement(0, 1)).toBe('Alle Orte sind eingeblendet.');
+    expect(formatSoloAnnouncement(0, 7)).toBe('Alle Orte sind eingeblendet.');
+  });
+
+  it('sagt sonst denselben Satz wie die Hinweiszeile', () => {
+    expect(formatSoloAnnouncement(6, 7)).toBe(formatHiddenHint(6, 7));
+    expect(formatSoloAnnouncement(1, 7)).toBe('1 von 7 Orten ist ausgeblendet.');
   });
 });

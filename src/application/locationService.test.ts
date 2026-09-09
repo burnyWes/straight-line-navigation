@@ -7,12 +7,16 @@ import { testLocation } from '../testing/fixtures.js';
 
 class InMemoryRepository implements LocationRepository {
   private locations: Location[] = [];
+  /** Zaehlt die Schreibzugriffe - Solo muss mit genau einem auskommen. */
+  saveCalls = 0;
+  replaceCalls = 0;
 
   all(): readonly Location[] {
     return this.locations;
   }
 
   save(location: Location): void {
+    this.saveCalls += 1;
     const index = this.locations.findIndex((candidate) => candidate.id === location.id);
     if (index === -1) {
       this.locations.push(location);
@@ -26,6 +30,7 @@ class InMemoryRepository implements LocationRepository {
   }
 
   replaceAll(locations: readonly Location[]): void {
+    this.replaceCalls += 1;
     this.locations = [...locations];
   }
 }
@@ -189,6 +194,81 @@ describe('LocationService', () => {
       ]);
       expect(service.all().map((l) => l.hidden)).toEqual([true, false]);
       expect(service.visible().map((l) => l.name)).toEqual(['Tor']);
+    });
+  });
+
+  describe('Sichtbarkeit auf einen Schlag', () => {
+    /** Legt drei Orte in dieser Speicherreihenfolge an: Zuhause, Arbeit, Dom. */
+    function seed(): readonly Location[] {
+      service.saveCurrentPosition('Zuhause', fix(52.5, 13.4));
+      service.saveCurrentPosition('Arbeit', fix(52.6, 13.5));
+      service.saveFromText('Dom', '50.94, 6.96');
+      return repository.all();
+    }
+
+    it('nennt nur die ausgeblendeten Orte', () => {
+      const [zuhause, , dom] = seed();
+      expect(service.hiddenIds()).toEqual([]);
+
+      service.setHidden(zuhause!.id, true);
+      service.setHidden(dom!.id, true);
+      // Alphabetisch, weil hiddenIds() auf all() sitzt: Dom vor Zuhause.
+      expect(service.hiddenIds()).toEqual([dom!.id, zuhause!.id]);
+    });
+
+    it('blendet aus und ein, was in der Liste steht - und nur das', () => {
+      const [zuhause, arbeit, dom] = seed();
+      service.setHidden(arbeit!.id, true);
+
+      service.setHidden(zuhause!.id, true);
+      service.setHiddenIds([dom!.id]);
+
+      expect(service.hiddenIds()).toEqual([dom!.id]);
+      expect(repository.all().map((l) => l.hidden)).toEqual([false, false, true]);
+    });
+
+    it('ruehrt die uebrigen Felder nicht an und laesst die Speicherreihenfolge stehen', () => {
+      const before = [...seed()];
+      service.setHiddenIds([before[1]!.id]);
+
+      const after = repository.all();
+      expect(after.map((l) => l.name)).toEqual(['Zuhause', 'Arbeit', 'Dom']);
+      expect(after.map((l) => l.id)).toEqual(before.map((l) => l.id));
+      expect(after[1]).toMatchObject({
+        name: 'Arbeit',
+        createdAt: before[1]!.createdAt,
+        accuracyMetres: before[1]!.accuracyMetres,
+        hidden: true,
+      });
+    });
+
+    it('schreibt genau einmal, ueber replaceAll statt ueber save', () => {
+      // Ganz oder gar nicht: Anders als der Reihenschalter der Gruppen-Birne
+      // kann Solo nicht auf halbem Weg stehenbleiben.
+      const [zuhause, arbeit] = seed();
+      repository.saveCalls = 0;
+      repository.replaceCalls = 0;
+
+      service.setHiddenIds([zuhause!.id, arbeit!.id]);
+
+      expect(repository.replaceCalls).toBe(1);
+      expect(repository.saveCalls).toBe(0);
+    });
+
+    it('ignoriert unbekannte Kennungen in der Liste', () => {
+      const [zuhause] = seed();
+      service.setHiddenIds([zuhause!.id, 'gibt-es-nicht']);
+
+      expect(service.hiddenIds()).toEqual([zuhause!.id]);
+    });
+
+    it('blendet bei leerer Liste alles ein', () => {
+      const [zuhause, arbeit] = seed();
+      service.setHiddenIds([zuhause!.id, arbeit!.id]);
+
+      service.setHiddenIds([]);
+      expect(service.hiddenIds()).toEqual([]);
+      expect(service.visible()).toHaveLength(3);
     });
   });
 
