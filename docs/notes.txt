@@ -268,14 +268,18 @@ x  Solo-Button: Zwischen Namensknopf und Gluehbirne steht in jeder Ortszeile und
    ueberlebt den Kaltstart und verfaellt, sobald eine Gluehbirne getippt oder
    die solo geschaltete Zeile geloescht wird (design.md 6.5, 6.6,
    Entscheidung 48)
+x  Praxistest: Faellt die dritte Station je Zeile im Gebrauch auf, nachdem die
+   zweite es nicht tat? Nein - wie schon bei der Gluehbirne merkt man sie beim
+   Erswipen nicht (design.md 6.5)
+x  Praxistest: Ist das Punkte-Symbol auf 26 Pixeln als "einer von dreien"
+   lesbar? Ja - gefuellt und Ring sind klar zu unterscheiden. Die Ringwand
+   misst 1,5 Einheiten des 24er-Rasters, bei 26 px also 1,63 CSS-Pixel und auf
+   dem Geraet rund 5 Bildpunkte; sie traegt und bleibt die feinste Linie der App
+x  Praxistest: Stoert die zusaetzliche Ansage nach dem Knopfnamen beim Solo?
+   Nein, sie traegt - die Zahl ist die eine Information, die der Knopfname nicht
+   hat. Zwei Ansagen nach einem Tipp bleiben gewollt (design.md 6.5)
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
--  Praxistest: Faellt die dritte Station je Zeile im Gebrauch auf, nachdem die
-   zweite es nicht tat?
--  Praxistest: Ist das Punkte-Symbol auf 26 Pixeln als "einer von dreien"
-   lesbar - tragen die Ringe mit 1,5 px Wandstaerke?
--  Praxistest: Stoert die zusaetzliche Ansage nach dem Knopfnamen beim Solo,
-   oder traegt sie?

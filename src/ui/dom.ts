@@ -190,8 +190,9 @@ export const ICON_ARROW = 'M12 5.34 18.3 18.66 12 14.88 5.7 18.66Z';
  * Drei Punkte, nur der mittlere gefuellt: Diese Zeile ist solo geschaltet.
  *
  * Ein Bild der Sache selbst - viele Orte, einer bleibt. Die Ringe sind mit
- * 1,5 px die feinste Linie der App; ob sie auf 26 Pixeln traegt, steht als
- * Praxistestfrage in docs/notes.txt, so wie es die Gluehbirne war.
+ * 1,5 Einheiten die feinste Linie der App - bei 26 px sind das 1,63 CSS-Pixel
+ * und auf dem Geraet rund fuenf Bildpunkte. Am Geraet abgenommen: gefuellt und
+ * Ring sind klar zu unterscheiden, wie zuvor schon die Gluehbirne.
  */
 export const ICON_SOLO_ONE =
   'M1.3 12a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M2.8 12a1.7 1.7 0 1 1 3.4 0a1.7 1.7 0 1 1-3.4 0' +

@@ -764,7 +764,10 @@ ausblenden"; der gefährlichste Fehlgriff wäre, die Birne zu treffen statt Solo
 Rückweg-Name nennt den Ort nicht: Es gibt in der ganzen Liste immer nur **einen** solchen
 Knopf, und der Name der Zeile steht eine Station davor. Das Symbol sind drei Punkte in
 einer Reihe, von denen im Solo nur der mittlere gefüllt bleibt — wie bei der Birne zeigt
-das Symbol den Zustand und der Name die Wirkung.
+das Symbol den Zustand und der Name die Wirkung. *(Praxistest bestanden: Gefüllt und Ring
+sind auf 26 px klar zu unterscheiden — die Ringwand misst dort 1,63 px und bleibt die
+feinste Linie der App. Auch die dritte Station je Zeile fällt im Gebrauch nicht auf, so
+wenig wie zuvor die zweite.)*
 
 **Hier gibt es — anders als bei der Birne — eine Ansage:** „6 von 7 Orten sind
 ausgeblendet." bzw. „Alle Orte sind eingeblendet." Die Begründung der Birne („dieselbe
@@ -772,6 +775,8 @@ Information ein zweites Mal") trägt nicht: Der Knopfname sagt nichts darüber, 
 **andere** Zeilen dunkel geworden sind. Genau dafür wurde die stille Hinweiszeile
 erfunden, und auf der Gruppen-Seite gibt es sie gar nicht. Zwei Ansagen nach einem Tipp
 sind gewollt: der Knopfname durch den Fokus, der Umfang durch die Live-Region.
+*(Praxistest bestanden: Sie trägt, sie stört nicht — anders als die Ansage bei Ein- und
+Austritt, die genau daran gescheitert ist (§4.4).)*
 
 **Geschaltet wird in einem einzigen Schreibzugriff** über die ganze Ortsliste — ganz oder
 gar nicht. Anders als der Reihenschalter der Gruppen-Birne (§6.6) kennt Solo deshalb
