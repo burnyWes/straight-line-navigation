@@ -378,7 +378,7 @@ const settingsView = new SettingsView(settings, announcer, {
       // Ohne diesen Fall meldet der leere Knopfdruck "keine Orte gefunden" -
       // das klingt nach einer kaputten Sicherung statt nach einem leeren Feld.
       settingsView.report(
-        'Das Feld war leer. Erst die Sicherung einfuegen oder eine Datei waehlen.',
+        'Das Feld war leer. Erst die Sicherung einfügen oder eine Datei wählen.',
       );
       return;
     }
@@ -386,7 +386,7 @@ const settingsView = new SettingsView(settings, announcer, {
     if (parsed.locations.length === 0 && parsed.groups.length === 0) {
       settingsView.report(
         parsed.skippedLocations + parsed.skippedGroups > 0
-          ? `Keine lesbaren Orte gefunden, ${parsed.skippedLocations + parsed.skippedGroups} Eintraege waren beschaedigt.`
+          ? `Keine lesbaren Orte gefunden, ${parsed.skippedLocations + parsed.skippedGroups} Einträge waren beschädigt.`
           : 'Darin waren keine Orte zu finden.',
       );
       return;
@@ -452,13 +452,13 @@ renderGroups();
 const skipped = repository.skippedOnLoad();
 if (skipped > 0) {
   // Ehrlich melden statt still schlucken - die Orte sind nur hier gespeichert.
-  announcer.announce(`Achtung: ${skipped} gespeicherte Orte waren beschaedigt und fehlen.`);
+  announcer.announce(`Achtung: ${skipped} gespeicherte Orte waren beschädigt und fehlen.`);
 }
 
 const skippedGroups = groupRepository.skippedOnLoad();
 if (skippedGroups > 0) {
   announcer.announce(
-    `Achtung: ${skippedGroups} gespeicherte Gruppen waren beschaedigt und fehlen.`,
+    `Achtung: ${skippedGroups} gespeicherte Gruppen waren beschädigt und fehlen.`,
   );
 }
 
@@ -681,7 +681,7 @@ function guardStorage(action: () => void, report: (message: string) => void): vo
   try {
     action();
   } catch {
-    report('Speichern fehlgeschlagen. Der Geraetespeicher ist voll oder blockiert.');
+    report('Speichern fehlgeschlagen. Der Gerätespeicher ist voll oder blockiert.');
   }
 }
 
@@ -770,21 +770,21 @@ function importSummary(
   parsed: { skippedLocations: number; skippedGroups: number },
 ): string {
   const parts = [
-    `${locations.added} Orte ergaenzt`,
+    `${locations.added} Orte ergänzt`,
     `${locations.duplicates} waren schon vorhanden`,
   ];
   if (groups.added > 0) {
-    parts.push(`${groups.added} ${groups.added === 1 ? 'Gruppe' : 'Gruppen'} ergaenzt`);
+    parts.push(`${groups.added} ${groups.added === 1 ? 'Gruppe' : 'Gruppen'} ergänzt`);
   }
   if (groups.extended > 0) {
     parts.push(`${groups.extended} ${groups.extended === 1 ? 'Gruppe' : 'Gruppen'} erweitert`);
   }
   if (parsed.skippedLocations > 0) {
-    parts.push(`${parsed.skippedLocations} Orte beschaedigt`);
+    parts.push(`${parsed.skippedLocations} Orte beschädigt`);
   }
   if (parsed.skippedGroups > 0) {
     parts.push(
-      `${parsed.skippedGroups} ${parsed.skippedGroups === 1 ? 'Gruppe' : 'Gruppen'} beschaedigt`,
+      `${parsed.skippedGroups} ${parsed.skippedGroups === 1 ? 'Gruppe' : 'Gruppen'} beschädigt`,
     );
   }
   return `${parts.join(', ')}.`;

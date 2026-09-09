@@ -125,12 +125,12 @@
   <table>
     <tr><td>AudioContext</td><td id="audioState">&ndash;</td></tr>
     <tr><td>Ausgabe-Latenz</td><td id="audioLatency">&ndash;</td></tr>
-    <tr><td>Toene abgespielt</td><td id="audioCount">0</td></tr>
+    <tr><td>Töne abgespielt</td><td id="audioCount">0</td></tr>
   </table>
   <p style="color:#8b949e;font-size:13px;margin:12px 0 0">
-    Vier Durchlaeufe: Lautsprecher laut, Lautsprecher lautlos,
-    Kopfhoerer laut, Kopfhoerer lautlos. Gesucht ist, ob der
-    Lautlos-Schalter den Ton abwuergt.
+    Vier Durchläufe: Lautsprecher laut, Lautsprecher lautlos,
+    Kopfhörer laut, Kopfhörer lautlos. Gesucht ist, ob der
+    Lautlos-Schalter den Ton abwürgt.
   </p>
 </div>
 
@@ -186,7 +186,7 @@
   $('ua').textContent = navigator.userAgent;
 
   if (!window.isSecureContext) {
-    verdict('fail', 'Kein Secure Context. Die Seite muss ueber HTTPS geladen werden - ueber http:// oder eine nackte IP verweigert iOS Kompass und GPS grundsaetzlich.');
+    verdict('fail', 'Kein Secure Context. Die Seite muss über HTTPS geladen werden - über http:// oder eine nackte IP verweigert iOS Kompass und GPS grundsätzlich.');
   }
 
   // ---- Kompass -------------------------------------------------------------
@@ -226,8 +226,8 @@
       set('hdgSrc', source);
       $('rose').setAttribute('transform', 'rotate(' + (-heading).toFixed(1) + ' 75 75)');
       verdict('pass', isStandalone
-        ? 'Kompass liefert Daten - und das im Standalone-Modus. Weg A ist tragfaehig.'
-        : 'Kompass liefert Daten. Jetzt bitte noch ueber den Homescreen testen.');
+        ? 'Kompass liefert Daten - und das im Standalone-Modus. Weg A ist tragfähig.'
+        : 'Kompass liefert Daten. Jetzt bitte noch über den Homescreen testen.');
     }
   }
 
@@ -244,9 +244,9 @@
     // Wenn nach 3 s nichts ankommt, ist der Sensor stumm.
     setTimeout(function () {
       if (state.orientEvents === 0) {
-        verdict('fail', 'Permission erteilt, aber es kommen keine deviceorientation-Events an. Weg A traegt so nicht.');
+        verdict('fail', 'Permission erteilt, aber es kommen keine deviceorientation-Events an. Weg A trägt so nicht.');
       } else if (!state.headingSeen) {
-        verdict('fail', 'Events kommen an, aber ohne nutzbaren Heading (kein webkitCompassHeading, kein absolute alpha). Fuer Sichtrichtung unbrauchbar.');
+        verdict('fail', 'Events kommen an, aber ohne nutzbaren Heading (kein webkitCompassHeading, kein absolute alpha). Für Sichtrichtung unbrauchbar.');
       }
     }, 3000);
   }
@@ -297,7 +297,7 @@
   function earcon(freqs) {
     var ctx = audioContext();
     if (!ctx) {
-      set('audioState', 'Web Audio nicht verfuegbar', 'bad');
+      set('audioState', 'Web Audio nicht verfügbar', 'bad');
       return;
     }
 
@@ -352,19 +352,19 @@
     }
     var accepted = navigator.vibrate([120, 60, 120]);
     set('hapticResult', accepted
-      ? 'vibrate() aufgerufen - hast du etwas gespuert?'
+      ? 'vibrate() aufgerufen - hast du etwas gespürt?'
       : 'vibrate() wurde abgelehnt', accepted ? 'ok' : 'bad');
   });
 
   $('hapticHack').addEventListener('click', function () {
     if (!switchSupported) {
-      set('hapticResult', 'switch-Attribut nicht unterstuetzt', 'bad');
+      set('hapticResult', 'switch-Attribut nicht unterstützt', 'bad');
       return;
     }
     // Zweimal umschalten, damit der Ausgangszustand erhalten bleibt.
     hapticSwitch.click();
     setTimeout(function () { hapticSwitch.click(); }, 150);
-    set('hapticResult', 'switch zweimal umgeschaltet - hast du etwas gespuert?');
+    set('hapticResult', 'switch zweimal umgeschaltet - hast du etwas gespürt?');
   });
 
   // ---- Start (muss aus echter User-Geste heraus laufen) ---------------------
@@ -383,7 +383,7 @@
       if (result === 'granted') {
         listenOrientation();
       } else {
-        verdict('fail', 'Permission abgelehnt ("' + result + '"). Unter Einstellungen > Safari > Erweitert > Website-Daten bzw. Bewegung & Ausrichtung zuruecksetzen und erneut versuchen.');
+        verdict('fail', 'Permission abgelehnt ("' + result + '"). Unter Einstellungen > Safari > Erweitert > Website-Daten bzw. Bewegung & Ausrichtung zurücksetzen und erneut versuchen.');
       }
     })['catch'](function (err) {
       set('perm', 'Exception: ' + err.message, 'bad');

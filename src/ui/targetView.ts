@@ -159,7 +159,7 @@ export class TargetView {
     this.picker.replaceChildren(
       // Ohne Vorgabeoption waere der erste Ort schon gewaehlt, und ein Tipp auf
       // "Fertig" machte ihn zum Ziel, ohne dass jemand ihn gewaehlt haette.
-      el('option', { value: '', text: 'Ziel waehlen' }),
+      el('option', { value: '', text: 'Ziel wählen' }),
       ...locations.map((location) => el('option', { value: location.id, text: location.name })),
     );
     // Eine Kennung ohne Option faellt hier still auf "" zurueck. Genau deshalb
@@ -224,7 +224,7 @@ export class TargetView {
       return 'Noch keine Orte gespeichert.';
     }
     if (this.selectedId === null) {
-      return 'Noch kein Ziel gewaehlt.';
+      return 'Noch kein Ziel gewählt.';
     }
     // Gewaehlt, aber noch nichts gemessen. Warum, steht in der Statuszeile am
     // unteren Rand - hier stuende es ein zweites Mal.

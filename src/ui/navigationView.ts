@@ -41,9 +41,9 @@ const MODE_HEADING: Record<NavigationMode, string> = {
 
 const QUALITY_TEXT: Record<HeadingQuality, string> = {
   gut: 'Kompass in Ordnung',
-  ungenau: 'Kompass ungenau. Die Auswahl der Orte ist unzuverlaessig, die Entfernungen stimmen.',
-  unkalibriert: 'Kompass unkalibriert. Das Geraet einmal in einer Acht durchdrehen.',
-  unbekannt: 'Kompassguete unbekannt',
+  ungenau: 'Kompass ungenau. Die Auswahl der Orte ist unzuverlässig, die Entfernungen stimmen.',
+  unkalibriert: 'Kompass unkalibriert. Das Gerät einmal in einer Acht durchdrehen.',
+  unbekannt: 'Kompassgüte unbekannt',
 };
 
 /**
@@ -65,8 +65,8 @@ const STALE_ANNOUNCEMENT: Record<NavigationMode, string> = {
 };
 
 const FRESH_ANNOUNCEMENT: Record<NavigationMode, string> = {
-  orientation: 'Standort wieder da. Die Liste laeuft.',
-  target: 'Standort wieder da. Der Ton laeuft.',
+  orientation: 'Standort wieder da. Die Liste läuft.',
+  target: 'Standort wieder da. Der Ton läuft.',
 };
 
 /**
@@ -93,9 +93,9 @@ function statusText(
     return STALE_STATUS[mode];
   }
   if (mode === 'target') {
-    return 'Navigation laeuft.';
+    return 'Navigation läuft.';
   }
-  return snapshot.frozen ? 'Liste angehalten.' : 'Navigation laeuft.';
+  return snapshot.frozen ? 'Liste angehalten.' : 'Navigation läuft.';
 }
 
 interface Row {

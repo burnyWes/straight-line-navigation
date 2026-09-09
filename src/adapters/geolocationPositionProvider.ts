@@ -52,7 +52,7 @@ function describe(error: GeolocationPositionError): string {
     case error.PERMISSION_DENIED:
       return 'Standortzugriff wurde abgelehnt. In den Einstellungen unter Safari freigeben.';
     case error.POSITION_UNAVAILABLE:
-      return 'Kein Standort verfuegbar.';
+      return 'Kein Standort verfügbar.';
     case error.TIMEOUT:
       return 'Der Standort konnte nicht rechtzeitig ermittelt werden.';
     default:

@@ -153,7 +153,7 @@ export class SettingsView {
     const closeBackup = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Schliessen',
+      text: 'Schließen',
     }) as HTMLButtonElement;
     // Der Weg ohne Tastatur: Escape leistet dasselbe, aber am iPhone ist keine da.
     closeBackup.addEventListener('click', () => {
@@ -169,16 +169,16 @@ export class SettingsView {
         class: 'hint',
         // Nennt beides, seit die Sicherung beides enthaelt: Wer hier nur
         // "Orte" liest, haelt seine Gruppen faelschlich fuer ungesichert.
-        text: 'Orte und Gruppen liegen nur auf diesem Geraet. Es gibt keine zweite Kopie.',
+        text: 'Orte und Gruppen liegen nur auf diesem Gerät. Es gibt keine zweite Kopie.',
       }),
       this.exportFileButton,
       exportClipboard,
       el('label', { for: 'import-datei', text: 'Sicherungsdatei einlesen' }),
       this.importFileField,
-      el('label', { for: 'import', text: 'Oder Sicherung als Text einfuegen' }),
+      el('label', { for: 'import', text: 'Oder Sicherung als Text einfügen' }),
       el('p', {
         class: 'hint',
-        text: 'Den kopierten Text hier einfuegen und dann "Sicherung einlesen" waehlen.',
+        text: 'Den kopierten Text hier einfügen und dann "Sicherung einlesen" wählen.',
       }),
       this.importField,
       importButton,
@@ -201,15 +201,15 @@ export class SettingsView {
       el('h2', { text: 'Einstellungen' }),
 
       el('h3', { text: 'Sichtkegel' }),
-      el('label', { for: 'kegel', text: 'Oeffnungswinkel' }),
+      el('label', { for: 'kegel', text: 'Öffnungswinkel' }),
       this.coneSelect,
-      el('label', { for: 'grenze', text: 'Groesste Entfernung' }),
+      el('label', { for: 'grenze', text: 'Größte Entfernung' }),
       this.distanceSelect,
 
       el('h3', { text: 'Signale' }),
       el('p', {
         class: 'hint',
-        text: 'Der Ton ist bei gestelltem Lautlos-Schalter nicht hoerbar.',
+        text: 'Der Ton ist bei gestelltem Lautlos-Schalter nicht hörbar.',
       }),
       this.labelledCheckbox('earcon', 'Ton bei Ein- und Austritt', this.earconBox),
 

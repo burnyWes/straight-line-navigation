@@ -143,7 +143,7 @@ export class GroupsView {
     const closeCreate = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Schliessen',
+      text: 'Schließen',
     }) as HTMLButtonElement;
     closeCreate.addEventListener('click', () => {
       this.createDialog.close();
@@ -201,7 +201,7 @@ export class GroupsView {
     this.deleteButton = el('button', {
       type: 'button',
       class: 'danger',
-      text: 'Loeschen',
+      text: 'Löschen',
     }) as HTMLButtonElement;
     this.deleteButton.addEventListener('click', () => {
       this.openDelete();
@@ -210,7 +210,7 @@ export class GroupsView {
     this.closeEdit = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Schliessen',
+      text: 'Schließen',
     }) as HTMLButtonElement;
     // Der Weg ohne Tastatur: Escape leistet dasselbe, aber am iPhone ist keine da.
     this.closeEdit.addEventListener('click', () => {
@@ -221,7 +221,7 @@ export class GroupsView {
 
     this.pickerLabel = el('label', {
       for: 'gruppe-ort-waehlen',
-      text: 'Ort hinzufuegen',
+      text: 'Ort hinzufügen',
     }) as HTMLLabelElement;
 
     // Der Knoten wird einmal angelegt; getauscht werden nur seine Optionen.
@@ -270,7 +270,7 @@ export class GroupsView {
     const confirmDelete = el('button', {
       type: 'button',
       class: 'danger',
-      text: 'Loeschen',
+      text: 'Löschen',
     }) as HTMLButtonElement;
     confirmDelete.addEventListener('click', () => {
       const editing = this.editing;
@@ -290,7 +290,7 @@ export class GroupsView {
 
     this.deleteFeedback = el('p', { class: 'status', role: 'status' });
 
-    this.deleteDialog = new ModalDialog('gruppe-loeschen', 'Gruppe loeschen?', [
+    this.deleteDialog = new ModalDialog('gruppe-loeschen', 'Gruppe löschen?', [
       this.deleteHint,
       confirmDelete,
       this.deleteCancel,
@@ -343,7 +343,7 @@ export class GroupsView {
   reportMemberAdded(group: Group, location: Location): void {
     this.editing = group;
     this.renderMembers();
-    setText(this.editFeedback, `${location.name} hinzugefuegt.`);
+    setText(this.editFeedback, `${location.name} hinzugefügt.`);
 
     if (!this.picker.hidden) {
       this.picker.focus();
@@ -390,7 +390,7 @@ export class GroupsView {
 
   reportRenamed(group: Group): void {
     this.closeDialogs();
-    this.reportInPanel(`Gruppe heisst jetzt ${group.name}.`);
+    this.reportInPanel(`Gruppe heißt jetzt ${group.name}.`);
     this.focusEntry(group.id);
   }
 
@@ -404,7 +404,7 @@ export class GroupsView {
   reportRemoved(): void {
     const name = this.editing?.name ?? 'Die Gruppe';
     this.closeDialogs();
-    this.reportInPanel(`${name} geloescht.`);
+    this.reportInPanel(`${name} gelöscht.`);
     this.addButton.focus();
   }
 
@@ -579,7 +579,7 @@ export class GroupsView {
       // Die Vorgabeoption traegt keinen Ort: Ohne sie waere der erste Ort der
       // Liste schon ausgewaehlt, und ein Tipp auf "Fertig" fuegte ihn ein,
       // ohne dass jemand ihn gewaehlt haette.
-      el('option', { value: '', text: 'Ort waehlen' }),
+      el('option', { value: '', text: 'Ort wählen' }),
       ...candidates.map((location) => el('option', { value: location.id, text: location.name })),
     );
     this.picker.value = '';
@@ -610,7 +610,7 @@ export class GroupsView {
       return;
     }
     const members = this.callbacks.membersOf(editing);
-    this.deleteDialog.setTitle(`${editing.name} loeschen?`);
+    this.deleteDialog.setTitle(`${editing.name} löschen?`);
     setText(
       this.deleteHint,
       formatDeleteGroupWarning(

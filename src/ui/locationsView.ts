@@ -33,15 +33,15 @@ type SaveFailure = CoordinateParseFailure | 'name-required' | 'no-position' | 'p
 const PARSE_ERROR: Record<SaveFailure, string> = {
   empty: 'Bitte eine Koordinate eingeben.',
   'shortlink-unresolvable':
-    'Kurzlinks lassen sich nicht auswerten. Den Link zuerst in der Karten-App oeffnen und die Koordinate kopieren.',
+    'Kurzlinks lassen sich nicht auswerten. Den Link zuerst in der Karten-App öffnen und die Koordinate kopieren.',
   'no-coordinate-found': 'Darin war keine Koordinate zu finden.',
-  'out-of-range': 'Diese Koordinate liegt ausserhalb des gueltigen Bereichs.',
+  'out-of-range': 'Diese Koordinate liegt außerhalb des gültigen Bereichs.',
   'name-required': 'Bitte einen Namen eingeben.',
   // Eigener Grund statt 'no-coordinate-found': Der Satz dort spricht vom
   // Koordinatenfeld und passt nicht, wenn nur die Navigation nicht laeuft.
-  'no-position': 'Kein Standort verfuegbar. Zuerst die Navigation starten.',
+  'no-position': 'Kein Standort verfügbar. Zuerst die Navigation starten.',
   'position-stale':
-    'Der Standort ist veraltet. Kurz warten, bis das Geraet wieder misst, dann erneut speichern.',
+    'Der Standort ist veraltet. Kurz warten, bis das Gerät wieder misst, dann erneut speichern.',
 };
 
 export interface LocationsViewCallbacks {
@@ -145,7 +145,7 @@ export class LocationsView {
     const closeCreate = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Schliessen',
+      text: 'Schließen',
     }) as HTMLButtonElement;
     closeCreate.addEventListener('click', () => {
       this.createDialog.close();
@@ -160,7 +160,7 @@ export class LocationsView {
       // Ein fehlender Knopf ist mit VoiceOver schwerer zu deuten als einer, der
       // sich erklaert.
       saveHere,
-      el('label', { for: 'ort-koordinate', text: 'Koordinate einfuegen' }),
+      el('label', { for: 'ort-koordinate', text: 'Koordinate einfügen' }),
       this.coordinateInput,
       saveText,
       this.createFeedback,
@@ -219,7 +219,7 @@ export class LocationsView {
     this.deleteButton = el('button', {
       type: 'button',
       class: 'danger',
-      text: 'Loeschen',
+      text: 'Löschen',
     }) as HTMLButtonElement;
     this.deleteButton.addEventListener('click', () => {
       this.openDelete();
@@ -228,7 +228,7 @@ export class LocationsView {
     const closeEdit = el('button', {
       type: 'button',
       class: 'secondary',
-      text: 'Schliessen',
+      text: 'Schließen',
     }) as HTMLButtonElement;
     // Der Weg ohne Tastatur: Escape leistet dasselbe, aber am iPhone ist keine da.
     closeEdit.addEventListener('click', () => {
@@ -252,7 +252,7 @@ export class LocationsView {
     const confirmDelete = el('button', {
       type: 'button',
       class: 'danger',
-      text: 'Loeschen',
+      text: 'Löschen',
     }) as HTMLButtonElement;
     confirmDelete.addEventListener('click', () => {
       const editing = this.editing;
@@ -272,10 +272,10 @@ export class LocationsView {
 
     this.deleteFeedback = el('p', { class: 'status', role: 'status' });
 
-    this.deleteDialog = new ModalDialog('ort-loeschen', 'Ort loeschen?', [
+    this.deleteDialog = new ModalDialog('ort-loeschen', 'Ort löschen?', [
       el('p', {
         class: 'hint',
-        text: 'Der Ort wird endgueltig entfernt. Es gibt keine zweite Kopie.',
+        text: 'Der Ort wird endgültig entfernt. Es gibt keine zweite Kopie.',
       }),
       confirmDelete,
       this.deleteCancel,
@@ -316,7 +316,7 @@ export class LocationsView {
   reportRemoved(): void {
     const name = this.editing?.name ?? 'Der Ort';
     this.closeDialogs();
-    const text = `${name} geloescht.`;
+    const text = `${name} gelöscht.`;
     setText(this.feedback, text);
     this.announcer.announce(text);
     // Nicht auf das Panel: Das Plus ist die naechste sinnvolle Handlung und
@@ -460,7 +460,7 @@ export class LocationsView {
     if (editing === null) {
       return;
     }
-    this.deleteDialog.setTitle(`${editing.name} loeschen?`);
+    this.deleteDialog.setTitle(`${editing.name} löschen?`);
     setText(this.deleteFeedback, '');
     // Fokus auf "Abbrechen": Ohne Backend ist ein Fehlgriff endgueltig
     // (docs/design.md 7), also ist der sichere Weg der voreingestellte.

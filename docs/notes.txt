@@ -235,8 +235,12 @@ x  Praxistest am Geraet: Akkord abgenommen - er ist beim Gehen als "jetzt stimmt
 x  M4 Panorama unter VoiceOver                              -> Stereo kommt durch
 x  M5 Ton waehrend der VoiceOver-Ansage                     -> man hoert beides,
    iOS daempft nichts; akzeptiert, kein Ducking (design.md 11, Entscheidung 46)
+x  Umlaute: UI-sichtbare Strings tragen jetzt echte Umlaute und ss, der
+   Quelltext (Kommentare, Testnamen, DOM-Kennungen) bleibt ASCII
 
 --------------------------------------------------------------------------------
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
+- Solo-Button
+- Navigation-Tracking überdenken
