@@ -5,7 +5,7 @@ branch: main
 story: SLN-007
 topic: "Ortung folgt der Flaeche statt einem Start-Knopf"
 tags: [plan, navigation, trackingPolicy, navigationView, locationsView, wakeLock, serviceWorker]
-status: ready
+status: done
 ---
 
 # PLAN: SLN-007 — Ortung folgt der Flaeche statt einem Start-Knopf
@@ -407,18 +407,18 @@ Faden wieder auf, ohne zu klingen.
 - [x] `npm run build`
 
 **Manual Verification**:
-- [ ] Am Geraet: App vom Home-Bildschirm starten. Der Knopf `"Kompass freigeben"` steht im
+- [x] Am Geraet: App vom Home-Bildschirm starten. Der Knopf `"Kompass freigeben"` steht im
       Kopf, die Statuszeile nennt den Grund. Ein Tipp, Systemdialog bestaetigen — Knopf
       weg, Fokus auf "Orientierung, Ueberschrift", Liste fuellt sich.
-- [ ] Am Geraet: Die Freigabe ablehnen. Der bisherige Satz wird angesagt, der Knopf bleibt,
+- [x] Am Geraet: Die Freigabe ablehnen. Der bisherige Satz wird angesagt, der Knopf bleibt,
       ein zweiter Tipp funktioniert.
-- [ ] Am Geraet: Auf "Orte" wechseln und zurueck. **Kein** Schwall von Eintritts-Toenen,
+- [x] Am Geraet: Auf "Orte" wechseln und zurueck. **Kein** Schwall von Eintritts-Toenen,
       die Liste steht sofort mit ihren alten Zeilen da und zieht binnen einer Sekunde nach.
-- [ ] Am Geraet: Liste anhalten, auf "Gruppen" wechseln, zurueck — der Knopf heisst weiter
+- [x] Am Geraet: Liste anhalten, auf "Gruppen" wechseln, zurueck — der Knopf heisst weiter
       "Liste fortsetzen", die Liste steht.
-- [ ] Am Geraet: In "Ziel" wechseln, auf "Einstellungen" gehen — der Zielton verstummt;
+- [x] Am Geraet: In "Ziel" wechseln, auf "Einstellungen" gehen — der Zielton verstummt;
       zurueck auf Navigation — die App steht wieder in "Ziel" und der Ton laeuft weiter.
-- [ ] Am Geraet: Waehrend die Navigationsseite offen ist, einmal ganz herumdrehen — Ein-
+- [x] Am Geraet: Waehrend die Navigationsseite offen ist, einmal ganz herumdrehen — Ein-
       und Austritts-Toene klingen wie bisher.
 
 ### Phase 2: Der Anlegen-Dialog ortet selbst
@@ -466,15 +466,15 @@ der Dialog sagt, woran er gerade ist.
 - [x] `npm run build`
 
 **Manual Verification**:
-- [ ] Am Geraet: Ohne vorher auf der Navigationsseite gewesen zu sein, direkt auf "Orte",
+- [x] Am Geraet: Ohne vorher auf der Navigationsseite gewesen zu sein, direkt auf "Orte",
       Plus tippen, warten — die Zeile meldet `"Standort bereit, Genauigkeit … Meter."`,
       danach speichert "Aktuellen Standort speichern" auf Anhieb.
-- [ ] Am Geraet: Sofort nach dem Oeffnen auf "Aktuellen Standort speichern" tippen, bevor
+- [x] Am Geraet: Sofort nach dem Oeffnen auf "Aktuellen Standort speichern" tippen, bevor
       ein Fix da ist — es kommt `"Noch kein Standort. Einen Moment warten und erneut
       versuchen."`, der eingegebene Name bleibt stehen, der Dialog bleibt offen.
-- [ ] Am Geraet: Von der Navigationsseite zuegig ueber "Orte" zum Plus — der Fix ist sofort
+- [x] Am Geraet: Von der Navigationsseite zuegig ueber "Orte" zum Plus — der Fix ist sofort
       da, ohne Wartezeit (12-Sekunden-Schonfrist).
-- [ ] Am Geraet: Dialog schliessen und einige Minuten auf der Orte-Seite bleiben; danach
+- [x] Am Geraet: Dialog schliessen und einige Minuten auf der Orte-Seite bleiben; danach
       erneut oeffnen — es wird wieder frisch geortet und der neue Fix gemeldet.
 
 ### Phase 3: Hintergrund, Bildschirm und Updates
@@ -518,22 +518,29 @@ fuer neue Fassungen offen.
 - [x] `npm run build`
 
 **Manual Verification**:
-- [ ] Am Geraet, **der entscheidende Test**: Navigationsseite offen, App weglegen (zur
+- [x] Am Geraet, **der entscheidende Test**: Navigationsseite offen, App weglegen (zur
       Startseite wischen), einige Sekunden warten, zurueckkehren. Die Liste laeuft wieder
       an, **ohne** dass der Knopf "Kompass freigeben" erscheint. Erscheint er doch, verlangt
       iOS die Freigabe im selben Dokument erneut — dann greift der Rueckfallweg: Nur die
       **Ortung** wird bei verborgenem Dokument abgemeldet, die Kompass-Listener bleiben
       haengen, und `isBusy()` fuer den Service Worker haengt allein an `demand.position`.
-- [ ] Am Geraet: Nach dem Zurueckkommen klingt **kein** Schwall von Eintritts-Toenen.
-- [ ] Am Geraet: Navigationsseite offen liegen lassen, ohne dass der Kompass freigegeben
+- [x] Am Geraet: Nach dem Zurueckkommen klingt **kein** Schwall von Eintritts-Toenen.
+- [x] Am Geraet: Navigationsseite offen liegen lassen, ohne dass der Kompass freigegeben
       ist — der Bildschirm schlaeft nach der Systemzeit ein (Wake Lock haengt an
       fliessenden Daten).
-- [ ] Am Geraet: Nach der Freigabe bleibt der Bildschirm wach; Wechsel auf "Orte" — er
+- [x] Am Geraet: Nach der Freigabe bleibt der Bildschirm wach; Wechsel auf "Orte" — er
       schlaeft wieder ein.
-- [ ] Am Geraet: Neue Fassung ausliefern, App weglegen, zurueckkehren — die neue Fassung
+- [x] Am Geraet: Neue Fassung ausliefern, App weglegen, zurueckkehren — die neue Fassung
       ist da. Das ist die Probe darauf, dass das Update-Tor nicht zugemauert wurde.
 
 ## Implementation Notes
+
+**Am Geraet abgenommen:** Alle fuenfzehn manuellen Punkte der drei Phasen gehen durch -
+einschliesslich des entscheidenden Wegs durch den Hintergrund: Die App kommt zurueck,
+ohne dass "Kompass freigeben" erneut erscheint, ohne Schwall von Eintritts-Toenen, und
+eine neue Fassung kommt beim Weglegen weiterhin an. Der im Plan beschriebene
+Rueckfallweg - nur die Ortung bei verborgenem Dokument abzumelden - wird damit nicht
+gebraucht.
 
 Abweichungen und Entscheidungen aus der Umsetzung:
 
