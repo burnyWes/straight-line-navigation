@@ -9,6 +9,7 @@ import {
   formatGroupMembership,
   formatHiddenHint,
   formatLocationDetails,
+  formatPositionReady,
   formatSaveConfirmation,
   formatSoloAnnouncement,
 } from './format.js';
@@ -89,6 +90,15 @@ describe('formatSaveConfirmation', () => {
 
   it('laesst sie bei eingegebenen Koordinaten weg', () => {
     expect(formatSaveConfirmation('Bahnhof', null)).toBe('Bahnhof gespeichert.');
+  });
+});
+
+describe('formatPositionReady', () => {
+  it('meldet die gerundete Genauigkeit im Satzbau der Bestaetigung', () => {
+    expect(formatPositionReady(11.6)).toBe('Standort bereit, Genauigkeit 12 Meter.');
+    expect(formatSaveConfirmation('Bahnhof', 11.6)).toBe(
+      'Bahnhof gespeichert, Genauigkeit 12 Meter.',
+    );
   });
 });
 

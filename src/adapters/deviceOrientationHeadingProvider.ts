@@ -25,6 +25,20 @@ export class HeadingPermissionDeniedError extends Error {
 }
 
 /**
+ * Gibt es hier ueberhaupt etwas zu fragen?
+ *
+ * Gefragt wird, ob gefragt werden muss - und zwar bevor gefragt wird: Ein
+ * requestPermission() ausserhalb einer echten Beruehrung koennte als Ablehnung
+ * haengenbleiben und die App dauerhaft lahmlegen. Nur wo Apples
+ * Berechtigungsdialog existiert, ist der Freigabe-Knopf im Kopf ueberhaupt
+ * sinnvoll; ueberall sonst darf er nie erscheinen (docs/design.md 5).
+ */
+export function headingPermissionRequired(): boolean {
+  const ctor = DeviceOrientationEvent as unknown as DeviceOrientationEventWithPermission;
+  return typeof ctor.requestPermission === 'function';
+}
+
+/**
  * Muss synchron aus einem Tap heraus aufgerufen werden.
  *
  * Liefert true, wenn gelauscht werden darf. Auf Browsern ohne Apples

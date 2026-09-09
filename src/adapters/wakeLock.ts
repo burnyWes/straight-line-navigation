@@ -7,18 +7,20 @@
  *
  * Ein Bildschirmvorhang wird bewusst nicht nachgebaut: Den bringt VoiceOver
  * mit.
+ *
+ * Der Adapter weiss nur, ob er die Sperre gerade haelt - **ob** sie gewollt ist,
+ * steht in application/trackingPolicy.ts. Zwei Stellen, die dasselbe wissen,
+ * waeren eine zu viel.
  */
 
 export class ScreenWakeLock {
   private sentinel: WakeLockSentinel | null = null;
-  private wanted = false;
 
   get isHeld(): boolean {
     return this.sentinel !== null;
   }
 
   async acquire(): Promise<boolean> {
-    this.wanted = true;
     if (!('wakeLock' in navigator)) {
       return false;
     }
@@ -38,21 +40,8 @@ export class ScreenWakeLock {
   }
 
   async release(): Promise<void> {
-    this.wanted = false;
     const held = this.sentinel;
     this.sentinel = null;
     await held?.release();
-  }
-
-  /**
-   * Nach dem Zurueckschalten in die App ist die Sperre verloren.
-   *
-   * Aufrufen, wenn das Dokument wieder sichtbar wird - sonst laeuft die
-   * Navigation weiter, aber der Bildschirm schlaeft nach kurzer Zeit ein.
-   */
-  async reacquireIfWanted(): Promise<void> {
-    if (this.wanted && this.sentinel === null) {
-      await this.acquire();
-    }
   }
 }

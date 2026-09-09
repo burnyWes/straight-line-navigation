@@ -27,6 +27,7 @@ import {
   formatGroupMembership,
   formatHiddenHint,
   formatLocationDetails,
+  formatPositionReady,
   formatSaveConfirmation,
   formatSoloAnnouncement,
 } from './format.js';
@@ -42,13 +43,23 @@ const PARSE_ERROR: Record<SaveFailure, string> = {
   'out-of-range': 'Diese Koordinate liegt außerhalb des gültigen Bereichs.',
   'name-required': 'Bitte einen Namen eingeben.',
   // Eigener Grund statt 'no-coordinate-found': Der Satz dort spricht vom
-  // Koordinatenfeld und passt nicht, wenn nur die Navigation nicht laeuft.
-  'no-position': 'Kein Standort verfügbar. Zuerst die Navigation starten.',
+  // Koordinatenfeld und passt nicht, wenn nur noch kein Fix da ist. Der Dialog
+  // ortet selbst, sobald er offen ist - zu tun ist also nichts als warten.
+  'no-position': 'Noch kein Standort. Einen Moment warten und erneut versuchen.',
   'position-stale':
     'Der Standort ist veraltet. Kurz warten, bis das Gerät wieder misst, dann erneut speichern.',
 };
 
 export interface LocationsViewCallbacks {
+  /**
+   * Der Anlegen-Dialog ist offen - ab hier ortet er fuer sich selbst.
+   *
+   * "Aktuellen Standort speichern" braucht keinen laufenden Lauf mehr; die
+   * Flaeche ist der Schalter (docs/design.md 5, 6.1).
+   */
+  onCreateDialogOpen(): void;
+  /** Der Anlegen-Dialog ist zu - auf jedem Weg nach draussen. */
+  onCreateDialogClose(): void;
   onSaveHere(name: string): void;
   onSaveText(name: string, text: string): void;
   onRename(id: string, name: string): void;
@@ -180,6 +191,15 @@ export class LocationsView {
       this.createFeedback,
       closeCreate,
     ]);
+
+    // Ein einziger Lauscher fuer jeden Weg nach draussen: Natives <dialog>
+    // feuert `close` beim Knopf "Schließen", bei Escape und bei
+    // closeKeepingFocus() nach erfolgreichem Speichern. Ein Dialog, der zugeht,
+    // ohne die Ortung abzumelden, liesse GPS auf der Orte-Seite weiterlaufen -
+    // und jeden Schliessweg einzeln zu bedenken hiesse, einen zu vergessen.
+    this.createDialog.element.addEventListener('close', () => {
+      this.callbacks.onCreateDialogClose();
+    });
 
     this.addButton = el(
       'button',
@@ -340,6 +360,20 @@ export class LocationsView {
 
   reportFailure(reason: SaveFailure): void {
     this.report(PARSE_ERROR[reason]);
+  }
+
+  /**
+   * Der erste brauchbare Fix ist da - gemeldet in die Zeile des Dialogs.
+   *
+   * Sie traegt role="status" und spricht damit von selbst; ein zusaetzlicher
+   * Knoten im Wischweg entsteht nicht. Nur bei offenem Anlegen-Dialog: Ausserhalb
+   * gaebe es niemanden, der auf diese Auskunft wartet.
+   */
+  reportPositionReady(accuracyMetres: number): void {
+    if (!this.createDialog.isOpen) {
+      return;
+    }
+    setText(this.createFeedback, formatPositionReady(accuracyMetres));
   }
 
   /** Assertiv, weil ein nicht gespeicherter Ort verloren ist, sobald man weiterklickt. */
@@ -512,6 +546,9 @@ export class LocationsView {
     this.coordinateInput.value = '';
     setText(this.createFeedback, '');
     this.createDialog.open(this.addButton, this.nameInput);
+    // Nach dem Oeffnen: Die Ortung meldet ihren ersten Fix in die Zeile, die
+    // gerade leer geraeumt wurde.
+    this.callbacks.onCreateDialogOpen();
   }
 
   private openEdit(location: Location, opener: HTMLElement): void {

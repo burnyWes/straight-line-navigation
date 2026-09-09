@@ -276,7 +276,7 @@ Faden wieder auf, ohne zu klingen.
 
 **Tasks**:
 
-- [ ] `src/application/trackingPolicy.ts` anlegen: `TrackingContext`, `TrackingDemand`,
+- [x] `src/application/trackingPolicy.ts` anlegen: `TrackingContext`, `TrackingDemand`,
       `trackingDemand()`. Rein, ohne Browser-APIs.
       ```ts
       export function trackingDemand(context: TrackingContext): TrackingDemand {
@@ -292,34 +292,34 @@ Faden wieder auf, ohne zu klingen.
       ```
       In Phase 1 wird `documentVisible` fest mit `true` gespeist; Phase 3 haengt
       `visibilitychange` daran.
-- [ ] `src/application/trackingPolicy.test.ts`: Tabelle aller Kombinationen —
+- [x] `src/application/trackingPolicy.test.ts`: Tabelle aller Kombinationen —
       Navigationsseite offen, nur Dialog offen, beides zu, Dokument verborgen, Wake Lock
       erst bei `hasFix && hasHeading`.
-- [ ] `deviceOrientationHeadingProvider.ts`: `headingPermissionRequired()` exportieren —
+- [x] `deviceOrientationHeadingProvider.ts`: `headingPermissionRequired()` exportieren —
       `typeof ctor.requestPermission === 'function'`. Kommentar: Warum gefragt wird, ob
       gefragt werden muss.
-- [ ] `navigationView.ts`: `startButton`/`stopButton` durch **einen** `releaseButton`
+- [x] `navigationView.ts`: `startButton`/`stopButton` durch **einen** `releaseButton`
       ersetzen (`aria-label` und `title` `"Kompass freigeben"`, `ICON_PLAY`, Klasse
       `icon-button primary`), von Anfang an `hidden`. Callback `onReleaseHeading()`
       ersetzt `onStart`/`onStop`.
-- [ ] `navigationView.ts`: `showHeadingRelease(show: boolean)` ergaenzen. Beim Ausblenden
+- [x] `navigationView.ts`: `showHeadingRelease(show: boolean)` ergaenzen. Beim Ausblenden
       **nach** erfolgter Freigabe den Fokus auf `this.heading` setzen, falls der Fokus auf
       dem Knopf stand — sonst faellt der VoiceOver-Cursor auf den Rumpf.
-- [ ] `navigationView.ts`: `markRunning()`/`markStopped()` durch
+- [x] `navigationView.ts`: `markRunning()`/`markStopped()` durch
       `setActive(active: boolean)` ersetzen. Aktiv: Liste, Anhalten-Knopf und Lautsprecher
       wie bisher ueber `applyMode()`. Inaktiv: **Zeilen bleiben stehen**, `rows` wird nicht
       geleert, `targetView.reset()` entfaellt, keine Ansage.
-- [ ] `navigationView.ts`: `setPanelActive()` und das Feld `tabFreeze` entfernen;
+- [x] `navigationView.ts`: `setPanelActive()` und das Feld `tabFreeze` entfernen;
       `syncFreeze()` meldet nur noch `manualFreeze || modeFreeze`. Der Kommentar an
       `syncFreeze()` haelt fest, warum der dritte Grund entfaellt: Eine pausierte Seite
       rechnet nicht und kann darum nichts umsortieren.
-- [ ] `navigationView.ts`: `statusText()` auf die sechs Raenge umbauen. Zwei neue
+- [x] `navigationView.ts`: `statusText()` auf die sechs Raenge umbauen. Zwei neue
       Parameter: `headingReleasePending` und `hasData`. Die Wortlaute
       `"Noch nicht gestartet."` und `"Navigation beendet."` fallen ersatzlos weg.
-- [ ] `navigationView.ts`: `render()` bricht nicht mehr bei `!running` ab, sondern bei
+- [x] `navigationView.ts`: `render()` bricht nicht mehr bei `!running` ab, sondern bei
       `!active`. Die Statuszeile muss auch ohne Daten geschrieben werden — sonst steht beim
       ersten Oeffnen nichts da.
-- [ ] `main.ts`: Zustand umbauen — `running` weicht `context: TrackingContext` plus
+- [x] `main.ts`: Zustand umbauen — `running` weicht `context: TrackingContext` plus
       `positionUnsubscribe`/`headingUnsubscribe`. `startNavigation()` und
       `stopNavigation()` entfallen.
       ```ts
@@ -335,76 +335,76 @@ Faden wieder auf, ohne zu klingen.
         }
       }
       ```
-- [ ] `main.ts`: `applyPositionSubscription()` und `applyHeadingSubscription()` gleichen
+- [x] `main.ts`: `applyPositionSubscription()` und `applyHeadingSubscription()` gleichen
       Abonnements mit dem Bedarf ab — anmelden, wenn gewuenscht und nicht vorhanden;
       abmelden, wenn nicht gewuenscht und vorhanden. Beim Abmelden des Standorts
       `latestFix` **nicht** loeschen (Entscheidung 5); `latestHeading` ebenfalls halten,
       damit die Peilzeile beim Zurueckkommen nicht leer ist.
-- [ ] `main.ts`: `applyWakeLock(wanted)` — `acquire()` bei Bedarf und noch nicht gehalten,
+- [x] `main.ts`: `applyWakeLock(wanted)` — `acquire()` bei Bedarf und noch nicht gehalten,
       `release()`, sobald der Bedarf faellt. `ScreenWakeLock.isHeld` liefert die Bedingung
       bereits.
-- [ ] `main.ts`: Der erste Fix meldet `updateTracking({ hasFix: true })`, die erste Messung
+- [x] `main.ts`: Der erste Fix meldet `updateTracking({ hasFix: true })`, die erste Messung
       `updateTracking({ hasHeading: true })`. Ohne diese beiden Meldungen wird der Wake Lock
       nie angefordert — er haengt genau an ihnen (Entscheidung 6). Nur beim Wechsel melden,
       nicht bei jedem Ereignis: `watchPosition` und `deviceorientation` feuern laufend.
-- [ ] `main.ts`: `resumeSilent`-Flagge. Wird gesetzt, sobald `navigating` von falsch auf
+- [x] `main.ts`: `resumeSilent`-Flagge. Wird gesetzt, sobald `navigating` von falsch auf
       wahr wechselt (Kaltstart eingeschlossen). Im naechsten `renderNavigation()` mit
       gueltigem Fix werden `snapshot.entered`/`snapshot.left` verworfen und die Flagge
       geloescht — der Kegel setzt sich neu, ohne zu klingen.
-- [ ] `main.ts`: Renderschleife an `navigating` haengen statt an `running`. `startLoop()`
+- [x] `main.ts`: Renderschleife an `navigating` haengen statt an `running`. `startLoop()`
       merkt sich, dass sie laeuft, damit ein zweiter Aufruf keine zweite Schleife startet;
       `tick()` beendet sich selbst, sobald `navigating` falsch ist.
-- [ ] `main.ts`: `applyGuidanceTone()` prueft `trackingDemand(context).navigating` statt
+- [x] `main.ts`: `applyGuidanceTone()` prueft `trackingDemand(context).navigating` statt
       `running`. Der Kommentar ueber der Funktion bleibt gueltig und wird nur im Wortlaut
       von "Lauf" auf "Navigationsseite offen" gezogen.
-- [ ] `main.ts`: Tab-Rueckruf meldet
+- [x] `main.ts`: Tab-Rueckruf meldet
       `updateTracking({ navigationVisible: id === 'navigation' })` statt
       `navigationView.setPanelActive(...)`.
-- [ ] `main.ts`: Freigabe-Probe. Wird `navigating` wahr, ist noch nie eine Messung
+- [x] `main.ts`: Freigabe-Probe. Wird `navigating` wahr, ist noch nie eine Messung
       eingetroffen und `headingPermissionRequired()` wahr, laeuft ein Zeitgeber ueber
       1000 ms; ist danach immer noch keine Messung da,
       `navigationView.showHeadingRelease(true)`. Die erste eingetroffene Messung loescht
       Zeitgeber und Knopf endgueltig fuer die Sitzung.
-- [ ] `main.ts`: `onReleaseHeading()` — `audioCue.unlock()` (dieselbe Beruehrung entsperrt
+- [x] `main.ts`: `onReleaseHeading()` — `audioCue.unlock()` (dieselbe Beruehrung entsperrt
       Web Audio), dann `requestHeadingPermission()`. Bei `false` den bisherigen
       Ablehnungstext ueber `navigationView.showError()`, Knopf bleibt stehen. Bei `true`
       das Kompass-Abonnement abmelden und neu anmelden — vor der Freigabe angemeldete
       Listener liefern auf iOS nichts nach.
-- [ ] `main.ts`: `registerServiceWorker` bekommt
+- [x] `main.ts`: `registerServiceWorker` bekommt
       `() => { const d = trackingDemand(context); return d.position || d.navigating; }`
       statt `() => running`. Solange `documentVisible` in dieser Phase fest `true` ist,
       sperrt das Tor beim Weglegen von der Navigationsseite aus **jede** neue Fassung —
       das ist bekannt und wird in Phase 3 durch `visibilitychange` aufgeloest. Bis dahin
       nicht als Fehler behandeln.
-- [ ] `main.ts`: Einmalige Web-Audio-Entsperrung fuer Browser ohne Kompass-Freigabe — ein
+- [x] `main.ts`: Einmalige Web-Audio-Entsperrung fuer Browser ohne Kompass-Freigabe — ein
       `pointerdown`-Lauscher mit `{ once: true }` auf `document`, der `audioCue.unlock()`
       ruft. Ohne ihn blieben Earcon und Zielton dort stumm, wo es keinen Freigabe-Knopf
       gibt.
-- [ ] `docs/design.md` 4.3: Der Absatz "Ein anderer Bereich haelt die Liste weiterhin an"
+- [x] `docs/design.md` 4.3: Der Absatz "Ein anderer Bereich haelt die Liste weiterhin an"
       wird ersetzt — der Bereichswechsel haelt jetzt den ganzen Lauf an, nicht nur die
       Liste. Der Satz "Der Navigationslauf selbst geht weiter" ist damit ueberholt. Ebenso
       der Punkt "Der Freeze-Zustand gehoert dem Lauf": Er gehoert jetzt dem Kaltstart, weil
       es kein Ende mehr gibt.
-- [ ] `docs/design.md` 4.6: Die Tabelle der Statuszeile durch die sechsstufige ersetzen.
-- [ ] `docs/design.md` 4.7: Der Satz "Der Anhalten-Knopf erscheint nur in Orientierung …
+- [x] `docs/design.md` 4.6: Die Tabelle der Statuszeile durch die sechsstufige ersetzen.
+- [x] `docs/design.md` 4.7: Der Satz "Der Anhalten-Knopf erscheint nur in Orientierung …
       beide nur bei laufender Navigation" bleibt richtig, "laufend" heisst jetzt "Seite
       offen". Ergaenzen, dass das erste Bild nach dem Zurueckkommen stumm gerechnet wird
       und warum (Schwall von Eintritts-Toenen).
-- [ ] `docs/design.md` 5: Den Punkt "Starten und Beenden stehen als Symbol rechts neben der
+- [x] `docs/design.md` 5: Den Punkt "Starten und Beenden stehen als Symbol rechts neben der
       Ueberschrift" durch "Kompass freigeben" ersetzen, samt Begruendung, warum der eine
       Tipp bleibt und warum durch Zuhoeren erkannt wird, ob er noetig ist.
-- [ ] `docs/design.md` Entscheidungstabelle: Eintrag 49 ergaenzen (Flaeche statt Knopf,
+- [x] `docs/design.md` Entscheidungstabelle: Eintrag 49 ergaenzen (Flaeche statt Knopf,
       Pause statt Ende, stummes erstes Bild, Freigabe-Knopf). Entscheidung 26 als durch 49
       ueberholt kennzeichnen, statt sie zu loeschen — die Tabelle ist ein Verlauf.
 
 **Automated Verification**:
-- [ ] `npm test` — `trackingPolicy.test.ts` deckt ab: nur Navigationsseite -> Standort und
+- [x] `npm test` — `trackingPolicy.test.ts` deckt ab: nur Navigationsseite -> Standort und
       `navigating`; nur Dialog offen -> Standort ohne `navigating`; nichts offen -> nichts;
       verborgenes Dokument schlaegt beides aus; `wakeLock` nur bei `hasFix && hasHeading`.
-- [ ] `npm test` — die bestehende Suite laeuft unveraendert durch.
-- [ ] `npm run typecheck` — keine Verweise auf `markRunning`, `markStopped`,
+- [x] `npm test` — die bestehende Suite laeuft unveraendert durch.
+- [x] `npm run typecheck` — keine Verweise auf `markRunning`, `markStopped`,
       `setPanelActive`, `onStart`, `onStop` mehr uebrig.
-- [ ] `npm run build`
+- [x] `npm run build`
 
 **Manual Verification**:
 - [ ] Am Geraet: App vom Home-Bildschirm starten. Der Knopf `"Kompass freigeben"` steht im
@@ -430,7 +430,7 @@ der Dialog sagt, woran er gerade ist.
 
 **Tasks**:
 
-- [ ] `locationsView.ts`: Zwei Rueckrufe in `LocationsViewCallbacks` ergaenzen —
+- [x] `locationsView.ts`: Zwei Rueckrufe in `LocationsViewCallbacks` ergaenzen —
       `onCreateDialogOpen()` und `onCreateDialogClose()`. Der erste wird in `openCreate()`
       gerufen, der zweite haengt an **einem** Lauscher auf `close` des
       `createDialog.element`. `ModalDialog` nutzt natives `<dialog>`; `close` feuert bei
@@ -438,32 +438,32 @@ der Dialog sagt, woran er gerade ist.
       erfolgreichem Speichern. Ein Dialog, der zugeht, ohne die Ortung abzumelden, liesse
       GPS auf der Orte-Seite weiterlaufen; ein einziger Lauscher schliesst genau diese
       Luecke.
-- [ ] `locationsView.ts:46`: `'no-position'` umtexten auf
+- [x] `locationsView.ts:46`: `'no-position'` umtexten auf
       `"Noch kein Standort. Einen Moment warten und erneut versuchen."`
-- [ ] `ui/format.ts`: `formatPositionReady(accuracyMetres: number)` ergaenzen —
+- [x] `ui/format.ts`: `formatPositionReady(accuracyMetres: number)` ergaenzen —
       `"Standort bereit, Genauigkeit 12 Meter."`, gerundet wie `formatSaveConfirmation()`
       (`format.ts:72`). Die Wortlaute der App liegen in `format.ts` und sind dort getestet;
       eine zweite Rundungsregel neben der vorhandenen waere der Anfang zweier Wahrheiten.
-- [ ] `ui/format.test.ts`: Fall fuer `formatPositionReady()` — gerundete Meterzahl,
+- [x] `ui/format.test.ts`: Fall fuer `formatPositionReady()` — gerundete Meterzahl,
       derselbe Satzbau wie die Bestaetigung nach dem Speichern.
-- [ ] `locationsView.ts`: `reportPositionReady(accuracyMetres: number)` ergaenzen —
+- [x] `locationsView.ts`: `reportPositionReady(accuracyMetres: number)` ergaenzen —
       schreibt `formatPositionReady(...)` in `createFeedback`, aber nur, wenn der
       Anlegen-Dialog offen ist.
-- [ ] `main.ts`: Die beiden Rueckrufe an `updateTracking({ createDialogOpen: … })` haengen.
-- [ ] `main.ts`: Im Fix-Rueckruf des Standort-Abonnements — trifft ein Fix ein, waehrend
+- [x] `main.ts`: Die beiden Rueckrufe an `updateTracking({ createDialogOpen: … })` haengen.
+- [x] `main.ts`: Im Fix-Rueckruf des Standort-Abonnements — trifft ein Fix ein, waehrend
       der Anlegen-Dialog offen ist und **vorher keiner** oder nur ein veralteter vorlag,
       einmal `locationsView.reportPositionReady(fix.accuracyMetres)`. Einmal, nicht je Fix:
       `watchPosition` liefert im Sekundentakt.
-- [ ] `docs/design.md` 6.1: Den Satz "und nennt dann den Grund ('Kein Standort verfügbar.
+- [x] `docs/design.md` 6.1: Den Satz "und nennt dann den Grund ('Kein Standort verfügbar.
       Zuerst die Navigation starten.')" auf den neuen Wortlaut ziehen und ergaenzen, dass
       der Dialog selbst ortet und den ersten Fix meldet. Die 12-Sekunden-Regel als
       Schonfrist benennen (Verweis auf 4.6).
 
 **Automated Verification**:
-- [ ] `npm test` — `format.test.ts` deckt `formatPositionReady()` ab, die uebrige Suite
+- [x] `npm test` — `format.test.ts` deckt `formatPositionReady()` ab, die uebrige Suite
       bleibt gruen.
-- [ ] `npm run typecheck`
-- [ ] `npm run build`
+- [x] `npm run typecheck`
+- [x] `npm run build`
 
 **Manual Verification**:
 - [ ] Am Geraet: Ohne vorher auf der Navigationsseite gewesen zu sein, direkt auf "Orte",
@@ -486,36 +486,36 @@ fuer neue Fassungen offen.
 
 **Tasks**:
 
-- [ ] `main.ts`: Den vorhandenen `visibilitychange`-Lauscher erweitern —
+- [x] `main.ts`: Den vorhandenen `visibilitychange`-Lauscher erweitern —
       `updateTracking({ documentVisible: document.visibilityState === 'visible' })`. Der
       bisherige `wakeLock.reacquireIfWanted()`-Aufruf entfaellt, weil das aus Phase 1
       stammende `applyWakeLock()` beim Sichtbarwerden ohnehin neu anfordert.
-- [ ] `main.ts`: Beim Wechsel von verborgen auf sichtbar die `resumeSilent`-Flagge setzen —
+- [x] `main.ts`: Beim Wechsel von verborgen auf sichtbar die `resumeSilent`-Flagge setzen —
       derselbe Grund wie beim Tabwechsel: Was sich waehrend der Pause im Kegel geaendert
       hat, darf nicht in einem Schwall nachklingen.
-- [ ] `adapters/wakeLock.ts`: `reacquireIfWanted()` und das Feld `wanted` entfernen — ihr
+- [x] `adapters/wakeLock.ts`: `reacquireIfWanted()` und das Feld `wanted` entfernen — ihr
       einziger Aufrufer ist weg, und die Absicht liegt jetzt in der Policy statt im
       Adapter. Der Klassenkommentar wird entsprechend gekuerzt.
-- [ ] `main.ts`: Nach dem Zurueckkommen darf die Freigabe-Probe **nicht** erneut anlaufen,
+- [x] `main.ts`: Nach dem Zurueckkommen darf die Freigabe-Probe **nicht** erneut anlaufen,
       wenn die Freigabe in dieser Sitzung schon erteilt wurde — sonst blinkt der Knopf bei
       jedem Wiedersehen kurz auf.
-- [ ] `docs/design.md` 2.1: Die Zeile "Kein Hintergrundbetrieb" ergaenzen — die App
+- [x] `docs/design.md` 2.1: Die Zeile "Kein Hintergrundbetrieb" ergaenzen — die App
       pausiert bei verborgenem Dokument jetzt **ausdruecklich**, statt es dem Einfrieren
       durch Safari zu ueberlassen; das ist die Bedingung dafuer, dass eine neue Fassung
       beim Weglegen ankommt.
-- [ ] `docs/design.md` 5: Den Punkt "Waehrend der Navigation haelt navigator.wakeLock den
+- [x] `docs/design.md` 5: Den Punkt "Waehrend der Navigation haelt navigator.wakeLock den
       Bildschirm wach" praezisieren — jetzt: solange die Navigationsseite offen und sichtbar
       ist **und** Standort wie Kompass geliefert haben.
-- [ ] `docs/notes.txt`: `- Navigation-Tracking ueberdenken` nach DONE ziehen, mit
+- [x] `docs/notes.txt`: `- Navigation-Tracking ueberdenken` nach DONE ziehen, mit
       Zusammenfassung im Stil der uebrigen Eintraege; die drei offenen Praxistests des
       Solo-Knopfes bleiben unberuehrt.
-- [ ] `docs/notes.txt`: Den Praxistest zur Kompass-Freigabe nach dem Hintergrund als
+- [x] `docs/notes.txt`: Den Praxistest zur Kompass-Freigabe nach dem Hintergrund als
       offenen Punkt eintragen, falls er am Geraet nicht sauber abzunehmen ist.
 
 **Automated Verification**:
-- [ ] `npm test`
-- [ ] `npm run typecheck`
-- [ ] `npm run build`
+- [x] `npm test`
+- [x] `npm run typecheck`
+- [x] `npm run build`
 
 **Manual Verification**:
 - [ ] Am Geraet, **der entscheidende Test**: Navigationsseite offen, App weglegen (zur
@@ -535,7 +535,42 @@ fuer neue Fassungen offen.
 
 ## Implementation Notes
 
-During implementation, document user feedback, problems, and decisions here.
+Abweichungen und Entscheidungen aus der Umsetzung:
+
+- **`render(snapshot)` nimmt `NavigationSnapshot | null`** statt zweier neuer Parameter
+  `headingReleasePending` und `hasData`. Der Freigabe-Zustand liegt ohnehin in der
+  Ansicht (`showHeadingRelease()` setzt ihn), und "noch keine Daten" ist genau der Fall,
+  in dem `main.ts` keinen Schnappschuss bilden kann - ein `null` sagt das, ein zweites
+  Flag daneben waere eine zweite Wahrheit. `statusText()` bekam nur
+  `headingReleasePending` dazu.
+- **`showError()` fuehrt die Meldung als gemeldete Stoerung** (Rang 1), statt nur in die
+  Zeile zu schreiben. Nur so ueberlebt der Ablehnungstext das naechste Bild - frueher
+  rechnete beim Fehlschlag niemand dagegen an, jetzt rendert die Seite im Sekundentakt.
+  Angesagt wird er bei jedem Tipp, anders als bei `setHeadingProblem()`.
+- **Die Ansage "Standort veraltet" / "wieder da" schweigt beim ersten Bild nach einer
+  Pause** (`silentResume` in `NavigationView`). Ohne das kaemen beim Zurueckkommen binnen
+  einer Sekunde beide Saetze hintereinander: Der letzte Fix altert waehrend der Pause,
+  und der erste neue macht ihn sofort wieder frisch. Das Akzeptanzkriterium "beim
+  Tabwechsel wird nichts angesagt" verlangt es.
+- **Die Renderschleife wird ausdruecklich abgebrochen** (`cancelAnimationFrame` in
+  `stopLoop()`) statt sich selbst auslaufen zu lassen. Ein verborgenes Dokument bekommt
+  keine Bilder mehr; ein bloss angefordertes, nie gerufenes Bild bliebe als Rest zurueck,
+  und der naechste Start haette entweder gar keine Schleife oder zwei.
+- **`targetView.reset()` entfernt**: Der einzige Aufrufer war `markStopped()`, und die
+  Methode tat nichts, was `render()` bei leerer Peilung nicht ohnehin tut.
+  `navigationService.reset()` und `guidanceService.reset()` bleiben - sie gehoeren zum
+  Vertrag der Dienste und sind dort getestet.
+- **Entscheidung 27 zusaetzlich als ueberholt gekennzeichnet**: Ihr zweiter Teil ("beendet
+  den Lauf aber nicht") ist durch 49 aufgehoben, und ihre Begruendung ("Hier speichern"
+  braucht einen frischen Fix) traegt seit dem selbst ortenden Anlegen-Dialog nicht mehr.
+- **Smoke-Test im Browser** (Chrome, Vite-Dev): Kaltstart ohne Konsolenfehler, Statuszeile
+  "Warte auf Standort und Kompass.", kein Start-Knopf; Wechsel auf "Orte" blendet den
+  Anhalten-Knopf aus, Zurueckkommen holt ihn zurueck; Anlegen-Dialog auf und zu
+  (auch ueber `close`) ohne Fehler. Ein verborgenes Dokument pausiert nachweislich - das
+  automatisierte Fenster meldete `visibilityState: "hidden"`, und die Seite rechnete erst
+  nach dem Sichtbarwerden. Anmerkung: Dieses Chrome kennt
+  `DeviceOrientationEvent.requestPermission`, der Freigabe-Knopf erscheint dort also
+  erwartungsgemaess nach einer Sekunde ohne Messung.
 
 ## References
 

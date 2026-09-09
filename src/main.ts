@@ -13,6 +13,7 @@ import { GroupService, type GroupMergeResult } from './application/groupService.
 import { coneFor, toNavigationSettings, type AppSettings } from './application/settings.js';
 import { tapSolo, type SoloKind } from './application/solo.js';
 import { isPositionStale } from './application/positionFreshness.js';
+import { trackingDemand, type TrackingContext } from './application/trackingPolicy.js';
 import { systemClock, type CuePort, type PositionFix, type Unsubscribe } from './application/ports.js';
 import type { GuidanceTone } from './domain/guidance.js';
 import { HeadingQualityMonitor } from './domain/headingQuality.js';
@@ -23,6 +24,7 @@ import { loadSettings, saveSettings } from './adapters/storedSettings.js';
 import { GeolocationPositionProvider } from './adapters/geolocationPositionProvider.js';
 import {
   DeviceOrientationHeadingProvider,
+  headingPermissionRequired,
   requestHeadingPermission,
 } from './adapters/deviceOrientationHeadingProvider.js';
 import { WebAudioCue, silentCue } from './adapters/cues.js';
@@ -83,20 +85,54 @@ function cuePort(): CuePort {
   return settings.cues.earcon ? audioCue : silentCue;
 }
 
-// --- Zustand des Navigationslaufs -------------------------------------------
+// --- Zustand der Ortung -----------------------------------------------------
 
 let latestFix: PositionFix | null = null;
 let latestHeading: number | null = null;
 let dirty = false;
-let running = false;
 /** Zeitpunkt des letzten Bildes - Grundlage fuer den Herzschlag in tick(). */
 let lastRenderMs = 0;
-const subscriptions: Unsubscribe[] = [];
 
-// Muss ohne Netz starten koennen - genau dafuer ist die App gedacht. Eine
-// neue Fassung uebernimmt erst, wenn kein Lauf aktiv ist: Das Neuladen wuerde
-// ihn sonst abreissen.
-registerServiceWorker(() => running);
+/**
+ * Was gerade offen und was schon gemessen ist.
+ *
+ * Aus diesen fuenf Angaben leitet trackingPolicy.ts ab, was laufen soll - es
+ * gibt keinen Start- und keinen Stopp-Knopf mehr, den man vergessen koennte.
+ */
+let context: TrackingContext = {
+  navigationVisible: false,
+  createDialogOpen: false,
+  documentVisible: document.visibilityState === 'visible',
+  hasFix: false,
+  hasHeading: false,
+};
+
+let positionUnsubscribe: Unsubscribe | null = null;
+let headingUnsubscribe: Unsubscribe | null = null;
+/** Angefordertes Bild der Renderschleife, oder null - ein zweiter Aufruf startet keine zweite. */
+let loopHandle: number | null = null;
+/**
+ * Das naechste Bild rechnet, aber schweigt.
+ *
+ * Gesetzt, sobald die Navigationsseite von "steht" auf "rechnet" wechselt -
+ * Kaltstart eingeschlossen. Ohne das feuerte der Kegel beim Zurueckkommen
+ * "eingetreten" fuer alles, was in ihm liegt: genau der Schwall, vor dem
+ * docs/design.md 4.7 schon einmal gewarnt hat.
+ */
+let resumeSilent = false;
+/** Ob je eine Kompassmessung eintraf - danach ist die Freigabe fuer die Sitzung erledigt. */
+let headingEverSeen = false;
+/** Laufender Zeitgeber der Freigabe-Probe, oder null. */
+let releaseProbe: number | null = null;
+
+// Muss ohne Netz starten koennen - genau dafuer ist die App gedacht. Eine neue
+// Fassung uebernimmt erst, wenn nichts geortet wird: Das Neuladen risse eine
+// laufende Navigation ab. Beim Weglegen ist der Bedarf falsch - genau deshalb
+// pausiert ein verborgenes Dokument die Sensoren (trackingPolicy.ts).
+registerServiceWorker(() => {
+  const demand = trackingDemand(context);
+  return demand.position || demand.navigating;
+});
 
 // --- Oberflaeche ------------------------------------------------------------
 
@@ -113,11 +149,8 @@ const targetView = new TargetView({
 });
 
 const navigationView = new NavigationView(announcer, targetView, {
-  onStart: () => {
-    void startNavigation();
-  },
-  onStop: () => {
-    stopNavigation();
+  onReleaseHeading: () => {
+    void releaseHeading();
   },
   onFreezeChange: (frozen) => {
     if (frozen) {
@@ -138,6 +171,12 @@ const navigationView = new NavigationView(announcer, targetView, {
 });
 
 const locationsView = new LocationsView(announcer, {
+  onCreateDialogOpen: () => {
+    updateTracking({ createDialogOpen: true });
+  },
+  onCreateDialogClose: () => {
+    updateTracking({ createDialogOpen: false });
+  },
   suggestName: () => locationService.suggestName(),
   groupNamesOf: (id) =>
     groupService
@@ -486,10 +525,10 @@ const tabs = new Tabs(
   // Die App wird geoeffnet, um zu navigieren.
   'navigation',
   (id) => {
-    // Auf einem anderen Bereich haelt die Liste an. Der Lauf selbst geht
-    // weiter: Die Sensoren bleiben angemeldet, damit "Hier speichern" im
-    // Bereich Orte einen frischen Standort vorfindet (docs/design.md 4.3).
-    navigationView.setPanelActive(id === 'navigation');
+    // Die Flaeche ist der Schalter: Auf der Navigationsseite wird geortet, auf
+    // den uebrigen nicht. Ein Bereichswechsel ist eine Pause, kein Ende - die
+    // Liste behaelt ihre Zeilen (docs/design.md 4.3).
+    updateTracking({ navigationVisible: id === 'navigation' });
   },
 );
 
@@ -524,14 +563,180 @@ if (skippedGroups > 0) {
   );
 }
 
-// --- Navigationslauf --------------------------------------------------------
+// --- Ortung -----------------------------------------------------------------
 
-async function startNavigation(): Promise<void> {
-  if (running) {
+/**
+ * Nimmt eine Aenderung an der offenen Flaeche entgegen und gleicht alles daran
+ * ab, was Strom zieht.
+ *
+ * Der einzige Weg, an dem Zustand zu drehen. Frueher standen dafuer
+ * startNavigation() und stopNavigation() nebeneinander, und jede Bedingung, die
+ * nur in einem der beiden stand, war ein Fehlermodus.
+ */
+function updateTracking(patch: Partial<TrackingContext>): void {
+  const before = trackingDemand(context);
+  context = { ...context, ...patch };
+  const demand = trackingDemand(context);
+
+  applyPositionSubscription(demand.position);
+  applyHeadingSubscription(demand.navigating);
+  applyWakeLock(demand.wakeLock);
+  navigationView.setActive(demand.navigating);
+
+  if (!demand.navigating) {
+    stopLoop();
+    // Der Zielton haengt an keiner Schleife und muss hier verstummen.
+    guidanceAudio.silence();
     return;
   }
 
-  // Muss aus der Beruehrung heraus laufen: iOS gibt den Kompass sonst nicht frei.
+  if (!before.navigating) {
+    // Von "steht" auf "rechnet": Das erste Bild wird stumm gerechnet.
+    resumeSilent = true;
+    dirty = true;
+    startHeadingReleaseProbe();
+  }
+  startLoop();
+}
+
+/**
+ * Meldet das Standort-Abonnement an oder ab.
+ *
+ * Beim Abmelden bleibt `latestFix` stehen: Ob er noch etwas taugt, entscheidet
+ * allein isPositionStale() - ein zweiter Zeitbegriff neben den 12 Sekunden aus
+ * docs/design.md 4.6 waere einer zu viel. Wer innerhalb dieser Frist vom
+ * Navigations-Tab ueber "Orte" zum Plus kommt, speichert ohne Wartezeit.
+ */
+function applyPositionSubscription(wanted: boolean): void {
+  if (wanted === (positionUnsubscribe !== null)) {
+    return;
+  }
+
+  if (!wanted) {
+    positionUnsubscribe?.();
+    positionUnsubscribe = null;
+    return;
+  }
+
+  positionUnsubscribe = new GeolocationPositionProvider().subscribe(
+    (fix) => {
+      const wasUsable =
+        latestFix !== null && !isPositionStale(latestFix, systemClock.now().getTime());
+      latestFix = fix;
+      navigationView.setPositionProblem(null);
+      dirty = true;
+      // Einmal, nicht je Fix: watchPosition liefert im Sekundentakt. Gemeldet
+      // wird der Uebergang von "nichts Brauchbares" zu "jetzt geht es" - genau
+      // die Auskunft, auf die im Anlegen-Dialog gewartet wird.
+      if (!wasUsable) {
+        locationsView.reportPositionReady(fix.accuracyMetres);
+      }
+      // Nur der erste Fix wird der Policy gemeldet: An ihm haengt der Wake Lock,
+      // und updateTracking() gleicht bei jedem Ruf alle Abonnements ab.
+      if (!context.hasFix) {
+        updateTracking({ hasFix: true });
+      }
+    },
+    (error) => {
+      // watchPosition meldet einen Ausfall im Sekundentakt erneut. Die
+      // Ansicht sagt deshalb nur den Wechsel an, nicht jede Wiederholung.
+      navigationView.setPositionProblem(error.message);
+      dirty = true;
+    },
+  );
+}
+
+/** Meldet das Kompass-Abonnement an oder ab; `latestHeading` bleibt stehen. */
+function applyHeadingSubscription(wanted: boolean): void {
+  if (wanted === (headingUnsubscribe !== null)) {
+    return;
+  }
+
+  if (!wanted) {
+    headingUnsubscribe?.();
+    headingUnsubscribe = null;
+    return;
+  }
+
+  headingUnsubscribe = new DeviceOrientationHeadingProvider().subscribe(
+    (reading) => {
+      latestHeading = reading.headingDeg;
+      navigationView.setHeadingProblem(null);
+      noteHeadingArrived();
+      const changed = qualityMonitor.update(reading.accuracyDeg);
+      if (changed !== null) {
+        // Nur der Wechsel wird gemeldet, nie der Dauerzustand.
+        navigationView.showQuality(changed, true);
+      }
+      dirty = true;
+      if (!context.hasHeading) {
+        updateTracking({ hasHeading: true });
+      }
+    },
+    (error) => {
+      navigationView.setHeadingProblem(error.message);
+      dirty = true;
+    },
+  );
+}
+
+/**
+ * Haelt den Bildschirm wach, sobald Daten fliessen.
+ *
+ * Die Absicht "wach bleiben" steht in der Policy und nirgends sonst; der
+ * Adapter weiss nur, ob er die Sperre gerade haelt.
+ */
+function applyWakeLock(wanted: boolean): void {
+  if (wanted === wakeLock.isHeld) {
+    return;
+  }
+  if (wanted) {
+    void wakeLock.acquire();
+  } else {
+    void wakeLock.release();
+  }
+}
+
+/**
+ * Erkennt durch Zuhoeren, ob iOS noch auf eine Beruehrung wartet.
+ *
+ * Eine Sekunde ohne Messung ist das Zeichen. Ungefragt requestPermission() zu
+ * rufen waere der kuerzere Weg und der falsche: Ein Aufruf ausserhalb einer
+ * echten Beruehrung kann als Ablehnung haengenbleiben und die App dauerhaft
+ * lahmlegen (docs/design.md 5).
+ */
+function startHeadingReleaseProbe(): void {
+  if (headingEverSeen || releaseProbe !== null || !headingPermissionRequired()) {
+    return;
+  }
+  releaseProbe = window.setTimeout(() => {
+    releaseProbe = null;
+    if (!headingEverSeen) {
+      navigationView.showHeadingRelease(true);
+    }
+  }, 1000);
+}
+
+/** Die erste Messung erledigt die Freigabe fuer die ganze Sitzung. */
+function noteHeadingArrived(): void {
+  if (headingEverSeen) {
+    return;
+  }
+  headingEverSeen = true;
+  if (releaseProbe !== null) {
+    window.clearTimeout(releaseProbe);
+    releaseProbe = null;
+  }
+  navigationView.showHeadingRelease(false);
+}
+
+/**
+ * Der eine Tipp, den iOS technisch erzwingt.
+ *
+ * Dieselbe Beruehrung entsperrt Web Audio - beides geht nur aus einer echten
+ * Geste heraus, und zwei Gesten dafuer zu verlangen waere eine zu viel.
+ */
+async function releaseHeading(): Promise<void> {
   audioCue.unlock();
 
   const granted = await requestHeadingPermission();
@@ -542,83 +747,52 @@ async function startNavigation(): Promise<void> {
     return;
   }
 
-  running = true;
-  navigationView.markRunning();
-  navigationService.reset();
-  qualityMonitor.reset();
-  void wakeLock.acquire();
-
-  subscriptions.push(
-    new GeolocationPositionProvider().subscribe(
-      (fix) => {
-        latestFix = fix;
-        navigationView.setPositionProblem(null);
-        dirty = true;
-      },
-      (error) => {
-        // watchPosition meldet einen Ausfall im Sekundentakt erneut. Die
-        // Ansicht sagt deshalb nur den Wechsel an, nicht jede Wiederholung.
-        navigationView.setPositionProblem(error.message);
-        dirty = true;
-      },
-    ),
-  );
-
-  subscriptions.push(
-    new DeviceOrientationHeadingProvider().subscribe(
-      (reading) => {
-        latestHeading = reading.headingDeg;
-        navigationView.setHeadingProblem(null);
-        const changed = qualityMonitor.update(reading.accuracyDeg);
-        if (changed !== null) {
-          // Nur der Wechsel wird gemeldet, nie der Dauerzustand.
-          navigationView.showQuality(changed, true);
-        }
-        dirty = true;
-      },
-      (error) => {
-        navigationView.setHeadingProblem(error.message);
-        dirty = true;
-      },
-    ),
-  );
-
-  lastRenderMs = 0;
-  requestAnimationFrame(tick);
+  // Neu anmelden: Auf iOS liefern Listener, die vor der Freigabe angemeldet
+  // wurden, nichts nach.
+  if (headingUnsubscribe !== null) {
+    headingUnsubscribe();
+    headingUnsubscribe = null;
+    applyHeadingSubscription(trackingDemand(context).navigating);
+  }
 }
 
-function stopNavigation(): void {
-  if (!running) {
+/** Startet die Renderschleife, falls sie nicht ohnehin schon laeuft. */
+function startLoop(): void {
+  if (loopHandle !== null) {
     return;
   }
-  running = false;
+  lastRenderMs = 0;
+  loopHandle = requestAnimationFrame(tick);
+}
 
-  for (const unsubscribe of subscriptions.splice(0)) {
-    unsubscribe();
+/**
+ * Haelt die Renderschleife an - ausdruecklich, statt sie auslaufen zu lassen.
+ *
+ * Ein verborgenes Dokument bekommt keine Bilder mehr: Ein bloss angefordertes,
+ * nie gerufenes Bild bliebe als Rest zurueck, und der naechste Start haette
+ * entweder gar keine Schleife oder zwei.
+ */
+function stopLoop(): void {
+  if (loopHandle === null) {
+    return;
   }
-  void wakeLock.release();
-
-  latestFix = null;
-  latestHeading = null;
-  navigationService.reset();
-  guidanceService.reset();
-  guidanceAudio.silence();
-  qualityMonitor.reset();
-  navigationView.markStopped();
-  announcer.announce('Navigation beendet.');
+  cancelAnimationFrame(loopHandle);
+  loopHandle = null;
 }
 
 function tick(): void {
-  if (running) {
-    requestAnimationFrame(tick);
+  loopHandle = null;
+  if (!trackingDemand(context).navigating) {
+    return;
   }
+  loopHandle = requestAnimationFrame(tick);
 
   // Ein Bild pro Sekunde, auch wenn nichts hereinkommt: Ein veralteter Standort
   // meldet sich nicht selbst. Ohne diesen Herzschlag bliebe die Liste genau
   // dann stumm stehen, wenn auch der Kompass verstummt - also im schlimmsten
   // Fall. Gerechnet wird dabei nur, was ohnehin schon gemessen ist.
   const now = systemClock.now().getTime();
-  if (running && now - lastRenderMs >= 1000) {
+  if (now - lastRenderMs >= 1000) {
     dirty = true;
   }
 
@@ -634,6 +808,8 @@ function renderNavigation(): void {
   const fix = latestFix;
   const heading = latestHeading;
   if (fix === null || heading === null) {
+    // Noch nichts gemessen: Die Statuszeile sagt trotzdem, worauf gewartet wird.
+    navigationView.render(null);
     applyGuidanceTone(null);
     return;
   }
@@ -663,12 +839,20 @@ function renderNavigation(): void {
   // abends trotzdem das Ziel (docs/design.md 6.5).
   const guidance = guidanceService.update(fix.coordinate, heading, locationService.all());
 
-  const cue = cuePort();
-  for (const location of snapshot.entered) {
-    cue.entered(location);
-  }
-  for (const location of snapshot.left) {
-    cue.left(location);
+  if (resumeSilent) {
+    // Rechnen, aber schweigen - dieselbe Idee wie cuePort() in "Ziel", nur
+    // einmalig statt dauerhaft: Der Kegel setzt sich am neuen Stand neu auf,
+    // ohne alles nachklingen zu lassen, was sich waehrend der Pause geaendert
+    // hat (docs/design.md 4.7).
+    resumeSilent = false;
+  } else {
+    const cue = cuePort();
+    for (const location of snapshot.entered) {
+      cue.entered(location);
+    }
+    for (const location of snapshot.left) {
+      cue.left(location);
+    }
   }
 
   navigationView.render(snapshot);
@@ -679,9 +863,9 @@ function renderNavigation(): void {
 /**
  * Schaltet den Zielton.
  *
- * Er klingt nur, wenn **alles** zutrifft: Der Lauf laeuft, die Betriebsart ist
- * "Ziel", der Schalter steht an, ein Ziel ist gewaehlt und der Standort ist
- * gueltig. Die Kompassguete stoppt ihn ausdruecklich **nicht** - "ungenau" ist
+ * Er klingt nur, wenn **alles** zutrifft: Die Navigationsseite ist offen, die
+ * Betriebsart ist "Ziel", der Schalter steht an, ein Ziel ist gewaehlt und der
+ * Standort ist gueltig. Die Kompassguete stoppt ihn ausdruecklich **nicht** - "ungenau" ist
  * immer noch die beste verfuegbare Angabe, und ein Ton, der bei jedem
  * Kompasswackeln aussetzt, waere unbrauchbar (docs/design.md 4.7).
  *
@@ -690,7 +874,10 @@ function renderNavigation(): void {
  */
 function applyGuidanceTone(tone: GuidanceTone | null): void {
   const wanted =
-    running && navigationView.currentMode === 'target' && settings.guidanceTone && tone !== null;
+    trackingDemand(context).navigating &&
+    navigationView.currentMode === 'target' &&
+    settings.guidanceTone &&
+    tone !== null;
   if (wanted && tone !== null) {
     guidanceAudio.play(tone);
   } else {
@@ -724,12 +911,27 @@ function toggleGuidanceTone(on: boolean): void {
   dirty = true;
 }
 
-// Nach dem Zurueckschalten in die App ist die Bildschirmsperre verloren.
+// Ein verborgenes Dokument pausiert die Sensoren - ausdruecklich, statt es dem
+// Einfrieren durch Safari zu ueberlassen. Nur so ist der Bedarf beim Weglegen
+// falsch, und nur dann laesst das Update-Tor des Service Workers eine neue
+// Fassung durch: Die App wird immer auf der Navigationsseite weggelegt.
+// Die Bildschirmsperre wird beim Zurueckkommen ohnehin neu angefordert -
+// applyWakeLock() sieht sie als nicht gehalten.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    void wakeLock.reacquireIfWanted();
-  }
+  updateTracking({ documentVisible: document.visibilityState === 'visible' });
 });
+
+// Web Audio braucht eine echte Beruehrung. Auf iOS leistet das der Tipp auf
+// "Kompass freigeben"; wo es diesen Knopf nicht gibt, gaebe es sonst gar keine
+// Geste mehr, an der die Entsperrung haengen koennte - Earcon und Zielton
+// blieben stumm. Einmal reicht, danach ist der Kanal offen.
+document.addEventListener(
+  'pointerdown',
+  () => {
+    audioCue.unlock();
+  },
+  { once: true },
+);
 
 // --- Hilfen -----------------------------------------------------------------
 

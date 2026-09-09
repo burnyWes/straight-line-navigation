@@ -237,6 +237,22 @@ x  M5 Ton waehrend der VoiceOver-Ansage                     -> man hoert beides,
    iOS daempft nichts; akzeptiert, kein Ducking (design.md 11, Entscheidung 46)
 x  Umlaute: UI-sichtbare Strings tragen jetzt echte Umlaute und ss, der
    Quelltext (Kommentare, Testnamen, DOM-Kennungen) bleibt ASCII
+x  Ortung folgt der Flaeche statt einem Start-Knopf: Start und Stopp sind weg.
+   Die Navigationsseite ortet und rechnet, sobald sie offen ist, der
+   Anlegen-Dialog ortet fuer sich allein (ohne Kompass, Earcons und Wake Lock),
+   alle uebrigen Seiten schweigen. Abgeleitet wird das in einer reinen Regel,
+   application/trackingPolicy.ts, aus offener Flaeche, Sichtbarkeit des
+   Dokuments und den beiden ersten Messungen. Ein Bereichswechsel und das
+   Weglegen sind damit eine Pause: Zeilen, Kegel-Hysterese, Betriebsart und der
+   Anhalten-Knopf bleiben stehen, der letzte Fix wird nicht verworfen (allein
+   die 12-Sekunden-Regel entscheidet), und das erste Bild danach wird stumm
+   gerechnet - sonst klaenge ein Schwall von Eintritts-Toenen. Geblieben ist der
+   eine Tipp, den iOS erzwingt: ein Knopf "Kompass freigeben" an der Stelle des
+   alten Start-Knopfes, sichtbar nur dort, wo requestPermission existiert und
+   eine Sekunde lang keine Messung kam. Der Bildschirm bleibt wach, sobald
+   Standort und Kompass beide geliefert haben. Die Statuszeile hat jetzt sechs
+   Raenge (design.md 2.1, 4.3, 4.6, 4.7, 5, 6.1, Entscheidung 49)
+
 x  Solo-Button: Zwischen Namensknopf und Gluehbirne steht in jeder Ortszeile und
    jeder nicht leeren Gruppenzeile ein dritter Knopf; ein Tipp blendet alles
    andere aus, bei einer Gruppe bleiben alle Mitglieder hell - auch einzeln
@@ -250,7 +266,13 @@ x  Solo-Button: Zwischen Namensknopf und Gluehbirne steht in jeder Ortszeile und
 TODO
 --------------------------------------------------------------------------------
 m  Adresssuche / Geocoding als GeocodingPort (design.md 6.3)
-- Navigation-Tracking überdenken
+-  Praxistest: Kommt die App aus dem Hintergrund zurueck, ohne dass der Knopf
+   "Kompass freigeben" erneut erscheint? Verlangt iOS die Freigabe im selben
+   Dokument ein zweites Mal, wird nur die Ortung bei verborgenem Dokument
+   abgemeldet, die Kompass-Listener bleiben haengen, und das Update-Tor des
+   Service Workers haengt allein an der Ortung
+-  Praxistest: Kommt eine neue Fassung beim Weglegen weiterhin an, jetzt wo die
+   App bei verborgenem Dokument ausdruecklich pausiert?
 -  Praxistest: Faellt die dritte Station je Zeile im Gebrauch auf, nachdem die
    zweite es nicht tat?
 -  Praxistest: Ist das Punkte-Symbol auf 26 Pixeln als "einer von dreien"

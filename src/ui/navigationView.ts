@@ -9,7 +9,6 @@ import {
   icon,
   setButtonLabel,
   ICON_PLAY,
-  ICON_STOP,
   ICON_PAUSE,
   ICON_TARGET,
 } from './dom.js';
@@ -69,25 +68,47 @@ const FRESH_ANNOUNCEMENT: Record<NavigationMode, string> = {
   target: 'Standort wieder da. Der Ton läuft.',
 };
 
+/** Rang 2: Der Kompass liefert nichts, und iOS wartet auf eine Beruehrung. */
+const RELEASE_STATUS = 'Kompass noch nicht freigegeben. Den Knopf oben rechts tippen.';
+
+/** Rang 4: Die Seite ortet schon, aber es ist noch nichts angekommen. */
+const WAITING_STATUS = 'Warte auf Standort und Kompass.';
+
 /**
  * Was in der Statuszeile steht, in der Reihenfolge der Dringlichkeit.
  *
- * Eine gemeldete Stoerung nennt den Grund und steht deshalb vorn; ohne sie
- * bleibt der veraltete Standort die wichtigste Aussage. Erst danach kommt, ob
- * die Liste angehalten ist. Frueher schrieb der Render hier unbedingt
- * "Navigation laeuft." - und wischte damit jede Fehlermeldung im naechsten
- * Bild wieder weg.
+ * Sie ist die einzige Beobachtungsflaeche dieser App - es gibt kein Logging und
+ * keinen Knopfnamen mehr, der nebenbei "es laeuft" sagt (frueher hiess der
+ * Knopf im Kopf "Navigation beenden" und war damit auch eine Auskunft). Deshalb
+ * ist die Rangfolge Teil der Fachlichkeit und nicht Kosmetik:
  *
- * In "Ziel" faellt der Rang "Liste angehalten" weg: Dort steht die Liste immer,
- * und eine Zeile, die nie etwas anderes sagt, ist keine Auskunft.
+ * 1. eine gemeldete Stoerung nennt den Grund und steht vorn,
+ * 2. die fehlende Kompass-Freigabe ist die einzige Stoerung, gegen die der
+ *    Nutzer hier und jetzt etwas tun kann,
+ * 3. ein veralteter Standort macht alle Zahlen fragwuerdig,
+ * 4. ohne jede Messung ist "Navigation laeuft." eine Behauptung,
+ * 5. erst danach kommt, ob die Liste angehalten ist.
+ *
+ * In "Ziel" faellt Rang 5 weg: Dort steht die Liste immer, und eine Zeile, die
+ * nie etwas anderes sagt, ist keine Auskunft.
+ *
+ * `snapshot === null` heisst "noch keine Daten": Ohne Standort **und** Kompass
+ * gibt es nichts zu rechnen, die Zeile muss trotzdem etwas sagen.
  */
 function statusText(
-  snapshot: NavigationSnapshot,
+  snapshot: NavigationSnapshot | null,
   problem: string | null,
   mode: NavigationMode,
+  headingReleasePending: boolean,
 ): string {
   if (problem !== null) {
     return problem;
+  }
+  if (headingReleasePending) {
+    return RELEASE_STATUS;
+  }
+  if (snapshot === null) {
+    return WAITING_STATUS;
   }
   if (snapshot.positionStale) {
     return STALE_STATUS[mode];
@@ -105,8 +126,13 @@ interface Row {
 }
 
 export interface NavigationViewCallbacks {
-  onStart(): void;
-  onStop(): void;
+  /**
+   * Der eine Tipp, den iOS technisch erzwingt.
+   *
+   * Kein Start: Geortet wird, weil die Seite offen ist. Freigegeben wird, weil
+   * Apple es ohne Beruehrung nicht erlaubt (docs/design.md 5).
+   */
+  onReleaseHeading(): void;
   onFreezeChange(frozen: boolean): void;
   /** Die Betriebsart hat gewechselt - Signalkanaele und Ton haengen daran. */
   onModeChange(mode: NavigationMode): void;
@@ -116,8 +142,7 @@ export class NavigationView {
   readonly panel: HTMLElement;
 
   private readonly heading: HTMLElement;
-  private readonly startButton: HTMLButtonElement;
-  private readonly stopButton: HTMLButtonElement;
+  private readonly releaseButton: HTMLButtonElement;
   private readonly freezeButton: HTMLButtonElement;
   /** Der Weg **hin** zur Zielseite; das Gegenstueck haelt die TargetView. */
   private readonly targetModeButton: HTMLButtonElement;
@@ -131,7 +156,6 @@ export class NavigationView {
   private readonly rows = new Map<string, Row>();
 
   private manualFreeze = false;
-  private tabFreeze = false;
   /**
    * In "Ziel" haelt die Liste an - aus demselben Grund wie beim
    * Bereichswechsel (docs/design.md Entscheidung 27): Sie wird dort weder
@@ -139,10 +163,23 @@ export class NavigationView {
    * anderer Reihenfolge stehen. Der Kegel selbst rechnet weiter.
    */
   private modeFreeze = false;
-  private running = false;
+  /** Die Navigationsseite ist offen und sichtbar - sie rechnet. */
+  private active = false;
+  /** Der Freigabe-Knopf steht im Kopf; Rang 2 der Statuszeile haengt daran. */
+  private headingReleasePending = false;
   private mode: NavigationMode = 'orientation';
   /** Ob die Kegel-Liste zuletzt etwas enthielt - Grundlage fuer die Leerzeile. */
   private hasEntries = false;
+  /** Ob Standort und Kompass beide vorliegen - Grundlage fuer Liste und Leerzeile. */
+  private hasData = false;
+  /**
+   * Das naechste Bild uebernimmt den Standort-Zustand, ohne ihn anzusagen.
+   *
+   * Ein Tabwechsel ist eine Pause, keine Nachricht: Waehrend die Seite steht,
+   * altert der letzte Fix, und beim Zurueckkommen kaemen sonst binnen einer
+   * Sekunde "veraltet" und "wieder da" hintereinander (docs/design.md 4.6).
+   */
+  private silentResume = false;
   /**
    * Zuletzt gemeldete Stoerung je Kanal, oder null.
    *
@@ -166,26 +203,20 @@ export class NavigationView {
     // Ansage waere derselbe doppelte Kanal, den docs/design.md 6.5 vermeidet.
     this.heading = el('h2', { text: MODE_HEADING.orientation, tabindex: '-1' });
 
-    // Start und Stopp stehen als Symbol rechts neben der Ueberschrift, nicht
-    // mehr bildschirmbreit darunter: Sie werden einmal pro Weg gedrueckt, die
-    // Liste dagegen dauernd erswiped - sie soll frueh im Wischweg beginnen.
-    this.startButton = headerButton('Navigation starten', ICON_PLAY, 'primary');
-
-    // iOS gibt den Kompass erst nach einer echten Beruehrung frei - die App
-    // kann nicht von selbst loslaufen (docs/design.md 5).
-    this.startButton.addEventListener('click', () => {
-      this.callbacks.onStart();
+    // An der Stelle, an der frueher Start und Stopp standen - und aus demselben
+    // Grund dort: Er wird hoechstens einmal pro Sitzung gedrueckt, die Liste
+    // dagegen dauernd erswiped und soll frueh im Wischweg beginnen.
+    //
+    // Von Anfang an verborgen: Ob er gebraucht wird, entscheidet sich durch
+    // Zuhoeren - eine Sekunde ohne Kompassmessung -, nicht durch einen
+    // ungefragten requestPermission()-Aufruf (docs/design.md 5).
+    this.releaseButton = headerButton('Kompass freigeben', ICON_PLAY, 'primary');
+    this.releaseButton.hidden = true;
+    this.releaseButton.addEventListener('click', () => {
+      this.callbacks.onReleaseHeading();
     });
 
-    // Ohne Gegenstueck liefe die Bildschirmsperre bis zum Schliessen der App
-    // weiter und zoege dabei Akku.
-    this.stopButton = headerButton('Navigation beenden', ICON_STOP, 'secondary');
-    this.stopButton.hidden = true;
-    this.stopButton.addEventListener('click', () => {
-      this.callbacks.onStop();
-    });
-
-    this.statusLine = el('p', { class: 'status', text: 'Noch nicht gestartet.' });
+    this.statusLine = el('p', { class: 'status', text: WAITING_STATUS });
     this.qualityLine = el('p', { class: 'status' });
     this.emptyLine = el('p', {
       class: 'status',
@@ -254,7 +285,7 @@ export class NavigationView {
     // ist verborgen und faellt damit auch aus dem Wischweg. In "Orientierung"
     // bleibt der Weg genau der bisherige.
     this.panel = el('section', { class: 'panel panel-navigation' }, [
-      el('div', { class: 'panel-head' }, [this.heading, this.startButton, this.stopButton]),
+      el('div', { class: 'panel-head' }, [this.heading, this.releaseButton]),
       this.freezeButton,
       this.targetModeButton,
       this.emptyLine,
@@ -294,26 +325,29 @@ export class NavigationView {
   }
 
   /**
-   * Haelt die Sichtbarkeit aller Bloecke an Betriebsart und Lauf.
+   * Haelt die Sichtbarkeit aller Bloecke an Betriebsart und Seitenzustand.
    *
    * An einer Stelle und nicht verteilt: Sonst stuende in "Ziel" ein
-   * funktionsloser Anhalten-Knopf unten rechts, sobald der Lauf startet.
+   * funktionsloser Anhalten-Knopf unten rechts.
    */
   private applyMode(): void {
     const target = this.mode === 'target';
 
     setHidden(this.targetModeButton, target);
     setHidden(this.targetView.modeButton, !target);
-    // Das Zielrad bleibt sichtbar, auch wenn nichts laeuft: Gewaehlt wird vor
-    // dem Start, nicht danach.
+    // Das Zielrad bleibt sichtbar, auch ohne Daten: Gewaehlt wird, bevor etwas
+    // gemessen ist.
     setHidden(this.targetView.element, !target);
 
-    // Der Anhalten-Knopf gehoert zur Liste, der Lautsprecher zum Ton: Beide
-    // nur dort, wo sie etwas bewirken, und beide nur bei laufender Navigation.
-    setHidden(this.freezeButton, target || !this.running);
-    setHidden(this.targetView.toneButton, !target || !this.running);
-    setHidden(this.list, target || !this.running);
-    setHidden(this.emptyLine, target || !this.running || this.hasEntries);
+    // Der Anhalten-Knopf gehoert zur Liste, der Lautsprecher zum Ton: Beide nur
+    // dort, wo sie etwas bewirken. "Laufend" heisst jetzt "Seite offen".
+    setHidden(this.freezeButton, target || !this.active);
+    setHidden(this.targetView.toneButton, !target || !this.active);
+    // Ohne Daten ist die Liste leer, und "Nichts in Sichtrichtung." waere dann
+    // eine Behauptung ueber die Umgebung statt ueber den eigenen Zustand - das
+    // sagt in diesem Fall die Statuszeile.
+    setHidden(this.list, target || !this.active || !this.hasData);
+    setHidden(this.emptyLine, target || !this.active || !this.hasData || this.hasEntries);
   }
 
   /**
@@ -345,60 +379,59 @@ export class NavigationView {
     this.footObserver.observe(this.foot);
   }
 
-  markRunning(): void {
-    this.running = true;
-    this.clearProblems();
-    this.resetFreeze();
-    this.hasEntries = false;
-    setHidden(this.startButton, true);
-    setHidden(this.stopButton, false);
-    this.applyMode();
-    setText(this.statusLine, 'Warte auf Standort und Kompass.');
-  }
-
-  markStopped(): void {
-    this.running = false;
-    this.clearProblems();
-    this.resetFreeze();
-    this.hasEntries = false;
-    setHidden(this.startButton, false);
-    setHidden(this.stopButton, true);
-    this.list.textContent = '';
-    this.rows.clear();
-    this.targetView.reset();
-    this.applyMode();
-    setText(this.statusLine, 'Navigation beendet.');
-    setText(this.qualityLine, '');
-    // Fokus auf den Startknopf, damit er nicht ins Leere faellt.
-    this.startButton.focus();
-  }
-
   /**
-   * Meldet, ob der Navigationsbereich gerade sichtbar ist.
+   * Meldet, ob die Navigationsseite gerade rechnet.
    *
-   * Ist er es nicht, haelt die Liste an: Sie wird dort weder gesehen noch
-   * erswiped, und beim Zurueckkommen soll sie nicht in voellig anderer
-   * Reihenfolge stehen. Sensoren und Signale laufen weiter - "Hier speichern"
-   * im Bereich Orte braucht einen frischen Standort (docs/design.md 4.3).
-   *
-   * Bewusst ohne Ansage: Gemeldet wird das Anhalten nur dort, wo es die
-   * gerade gelesene Liste betrifft.
+   * Ein Bereichswechsel ist eine **Pause**, kein Ende: Die Zeilen bleiben
+   * stehen, der Anhalten-Knopf behaelt seinen Zustand, die Betriebsart bleibt.
+   * Nichts wird geleert und nichts angesagt - beim Zurueckkommen soll die Seite
+   * genau so dastehen, wie sie verlassen wurde (docs/design.md 4.3).
    */
-  setPanelActive(active: boolean): void {
-    if (this.tabFreeze === !active) {
+  setActive(active: boolean): void {
+    if (active === this.active) {
       return;
     }
-    this.tabFreeze = !active;
-    this.syncFreeze();
+    this.active = active;
+    if (active) {
+      this.silentResume = true;
+    }
+    this.applyMode();
   }
 
   /**
-   * Meldung, bevor der Lauf beginnt - etwa eine abgelehnte Berechtigung.
+   * Zeigt oder verbirgt den Knopf "Kompass freigeben".
    *
-   * Schreibt direkt in die Statuszeile: Solange nicht gestartet ist, rendert
-   * niemand dagegen an.
+   * Beim Ausblenden nach erfolgter Freigabe wandert der Fokus auf die
+   * Ueberschrift: Er stand auf einem Knopf, den es gleich nicht mehr gibt, und
+   * fiele sonst auf den Rumpf - der VoiceOver-Cursor stuende danach wieder am
+   * Seitenanfang statt am Anfang der Seite, die jetzt endlich laeuft.
+   */
+  showHeadingRelease(show: boolean): void {
+    if (show === this.headingReleasePending) {
+      return;
+    }
+    this.headingReleasePending = show;
+    const hadFocus = document.activeElement === this.releaseButton;
+    setHidden(this.releaseButton, !show);
+    if (!show && hadFocus) {
+      this.heading.focus();
+    }
+  }
+
+  /**
+   * Meldung aus einer Handlung heraus - etwa eine abgelehnte Freigabe.
+   *
+   * Wird wie eine gemeldete Stoerung gefuehrt und nicht nur in die Zeile
+   * geschrieben: Seit die Seite ohne Knopfdruck rechnet, wischte das naechste
+   * Bild sie sonst binnen einer Sekunde wieder weg. Die naechste gueltige
+   * Messung loescht sie.
+   *
+   * Angesagt wird sie jedes Mal - anders als bei setHeadingProblem(): Wer den
+   * Knopf ein zweites Mal tippt, hat eine Antwort verdient; ein Sensor, der
+   * seinen Ausfall im Sekundentakt wiederholt, nicht.
    */
   showError(message: string): void {
+    this.headingProblem = message;
     setText(this.statusLine, message);
     this.announcer.announce(message);
   }
@@ -439,25 +472,50 @@ export class NavigationView {
     }
   }
 
-  render(snapshot: NavigationSnapshot): void {
-    if (!this.running) {
+  /**
+   * Zeichnet ein Bild; `null` heisst "noch keine Daten".
+   *
+   * Ohne Standort **und** Kompass gibt es nichts zu rechnen - die Statuszeile
+   * muss trotzdem geschrieben werden, sonst stuende beim ersten Oeffnen nichts
+   * da, was die Wartezeit erklaert.
+   */
+  render(snapshot: NavigationSnapshot | null): void {
+    if (!this.active) {
       return;
     }
 
     setText(
       this.statusLine,
-      statusText(snapshot, this.positionProblem ?? this.headingProblem, this.mode),
+      statusText(
+        snapshot,
+        this.positionProblem ?? this.headingProblem,
+        this.mode,
+        this.headingReleasePending,
+      ),
     );
+
+    if (this.hasData !== (snapshot !== null)) {
+      this.hasData = snapshot !== null;
+      this.applyMode();
+    }
+
+    if (snapshot === null) {
+      return;
+    }
 
     // Der Wechsel auf "veraltet" ist die eigentliche Nachricht: Ab hier stimmen
     // die Zahlen nicht mehr. Wer nur die Liste erswiped, wuerde ihn sonst nicht
     // bemerken - sie steht ja weiterhin da und klingt unveraendert plausibel.
+    // Das erste Bild nach einer Pause uebernimmt den Zustand dagegen stumm.
     if (snapshot.positionStale !== this.stale) {
       this.stale = snapshot.positionStale;
-      this.announcer.announce(
-        this.stale ? STALE_ANNOUNCEMENT[this.mode] : FRESH_ANNOUNCEMENT[this.mode],
-      );
+      if (!this.silentResume) {
+        this.announcer.announce(
+          this.stale ? STALE_ANNOUNCEMENT[this.mode] : FRESH_ANNOUNCEMENT[this.mode],
+        );
+      }
     }
+    this.silentResume = false;
 
     // In "Ziel" steht die Liste ohnehin und ist verborgen. Sie trotzdem
     // fortzuschreiben kostete Arbeit an Knoten, die niemand liest - beim
@@ -567,21 +625,6 @@ export class NavigationView {
     row.label = label;
   }
 
-  /**
-   * Setzt das Anhalten zurueck - jeder Lauf beginnt laufend.
-   *
-   * Frueher ueberlebte die Flagge das Beenden. Wer die Liste angehalten hatte,
-   * startete den naechsten Lauf mit einem eingefrorenen Zustand, den der Dienst
-   * nach seinem reset() gar nicht mehr kannte: Der naechste Griff zum Knopf fror
-   * die noch leere Liste ein, und sie blieb leer. Zu hoeren waren nur noch die
-   * Ein- und Austritts-Signale.
-   */
-  private resetFreeze(): void {
-    this.manualFreeze = false;
-    this.showFreezeState(false);
-    this.syncFreeze();
-  }
-
   /** Haelt Beschriftung und Zustand des Anhalten-Knopfes am gemeldeten Zustand. */
   private showFreezeState(frozen: boolean): void {
     if (this.freezeButton.getAttribute('aria-pressed') === String(frozen)) {
@@ -595,14 +638,15 @@ export class NavigationView {
     );
   }
 
-  private clearProblems(): void {
-    this.positionProblem = null;
-    this.headingProblem = null;
-    this.stale = false;
-  }
-
+  /**
+   * Zwei Gruende halten die Liste an, nicht mehr drei.
+   *
+   * Der Bereichswechsel ist keiner mehr: Eine pausierte Seite rechnet nicht und
+   * kann darum nichts umsortieren - genau davor schuetzte der dritte Grund
+   * (docs/design.md 4.3).
+   */
   private syncFreeze(): void {
-    this.callbacks.onFreezeChange(this.manualFreeze || this.tabFreeze || this.modeFreeze);
+    this.callbacks.onFreezeChange(this.manualFreeze || this.modeFreeze);
   }
 }
 

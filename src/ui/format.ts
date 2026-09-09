@@ -72,6 +72,18 @@ export function formatSaveConfirmation(name: string, accuracyMetres: number | nu
   return `${name} gespeichert, Genauigkeit ${Math.round(accuracyMetres)} Meter.`;
 }
 
+/**
+ * Rueckmeldung im Anlegen-Dialog, sobald der erste Fix da ist.
+ *
+ * Derselbe Satzbau und dieselbe Rundung wie die Bestaetigung nach dem Speichern:
+ * Die Genauigkeit sagt, ob ein zweiter Versuch sinnvoll ist - direkt nach dem
+ * Aufwachen liefert iOS gern +-65 Meter (docs/design.md 6.1). Eine zweite
+ * Rundungsregel neben der vorhandenen waere der Anfang zweier Wahrheiten.
+ */
+export function formatPositionReady(accuracyMetres: number): string {
+  return `Standort bereit, Genauigkeit ${Math.round(accuracyMetres)} Meter.`;
+}
+
 const CREATED_AT_FORMAT = new Intl.DateTimeFormat('de-DE', {
   day: 'numeric',
   month: 'long',

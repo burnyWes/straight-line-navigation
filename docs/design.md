@@ -48,7 +48,7 @@ Diese Einschränkungen sind **akzeptiert**, nicht übersehen:
 
 | Grenze | Auswirkung | Umgang |
 |---|---|---|
-| Kein Hintergrundbetrieb | Bei gesperrtem Bildschirm friert die Seite ein — kein Kompass, keine Töne | Wake Lock hält den Bildschirm wach; „Handy in der Tasche" ist **kein** unterstützter Anwendungsfall (bewusst verworfen) |
+| Kein Hintergrundbetrieb | Bei gesperrtem Bildschirm friert die Seite ein — kein Kompass, keine Töne | Wake Lock hält den Bildschirm wach; „Handy in der Tasche" ist **kein** unterstützter Anwendungsfall (bewusst verworfen). Bei verborgenem Dokument pausiert die App **ausdrücklich** — Ortung und Kompass ab, Bildschirmsperre frei —, statt es dem Einfrieren durch Safari zu überlassen. Das ist die Bedingung dafür, dass eine neue Fassung beim Weglegen ankommt: Das Update-Tor öffnet nur, wenn nichts geortet wird, und weggelegt wird die App immer auf der Navigationsseite (§2.2) |
 | Keine Web Share Target API | Kein „Teilen → diese App" aus Apple/Google Maps | Koordinaten werden über die Zwischenablage eingefügt |
 | **Keine Haptik, gemessen** | Kein Vibrationssignal bei Ein-/Austritt | Akzeptiert. Weder `navigator.vibrate` noch der `switch`-Umweg funktionieren (M1, gemessen 2026-09-04) |
 | **Lautlos-Schalter schaltet Web Audio stumm, gemessen** | Earcons bei Lautlos unhörbar — und seit dem Wegfall der Ansage (§4.4) gibt es dann gar kein Ein-/Austritts-Signal | Akzeptiert — Nutzerentscheidung. Wer das Signal braucht, schaltet den Lautlos-Schalter aus |
@@ -169,12 +169,19 @@ Störung: Beim Durchwischen hielt die Liste bei jedem Eintritt an und lief bei j
 Austritt wieder los, dazu sagte sie abwechselnd „angehalten" und „aktualisiert". Wer
 eine stehende Liste will, sagt das jetzt selbst.
 
-**Ein anderer Bereich hält die Liste weiterhin an.** Wer in „Orte" oder
+**Ein anderer Bereich hält die ganze Seite an.** Wer in „Orte", „Gruppen" oder
 „Einstellungen" wechselt, liest die Liste gerade nicht; liefe sie dort weiter, stünde
-sie beim Zurückkommen in völlig anderer Reihenfolge. Der Navigationslauf selbst geht
-weiter — Sensoren bleiben angemeldet, der Bildschirm wach, die Ein-/Austritts-Signale
-klingen —, denn „Hier speichern" im Bereich Orte braucht einen frischen Fix. Dieses
-Anhalten wird **nicht angesagt**: Gemeldet wird ein Freeze nur dort, wo er die gerade
+sie beim Zurückkommen in völlig anderer Reihenfolge. Seit die **Fläche der Schalter**
+ist (§5), hält dort nicht mehr nur die Liste an, sondern die Ortung selbst: Sensoren ab,
+Bildschirmsperre frei, keine Signale. Ein eigener Freeze-Grund für den Bereichswechsel
+entfällt damit ersatzlos — eine pausierte Seite rechnet nicht und kann nichts
+umsortieren.
+
+**Ein Bereichswechsel ist eine Pause, kein Ende.** Die Zeilen bleiben stehen, die
+Kegel-Hysterese bleibt, der Anhalten-Knopf behält seinen Zustand, die Betriebsart bleibt,
+und der zuletzt empfangene Fix wird **nicht** verworfen — allein die 12-Sekunden-Regel
+(§4.6) entscheidet, ob er für „Hier speichern" noch taugt. Angesagt wird beim Wechsel
+**nichts**, in keine Richtung: Gemeldet wird ein Zustand nur dort, wo er die gerade
 gelesene Liste betrifft.
 
 Das Drücken des Knopfes wird angesagt („angehalten" / „aktualisiert"), sonst ist
@@ -197,9 +204,10 @@ laufenden Liste — sonst liest VoiceOver den Eintrag unter dem Finger sekündli
 die Ein- und Austritts-Signale klingen weiter — und nichts widerspricht. Seit nur noch
 der Knopf einfriert, bleibt eine Sicherung nötig:
 
-- **Der Freeze-Zustand gehört dem Lauf.** Start und Ende setzen ihn zurück. Sonst friert
-  eine Flagge aus dem vorigen Lauf die noch leere Liste des nächsten ein, und der Lauf
-  zeigt nie wieder etwas an.
+- **Der Freeze-Zustand gehört dem Kaltstart.** Es gibt kein Ende mehr, das ihn
+  zurücksetzen könnte — also beginnt jede Sitzung laufend, und danach löst ihn nur noch
+  der Knopf. Die frühere Sicherung („Start und Ende setzen ihn zurück") ist damit
+  gegenstandslos: Eine Flagge, die einen Lauf überlebte, kann es ohne Läufe nicht geben.
 
 **Technische Voraussetzung:** Jede Listenzeile ist ein `<button>`. Nur fokussierbare
 Elemente nimmt der VoiceOver-Cursor als eigene Station, und nur an ihnen hängt die
@@ -281,19 +289,26 @@ erneut; jede Wiederholung anzusagen macht die App unbenutzbar.
 **„Hier speichern" lehnt einen veralteten Fix ab.** Dort ist er schlimmer als gar
 keiner: Der Ort landet dauerhaft in der Liste und sieht danach aus wie jeder andere.
 
-**Die Statuszeile gehört dem Render.** Sie zeigt in dieser Reihenfolge: gemeldete
-Störung, veralteter Standort, angehaltene Liste, laufende Navigation. **Die Wortlaute
-hängen an der Betriebsart** (§4.7) — was ein veralteter Standort bedeutet, ist in
-„Orientierung" etwas anderes als in „Ziel":
+**Die Statuszeile gehört dem Render.** Sie ist die einzige Beobachtungsfläche dieser App
+— es gibt kein Logging, und seit dem Wegfall des Stopp-Knopfes auch keinen Knopfnamen
+mehr, der nebenbei „es läuft" sagt („Navigation beenden" war ja auch eine Auskunft). Ihre
+Rangfolge ist deshalb Fachlichkeit, nicht Kosmetik. **Die Wortlaute hängen an der
+Betriebsart** (§4.7) — was ein veralteter Standort bedeutet, ist in „Orientierung" etwas
+anderes als in „Ziel":
 
 | Rang | Bedingung | Orientierung | Ziel |
 |---|---|---|---|
 | 1 | gemeldete Störung | Text des Fehlers | Text des Fehlers |
-| 2 | Standort veraltet | „Standort veraltet. Die Liste ist angehalten." | „Standort veraltet. Der Ton schweigt." |
-| 3 | Liste angehalten | „Liste angehalten." | — entfällt |
-| 4 | sonst | „Navigation läuft." | „Navigation läuft." |
+| 2 | Kompass nicht freigegeben | „Kompass noch nicht freigegeben. Den Knopf oben rechts tippen." | dito |
+| 3 | Standort veraltet | „Standort veraltet. Die Liste ist angehalten." | „Standort veraltet. Der Ton schweigt." |
+| 4 | noch keine Daten | „Warte auf Standort und Kompass." | dito |
+| 5 | Liste angehalten | „Liste angehalten." | — entfällt |
+| 6 | sonst | „Navigation läuft." | „Navigation läuft." |
 
-Rang 3 entfällt in „Ziel", weil die Liste dort **immer** steht (§4.7) — eine Zeile, die
+Rang 2 ist die einzige Störung, gegen die der Nutzer hier und jetzt etwas tun kann, und
+steht deshalb vor allen anderen außer der gemeldeten (§5). Rang 4 hält fest, dass
+„Navigation läuft." ohne jede Messung eine Behauptung wäre — die Seite ortet dann zwar
+schon, angekommen ist aber noch nichts. Rang 5 entfällt in „Ziel", weil die Liste dort **immer** steht (§4.7) — eine Zeile, die
 nie etwas anderes sagt, ist keine Auskunft. Angesagt wird auch hier nur der Wechsel, und
 auch die Ansage nennt die jeweilige Folge: „…und die Liste steht still.“
 gegenüber „…und der Ton schweigt.“ **Sie steht
@@ -357,8 +372,15 @@ Regel hinter dem Anhalten-Knopf war nie „Schalter nach vorn", sondern „nicht
 lange Liste" — auf der Zielseite gibt es keine.
 
 **Der Anhalten-Knopf erscheint nur in „Orientierung", der Lautsprecher nur in „Ziel"**,
-beide nur bei laufender Navigation. Das Zielrad bleibt dagegen immer sichtbar: Gewählt
-wird vor dem Start, nicht danach.
+beide nur bei laufender Navigation — und „laufend" heißt seit §5 schlicht „die Seite ist
+offen". Das Zielrad bleibt dagegen immer sichtbar: Gewählt wird, bevor etwas gemessen ist.
+
+**Das erste Bild nach einer Pause wird stumm gerechnet.** Beim Zurückkommen aus einem
+anderen Bereich oder aus dem Hintergrund liegt der Kegel neu — und feuerte ohne diese
+Regel „eingetreten" für alles, was inzwischen in ihm liegt. Es ist derselbe Schwall, gegen
+den der Kegel in „Ziel" schweigt statt zu pausieren; hier ist die Pause unvermeidlich, also
+schweigt stattdessen das eine Bild, das sie beendet. Was der Nutzer danach hört, sind
+wieder echte Übergänge.
 
 **Das Zielrad kennt alle Orte, auch ausgeblendete.** `hidden` ist eine Regel über den
 Kegel, nicht über den Willen (§6.5) — das geparkte Auto blendet man aus, damit es
@@ -518,7 +540,7 @@ davon abhängen, wie weit die Ortsliste gescrollt ist. Die Überschrift scrollt 
 
 | Tab | Inhalt |
 |---|---|
-| **Navigation** | Zwei Betriebsarten (§4.7): **Orientierung** mit Kegel-Liste und Anhalten-Schalter, **Ziel** mit Zielrad, Peilzeile, Kreisbild und Tonschalter. Start/Stopp als Symbol im Kopf gilt für beide |
+| **Navigation** | Zwei Betriebsarten (§4.7): **Orientierung** mit Kegel-Liste und Anhalten-Schalter, **Ziel** mit Zielrad, Peilzeile, Kreisbild und Tonschalter. Beide orten, sobald die Seite offen ist |
 | **Orte** | Liste aller gespeicherten Locations, nur Namen; Anlegen über ein Plus im Kopf, Bearbeiten und Löschen über Dialoge |
 | **Gruppen** | Liste der Gruppen; Anlegen über ein Plus im Kopf, Mitglieder und Löschen über Dialoge (§6.6) |
 | **Einstellungen** | Kegelwinkel, max. Entfernung, Signalkanal, Datum der letzten Sicherung; Sichern und Einlesen hinter dem Dialog „Daten speichern / laden" (§7) |
@@ -530,20 +552,39 @@ davon abhängen, wie weit die Ortsliste gescrollt ist. Die Überschrift scrollt 
   statt zwei, und die Knöpfe lägen sonst bei **jedem** Besuch der Orte-Seite vor der
   Liste. Der vierte Tab kostet eine Station, aber nur einmal, und liegt dort, wo der
   Bereichswechsel ohnehin stattfindet.)*
-- **Starten und Beenden stehen als Symbol rechts neben der Überschrift** — ein
-  Dreieck, während der Navigation ein Quadrat, beide ohne sichtbaren Text und mit
-  `aria-label` benannt. Sie werden einmal pro Weg gedrückt; die Liste dagegen wird
-  ständig erswiped und soll deshalb früh im Wischweg beginnen. *(Ursprünglich ein
-  bildschirmbreiter Knopf unter der Überschrift — Nutzerentscheidung.)* Unverändert
-  gilt: iOS gibt den Kompass erst nach `DeviceOrientationEvent.requestPermission()`
-  aus einer echten Berührung frei. Die App kann nicht von selbst loslaufen.
+- **Die Fläche ist der Schalter — es gibt keinen Start- und keinen Stopp-Knopf.** Die
+  Navigationsseite und der Anlegen-Dialog orten, alles andere nicht. Der alte Knopf
+  verlangte eine Entscheidung, die nie eine war: Auf der Navigationsseite will man
+  **immer** Ortungsdaten, sonst wäre man nicht dort. Was er tatsächlich erzeugt hat, sind
+  zwei Fehlermodi — der vergessene Start (die App sieht aus wie kaputt: leere Liste, keine
+  Töne, kein Hinweis) und der vergessene Stopp (Bildschirm wach, GPS läuft, niemand
+  navigiert). Ein abgeleiteter Zustand kann nicht vergessen werden.
+- **„Kompass freigeben" steht als Symbol rechts neben der Überschrift** — an der Stelle
+  des früheren Start-Knopfes und aus demselben Grund dort: Er wird höchstens einmal pro
+  Sitzung gedrückt, die Liste dagegen ständig erswiped und soll früh im Wischweg beginnen.
+  Er ist der eine Tipp, den iOS technisch erzwingt: Der Kompass wird erst nach
+  `DeviceOrientationEvent.requestPermission()` aus einer echten Berührung freigegeben, und
+  die Freigabe überlebt den Seitenaufbau nicht. Das ist Apples Sicherheitsmodell, keine
+  Gestaltungsfrage. Dieselbe Berührung entsperrt Web Audio.
+- **Ob der Knopf nötig ist, wird durch Zuhören erkannt, nicht durch Fragen.** Er erscheint
+  nur, wenn `requestPermission` überhaupt existiert **und** eine Sekunde nach dem Öffnen
+  der Navigationsseite keine Kompassmessung eingetroffen ist; die erste Messung lässt ihn
+  für die Sitzung verschwinden, und der Fokus springt auf die `h2`. Ungefragt
+  `requestPermission()` zu rufen wäre der kürzere Weg und der falsche: Ein Aufruf außerhalb
+  einer echten Berührung kann als Ablehnung hängenbleiben und die App dauerhaft lahmlegen.
+  Auf Browsern ohne diesen Dialog erscheint der Knopf nie; dort entsperrt die erste
+  beliebige Berührung Web Audio.
 - **Der Anhalten-Schalter schwebt als Pausensymbol unten rechts** über dem Inhalt, im
   Gehen mit dem Daumen erreichbar. Im DOM steht er weiterhin **vor** der Liste:
   VoiceOver wischt in DOM-Reihenfolge, dahinter läge er hinter allen Einträgen.
 - **Der Moduswechsel schwebt unten links**, der Tonschalter der Zielseite unten rechts an
   der Stelle des Anhalten-Knopfes (§4.7). Alle drei teilen Maße und Höhe über der
   Fußleiste; sichtbar ist immer nur, was zur laufenden Betriebsart gehört.
-- Während der Navigation hält `navigator.wakeLock` den Bildschirm wach.
+- **`navigator.wakeLock` hält den Bildschirm wach, sobald Daten fließen** — also solange
+  die Navigationsseite offen und sichtbar ist **und** Standort wie Kompass geliefert
+  haben. Nicht davor: Sonst brennt der Bildschirm genau dort, wo er nichts nützt —
+  abgelehnter Standort, nicht freigegebener Kompass, nichts läuft. Beim Verlassen der
+  Seite und beim Weglegen wird die Sperre freigegeben.
 
 ---
 
@@ -565,10 +606,23 @@ Ein Button. Die **Genauigkeit wird mitgespeichert und angesagt** („gespeichert
 Genauigkeit 12 Meter"), damit erkennbar ist, ob ein zweiter Versuch sinnvoll ist —
 direkt nach dem Aufwachen liefert iOS gern ±65 m.
 
+**Der Dialog ortet selbst.** Solange „Neuen Ort anlegen" offen steht, läuft die Ortung —
+auch wenn er von der Orte-Seite aus geöffnet wurde und die Navigationsseite nie besucht
+war. Kompass, Earcons und Wake Lock laufen dort **nicht**: Der Dialog will nur wissen, wo
+er steht. Trifft der erste brauchbare Fix ein, meldet seine Statuszeile einmal „Standort
+bereit, Genauigkeit 12 Meter." — dieselbe Angabe wie nach dem Speichern, damit erkennbar
+ist, ob sich Warten lohnt. Einmal, nicht je Fix: `watchPosition` liefert im Sekundentakt.
+
 Der Knopf **bleibt im Dialog sichtbar, auch wenn kein Fix vorliegt**, und nennt dann den
-Grund („Kein Standort verfügbar. Zuerst die Navigation starten.") statt zu verschwinden.
-Ein fehlender Knopf ist mit VoiceOver schwerer zu deuten als einer, der sich erklärt. Der
-Dialog bleibt dabei offen — der eingegebene Name geht nicht verloren.
+Grund („Noch kein Standort. Einen Moment warten und erneut versuchen.") statt zu
+verschwinden. Ein fehlender Knopf ist mit VoiceOver schwerer zu deuten als einer, der sich
+erklärt. Der Dialog bleibt dabei offen — der eingegebene Name geht nicht verloren.
+
+**Der letzte Fix wird beim Verlassen der Navigationsseite nicht verworfen.** Die
+12-Sekunden-Regel aus §4.6 ist die Schonfrist: Wer innerhalb dieser Zeit vom
+Navigations-Tab über „Orte" zum Plus kommt, speichert ohne Wartezeit; danach lehnt
+„Hier speichern" den alten Fix ab und der Dialog ortet neu. Ein zweiter Zeitbegriff neben
+den 12 Sekunden wäre einer zu viel.
 
 ### 6.2 Einfügen aus der Zwischenablage
 
@@ -1102,8 +1156,8 @@ das steht in keinem Verhältnis.
 | 23 | Kegel-Liste: weitestes Ziel oben, nächstes unten | Nutzerentscheidung; beim Durchswipen endet man auf dem wichtigsten Eintrag |
 | 24 | Service Worker handgeschrieben, keine Workbox | Hundert Zeilen gegen eine Build-Abhängigkeit; passt zum Stack ohne Framework (§2.2) |
 | 25 | Symbole per Skript erzeugt, ohne Bildbibliothek | Drei PNG rechtfertigen keine Abhängigkeit; `tools/make-icons.mjs`, Dateien eingecheckt |
-| 26 | Start/Stopp als Symbol im Kopf, Anhalten schwebend unten rechts | Nutzerentscheidung; die Liste soll früh im Wischweg beginnen, der Daumen den Pausenknopf ohne Suchen treffen |
-| 27 | Bereichswechsel hält die Liste an, beendet den Lauf aber nicht | Nutzerentscheidung; die Liste soll beim Zurückkommen nicht umsortiert sein, „Hier speichern" braucht weiter einen frischen Fix |
+| 26 | ~~Start/Stopp als Symbol im Kopf~~, Anhalten schwebend unten rechts — **durch 49 überholt** | Nutzerentscheidung; die Liste soll früh im Wischweg beginnen, der Daumen den Pausenknopf ohne Suchen treffen. Die Platzierung im Kopf gilt weiter, den Knopf selbst gibt es nicht mehr |
+| 27 | Bereichswechsel hält die Liste an, ~~beendet den Lauf aber nicht~~ — **durch 49 überholt** | Nutzerentscheidung; die Liste soll beim Zurückkommen nicht umsortiert sein. Der zweite Teil hing daran, dass „Hier speichern" einen frischen Fix brauchte — seit der Anlegen-Dialog selbst ortet (§6.1), hält der Bereichswechsel die ganze Seite an |
 | 28 | Fix gilt 12 s, danach wird die Liste gehalten und der Zustand angesagt | Ein veralteter Standort klingt genauso souverän wie ein gültiger; das Halten macht die Grenze hörbar (§4.6) |
 | 29 | Tab-Leiste bleibt beim Scrollen oben stehen | Der Bereichswechsel darf nicht davon abhängen, wie weit die Ortsliste gescrollt ist |
 | 30 | Orte verwalten in modalen Dialogen, Löschen mit eigener Rückfrage | Die Liste bleibt auf den Namen reduziert; ohne Backend ist ein Fehlgriff endgültig (§7) |
@@ -1125,3 +1179,4 @@ das steht in keinem Verhältnis.
 | 46 | Keine Absenkung des Zieltons, während VoiceOver spricht | M5 gemessen: iOS legt beides nebeneinander, und der Nutzer nimmt es so an. Ducking wäre eine Zustandsmaschine über zwei Kanäle, von denen einer sich nicht abfragen lässt — und sie ließe den Ton verstummen, wenn ohnehin geredet wird (§4.7, §11) |
 | 47 | Dur-Dreiklang über dem Zielton, solange das Ziel im Sichtkegel liegt — Nicht-Ziel „Markierung bei geradeaus" aufgehoben | Nutzerforderung. Der ursprüngliche Einwand hatte zwei Teile, und beide sind ausgeräumt: Der Akkord ist **kein zweiter Kanal**, sondern eine Klangfarbe desselben gleitenden Tons (Terz und Quinte über demselben Grundton, leiser, mitgleitend — die Feinauskunft bleibt), und er flackert nicht, weil er die Hysterese des Kegels erbt. Die Schwelle ist der eingestellte Kegel selbst: „geradeaus" heißt auf beiden Seiten dasselbe (§4.1, §4.7) |
 | 48 | Solo-Knopf als dritte Station je Zeile, an Orten und nicht leeren Gruppen; der zweite Druck stellt den Stand von vorher her; „Solo läuft" wird gespeichert, die Sichtbarkeit bleibt allein am Ort | Ausblenden war bisher pro Zeile ein Griff — „heute nur der Kiez" kostete eine Reihe davon. Der gemerkte Schnappschuss macht den Griff als erste Funktion der App **umkehrbar** und lässt einen dauerhaft dunklen Ort dunkel; „alles hell" wäre bequemer und falsch. Abgeleitet werden kann er nicht: Ein neuer Ort während des Solos ist sichtbar, und die Ableitung sähe danach „kein Solo" — der Weg zurück wäre still verloren. Er überlebt den Kaltstart wie das Ziel (§39), denn ein hängendes Solo wäre stumm (§4.3, §6.5, §6.6) |
+| 49 | Die Fläche ist der Schalter: Start/Stopp entfallen, Navigationsseite und Anlegen-Dialog orten, ein Bereichswechsel ist Pause statt Ende, das erste Bild danach wird stumm gerechnet; geblieben ist der Knopf „Kompass freigeben", und der nur auf iOS und nur, solange er wirkt | Der Knopf verlangte eine Entscheidung, die nie eine war — auf der Navigationsseite will man **immer** Ortungsdaten. Erzeugt hat er zwei Fehlermodi: den vergessenen Start (die App sieht aus wie kaputt) und den vergessenen Stopp (Bildschirm wach, GPS läuft, niemand navigiert). Ein abgeleiteter Zustand kann nicht vergessen werden. Ein Reset beim Zurückkommen feuerte „eingetreten" für alles im Kegel — derselbe Schwall, gegen den §4.7 den Kegel in „Ziel" schweigen statt pausieren lässt. Der eine verbliebene Tipp ist Apples Sicherheitsmodell, keine Gestaltungsfrage; ob er nötig ist, wird durch Zuhören erkannt, weil ein ungefragtes `requestPermission()` als Ablehnung hängenbleiben könnte (§4.3, §4.6, §4.7, §5, §6.1, überholt 26 und 27) |

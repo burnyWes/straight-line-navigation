@@ -205,15 +205,6 @@ export class TargetView {
     this.bearingLabel = label;
   }
 
-  /** Vergisst die gehaltene Beschriftung - jeder Lauf beginnt ohne Peilung. */
-  reset(): void {
-    this.bearingLabel = '';
-    this.bearing.textContent = '';
-    setHidden(this.bearing, true);
-    this.dial.render(null, '', 0);
-    this.renderHint();
-  }
-
   private renderHint(): void {
     setHidden(this.hint, !this.bearing.hidden);
     setText(this.hint, this.hintText());
